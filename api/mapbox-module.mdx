@@ -1,0 +1,248 @@
+---
+title: Mapbox Module
+description: Core module methods for configuring the Mapbox Maps SDK
+---
+
+The Mapbox module provides essential methods for configuring and managing the Mapbox Maps SDK in your React Native application.
+
+## Methods
+
+### setAccessToken
+
+Sets the Mapbox access token required for using Mapbox tiles and services.
+
+```typescript
+setAccessToken(accessToken: string | null): Promise<string | null>
+```
+
+<ParamField path="accessToken" type="string | null" required>
+  The Mapbox access token. Can be `null` if using non-Mapbox tiles.
+</ParamField>
+
+**Returns:** Promise that resolves to the access token.
+
+**Example:**
+
+```typescript
+import { setAccessToken } from '@rnmapbox/maps';
+
+await setAccessToken('pk.your_access_token_here');
+```
+
+### getAccessToken
+
+Retrieves the currently set Mapbox access token.
+
+```typescript
+getAccessToken(): Promise<string>
+```
+
+**Returns:** Promise that resolves to the current access token.
+
+**Example:**
+
+```typescript
+import { getAccessToken } from '@rnmapbox/maps';
+
+const token = await getAccessToken();
+console.log('Current token:', token);
+```
+
+### setTelemetryEnabled
+
+Enables or disables Mapbox telemetry collection.
+
+```typescript
+setTelemetryEnabled(telemetryEnabled: boolean): void
+```
+
+<ParamField path="telemetryEnabled" type="boolean" required>
+  Whether telemetry should be enabled.
+</ParamField>
+
+**Example:**
+
+```typescript
+import { setTelemetryEnabled } from '@rnmapbox/maps';
+
+setTelemetryEnabled(false);
+```
+
+### setConnected
+
+Sets the connection state for Mapbox. Useful for forcing offline mode.
+
+```typescript
+setConnected(connected: boolean): void
+```
+
+<ParamField path="connected" type="boolean" required>
+  Whether Mapbox should consider the device connected to the internet.
+</ParamField>
+
+**Example:**
+
+```typescript
+import { setConnected } from '@rnmapbox/maps';
+
+// Force offline mode
+setConnected(false);
+```
+
+### clearData
+
+Clears temporary map data from the cache. Useful for reducing disk usage or clearing invalid cached data.
+
+```typescript
+clearData(): Promise<void>
+```
+
+**Returns:** Promise that resolves when data is cleared.
+
+**Example:**
+
+```typescript
+import { clearData } from '@rnmapbox/maps';
+
+await clearData();
+console.log('Map cache cleared');
+```
+
+### addCustomHeader
+
+Adds a custom HTTP header to Mapbox requests.
+
+```typescript
+addCustomHeader(
+  headerName: string,
+  headerValue: string,
+  options?: { urlRegexp?: string }
+): void
+```
+
+<ParamField path="headerName" type="string" required>
+  The name of the header to add.
+</ParamField>
+
+<ParamField path="headerValue" type="string" required>
+  The value of the header.
+</ParamField>
+
+<ParamField path="options" type="object">
+  Optional configuration.
+  
+  <ParamField path="options.urlRegexp" type="string">
+    If provided, the header will only be added to URLs matching this regular expression.
+  </ParamField>
+</ParamField>
+
+**Example:**
+
+```typescript
+import { addCustomHeader } from '@rnmapbox/maps';
+
+// Add header to all requests
+addCustomHeader('Authorization', 'Bearer token123');
+
+// Add header only to specific URLs
+addCustomHeader('X-Custom-Header', 'value', {
+  urlRegexp: 'https://api\\.example\\.com/.*',
+});
+```
+
+### removeCustomHeader
+
+Removes a previously added custom HTTP header.
+
+```typescript
+removeCustomHeader(headerName: string): void
+```
+
+<ParamField path="headerName" type="string" required>
+  The name of the header to remove.
+</ParamField>
+
+**Example:**
+
+```typescript
+import { removeCustomHeader } from '@rnmapbox/maps';
+
+removeCustomHeader('Authorization');
+```
+
+### setWellKnownTileServer
+
+<Warning>Deprecated - This method will be removed in a future version.</Warning>
+
+Sets a well-known tile server.
+
+```typescript
+setWellKnownTileServer(tileServer: string): void
+```
+
+<ParamField path="tileServer" type="string" required>
+  The tile server identifier.
+</ParamField>
+
+## Constants
+
+### StyleURL
+
+Pre-defined Mapbox style URLs.
+
+```typescript
+enum StyleURL {
+  Street = 'mapbox://styles/mapbox/streets-v11',
+  Dark = 'mapbox://styles/mapbox/dark-v10',
+  Light = 'mapbox://styles/mapbox/light-v10',
+  Outdoors = 'mapbox://styles/mapbox/outdoors-v11',
+  Satellite = 'mapbox://styles/mapbox/satellite-v9',
+  SatelliteStreet = 'mapbox://styles/mapbox/satellite-streets-v11',
+  TrafficDay = 'mapbox://styles/mapbox/navigation-preview-day-v4',
+  TrafficNight = 'mapbox://styles/mapbox/navigation-preview-night-v4',
+}
+```
+
+**Example:**
+
+```typescript
+import { StyleURL } from '@rnmapbox/maps';
+import MapView from '@rnmapbox/maps';
+
+<MapView styleURL={StyleURL.Dark} />
+```
+
+### TileServers
+
+Tile server identifiers.
+
+```typescript
+const TileServers = {
+  Mapbox: 'mapbox',
+};
+```
+
+### LineJoin
+
+Line join style constants.
+
+```typescript
+const LineJoin = {
+  Bevel: 'bevel',
+  Round: 'round',
+  Miter: 'miter',
+};
+```
+
+### OfflinePackDownloadState
+
+Offline pack download state constants.
+
+```typescript
+const OfflinePackDownloadState = {
+  Inactive: 'inactive',
+  Active: 'active',
+  Complete: 'complete',
+  Unknown: 'unknown',
+};
+```

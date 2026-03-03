@@ -1,0 +1,143 @@
+---
+title: "iOS Setup Guide"
+description: "Complete iOS configuration for Mapbox Maps SDK in React Native"
+---
+
+## Overview
+
+This guide covers the iOS-specific setup required for `@rnmapbox/maps`. The SDK supports Mapbox Maps SDK v11 for iOS.
+
+## Prerequisites
+
+- React Native 0.79 or higher
+- Node.js (v22.16.0 recommended)
+- CocoaPods installed
+- Xcode 14 or higher
+- Mapbox access token (see [Setup Access Token](/guides/setup-access-token))
+
+## Installation Steps
+
+<Steps>
+  <Step title="Install the package">
+    Install `@rnmapbox/maps` via npm or yarn:
+
+    <CodeGroup>
+
+    ```bash npm
+    npm install @rnmapbox/maps
+    ```
+
+    ```bash yarn
+    yarn add @rnmapbox/maps
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Configure Podfile">
+    Add the required hooks to your `ios/Podfile`. These hooks are essential for the Mapbox SDK to work correctly:
+
+    ```ruby ios/Podfile
+    pre_install do |installer|
+      $RNMapboxMaps.pre_install(installer)
+      # ... other pre install hooks
+    end
+
+    post_install do |installer|
+      $RNMapboxMaps.post_install(installer)
+      # ... other post install hooks
+    end
+    ```
+
+    <Note>
+      Make sure to add these hooks even if you already have `pre_install` and `post_install` blocks in your Podfile.
+    </Note>
+  </Step>
+
+  <Step title="Install pods">
+    Navigate to the iOS folder and run pod install:
+
+    ```bash
+    cd ios
+    pod install
+    ```
+
+    This will download the proper Mapbox dependencies.
+  </Step>
+
+  <Step title="Configure location permissions (Optional)">
+    If you want to show the user's current location on the map using the `LocationPuck` component, add the location permission to your `Info.plist`:
+
+    ```xml ios/YourApp/Info.plist
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Show current location on map.</string>
+    ```
+
+    <Note>
+      You can customize the permission message to better fit your app's use case. This message will be shown to users when requesting location access.
+    </Note>
+  </Step>
+</Steps>
+
+## Advanced Configuration
+
+### Using a Custom Mapbox SDK Version
+
+You can override the default Mapbox SDK version by setting a variable in your `Podfile`:
+
+```ruby ios/Podfile
+$RNMapboxMapsVersion = '= 11.16.2'
+```
+
+<Warning>
+  If you set a custom version, make sure to revisit it whenever you update `@rnmapbox/maps`. Using an older version than what the library expects may cause build errors.
+</Warning>
+
+### Expo Managed Workflow
+
+If you're using Expo, set the `RNMapboxMapsVersion` variable through the Expo config plugin instead. See the [Expo Setup Guide](/guides/expo-setup) for details.
+
+## Troubleshooting
+
+### Pod install fails with "could not find compatible versions"
+
+If you encounter this error when upgrading `@rnmapbox/maps`:
+
+```log
+[!] CocoaPods could not find compatible versions for pod "MapboxMaps":
+  In snapshot (Podfile.lock):
+    MapboxMaps (= 10.15.0, ~> 10.15.0)
+
+  In Podfile:
+    rnmapbox-maps (from `../node_modules/@rnmapbox/maps`) was resolved to 10.0.15, which depends on
+      MapboxMaps (~> 10.16.0)
+```
+
+**Solution:** Update the MapboxMaps pod as suggested by CocoaPods:
+
+```bash
+cd ios
+pod update MapboxMaps
+```
+
+### Build fails after upgrading
+
+1. Clean your build folder in Xcode: **Product > Clean Build Folder**
+2. Delete `Podfile.lock` and the `Pods` directory
+3. Run `pod install` again
+4. Rebuild your project
+
+### Location permission not working
+
+Make sure you've:
+1. Added `NSLocationWhenInUseUsageDescription` to your `Info.plist`
+2. Requested location permissions in your app code using React Native's `PermissionsAndroid` or a library like `react-native-permissions`
+
+## Next Steps
+
+After completing the iOS setup:
+
+- [Set up your Mapbox access token](/guides/setup-access-token)
+- Explore the component documentation
+- Check out the example applications
+- If you're also targeting Android, see the [Android Setup Guide](/guides/android-setup)

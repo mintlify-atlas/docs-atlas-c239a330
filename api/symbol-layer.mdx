@@ -1,0 +1,157 @@
+---
+title: SymbolLayer
+description: Renders icon and text labels on the map
+---
+
+SymbolLayer is a style layer that renders icon and text labels at points or along lines on the map.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#symbol)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain data.
+</ParamField>
+
+<ParamField path="sourceLayerID" type="string">
+  Identifier of the layer within the source.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="slot" type="'bottom' | 'middle' | 'top'">
+  The slot this layer is assigned to. v11 only
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  Minimum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  Maximum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="SymbolLayerStyleProps" required>
+  Customizable style attributes.
+</ParamField>
+
+<ParamField path="children" type="JSX.Element | JSX.Element[]">
+  Deprecated: Use Image component instead.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.symbolPlacement" type="'point' | 'line' | 'line-center'" default="point">
+  Label placement relative to its geometry.
+</ParamField>
+
+<ParamField path="style.iconImage" type="string">
+  Name of image in sprite to use for drawing an icon.
+</ParamField>
+
+<ParamField path="style.iconSize" type="number" default="1">
+  Scales the original size of the icon. Minimum: 0
+</ParamField>
+
+<ParamField path="style.iconRotate" type="number" default="0">
+  Rotates the icon clockwise in degrees.
+</ParamField>
+
+<ParamField path="style.iconOpacity" type="number" default="1">
+  The opacity at which the icon will be drawn. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.iconColor" type="string" default="#000000">
+  The color of the icon. This can only be used with SDF icons.
+</ParamField>
+
+<ParamField path="style.textField" type="string">
+  Value to use for a text label.
+</ParamField>
+
+<ParamField path="style.textFont" type="string[]" default="['Open Sans Regular','Arial Unicode MS Regular']">
+  Font stack to use for displaying text.
+</ParamField>
+
+<ParamField path="style.textSize" type="number" default="16">
+  Font size in pixels. Minimum: 0
+</ParamField>
+
+<ParamField path="style.textOpacity" type="number" default="1">
+  The opacity at which the text will be drawn. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.textColor" type="string" default="#000000">
+  The color with which the text will be drawn.
+</ParamField>
+
+<ParamField path="style.textHaloColor" type="string" default="rgba(0, 0, 0, 0)">
+  The color of the text's halo, which helps it stand out from backgrounds.
+</ParamField>
+
+<ParamField path="style.textHaloWidth" type="number" default="0">
+  Distance of halo to the font outline in pixels. Minimum: 0
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, ShapeSource, SymbolLayer } from '@rnmapbox/maps';
+
+const markers = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [-122.4, 37.8],
+      },
+      properties: { title: 'San Francisco' },
+    },
+  ],
+};
+
+function Map() {
+  return (
+    <MapView>
+      <ShapeSource id="markers" shape={markers}>
+        <SymbolLayer
+          id="marker-labels"
+          style={{
+            textField: ['get', 'title'],
+            textSize: 14,
+            textColor: '#000',
+            textHaloColor: '#fff',
+            textHaloWidth: 2,
+            textAnchor: 'top',
+            textOffset: [0, 1],
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```

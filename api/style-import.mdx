@@ -1,0 +1,230 @@
+---
+title: StyleImport
+description: StyleImport component API reference for Mapbox Maps SDK for React Native
+---
+
+# StyleImport
+
+Use StyleImport to set configuration options on the Mapbox Standard style. **V11 only.**
+
+The Mapbox Standard style is a new default style that provides a clean, modern basemap with extensive configuration options. StyleImport allows you to customize various aspects of this style, such as the color scheme, font, and lighting.
+
+## Import
+
+```tsx
+import { StyleImport } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, StyleImport } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView
+      style={{ flex: 1 }}
+      styleURL="mapbox://styles/mapbox/standard"
+    >
+      <StyleImport
+        id="basemap"
+        existing={true}
+        config={{
+          colorScheme: "dark",
+          font: "Montserrat",
+        }}
+      />
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### id
+
+<ParamField path="id" type="string" required>
+  ID of the style import. For the Mapbox Standard style, this is typically `"basemap"`.
+  
+  ```tsx
+  <StyleImport id="basemap" existing={true} config={{}} />
+  ```
+</ParamField>
+
+### existing
+
+<ParamField path="existing" type="boolean" required>
+  Must always be set to `true`. This indicates that you're modifying an existing style import rather than creating a new one.
+  
+  ```tsx
+  <StyleImport id="basemap" existing={true} config={{}} />
+  ```
+</ParamField>
+
+### config
+
+<ParamField path="config" type="{ [key: string]: string }" required>
+  A dictionary of configuration options for the style import. The available options depend on the style being imported.
+  
+  For the Mapbox Standard style, common configuration options include:
+  
+  - `colorScheme` - The color scheme: `"light"`, `"dark"`, `"dusk"`, or `"dawn"`
+  - `font` - The font family for labels
+  - `lightPreset` - Lighting preset: `"day"`, `"night"`, `"dusk"`, or `"dawn"`
+  - `showPlaceLabels` - Show or hide place labels: `"true"` or `"false"`
+  - `showRoadLabels` - Show or hide road labels: `"true"` or `"false"`
+  - `showPointOfInterestLabels` - Show or hide POI labels: `"true"` or `"false"`
+  - `showTransitLabels` - Show or hide transit labels: `"true"` or `"false"`
+  
+  ```tsx
+  <StyleImport
+    id="basemap"
+    existing={true}
+    config={{
+      colorScheme: "dark",
+      font: "Montserrat",
+      lightPreset: "night",
+      showPlaceLabels: "true",
+      showRoadLabels: "true",
+    }}
+  />
+  ```
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Dark Theme">
+    ```tsx
+    import { MapView, StyleImport, Camera } from '@rnmapbox/maps';
+
+    function DarkMap() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          styleURL="mapbox://styles/mapbox/standard"
+        >
+          <StyleImport
+            id="basemap"
+            existing={true}
+            config={{
+              colorScheme: "dark",
+              lightPreset: "night",
+            }}
+          />
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={14}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Custom Font">
+    ```tsx
+    import { MapView, StyleImport, Camera } from '@rnmapbox/maps';
+
+    function CustomFontMap() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          styleURL="mapbox://styles/mapbox/standard"
+        >
+          <StyleImport
+            id="basemap"
+            existing={true}
+            config={{
+              font: "Montserrat",
+            }}
+          />
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={14}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Minimal Labels">
+    ```tsx
+    import { MapView, StyleImport, Camera } from '@rnmapbox/maps';
+
+    function MinimalMap() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          styleURL="mapbox://styles/mapbox/standard"
+        >
+          <StyleImport
+            id="basemap"
+            existing={true}
+            config={{
+              showPlaceLabels: "false",
+              showRoadLabels: "false",
+              showPointOfInterestLabels: "false",
+              showTransitLabels: "false",
+            }}
+          />
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={14}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Dynamic Configuration">
+    ```tsx
+    import { useState } from 'react';
+    import { MapView, StyleImport, Camera } from '@rnmapbox/maps';
+    import { Switch, Text, View } from 'react-native';
+
+    function DynamicMap() {
+      const [isDark, setIsDark] = useState(false);
+
+      return (
+        <>
+          <MapView
+            style={{ flex: 1 }}
+            styleURL="mapbox://styles/mapbox/standard"
+          >
+            <StyleImport
+              id="basemap"
+              existing={true}
+              config={{
+                colorScheme: isDark ? "dark" : "light",
+                lightPreset: isDark ? "night" : "day",
+              }}
+            />
+            <Camera
+              centerCoordinate={[-74.006, 40.7128]}
+              zoomLevel={14}
+            />
+          </MapView>
+          <View style={{ position: 'absolute', top: 50, right: 20 }}>
+            <Text>Dark Mode</Text>
+            <Switch value={isDark} onValueChange={setIsDark} />
+          </View>
+        </>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Additional Resources
+
+- [Mapbox Standard Style Documentation](https://github.com/mapbox/mapbox-maps-ios/blob/main/Sources/MapboxMaps/Documentation.docc/Migrate%20to%20v11.md#21-the-mapbox-standard-style)
+- [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
+
+## Related Components
+
+- [MapView](/api/mapview) - The map container
+- [Light](/api/light) - Configure lighting for 3D features
+- [Atmosphere](/api/atmosphere) - Configure atmospheric effects

@@ -1,0 +1,659 @@
+---
+title: Mapbox Expressions
+description: Data-driven styling with Mapbox GL expressions for dynamic, interactive maps
+---
+
+Expressions are a powerful feature of the Mapbox Style Specification that enable data-driven styling. They allow you to dynamically compute style property values based on feature properties, zoom level, and other inputs.
+
+## Why Use Expressions?
+
+Expressions enable:
+- **Data-driven styling** - Style features based on their properties
+- **Zoom-based styling** - Change appearance at different zoom levels
+- **Dynamic calculations** - Compute values on the fly
+- **Conditional logic** - Apply styles based on conditions
+- **Feature state** - Style based on interactive state
+
+## Expression Syntax
+
+Expressions use a JSON array format:
+
+```tsx
+['operator', ...args]
+```
+
+They can be nested for complex logic:
+
+```tsx
+[
+  'interpolate',
+  ['linear'],
+  ['get', 'population'],
+  0, 'rgba(0, 0, 255, 0.2)',
+  1000000, 'rgba(255, 0, 0, 0.8)',
+]
+```
+
+## Expression Types
+
+### Getting Feature Properties
+
+#### get
+
+Retrieve a feature property value:
+
+```tsx
+style={{
+  circleRadius: ['get', 'magnitude'],  // Use 'magnitude' property
+  textField: ['get', 'name'],          // Use 'name' property
+}}
+```
+
+#### has
+
+Check if a property exists:
+
+```tsx
+filter={[
+  'has', 'population'  // Only features with 'population' property
+]}
+```
+
+### Type Operators
+
+#### to-number, to-string, to-boolean
+
+Convert between types:
+
+```tsx
+style={{
+  circleRadius: ['to-number', ['get', 'size']],
+  textField: ['to-string', ['get', 'id']],
+}}
+```
+
+#### typeof
+
+Get the type of a value:
+
+```tsx
+['typeof', ['get', 'value']]  // Returns 'string', 'number', 'boolean', etc.
+```
+
+## Conditional Expressions
+
+### match
+
+Category-based styling (like a switch statement):
+
+```tsx
+<CircleLayer
+  id="poi"
+  style={{
+    circleColor: [
+      'match',
+      ['get', 'category'],
+      'restaurant', '#ff0000',
+      'hotel', '#0000ff',
+      'shop', '#00ff00',
+      '#cccccc',  // default
+    ],
+  }}
+/>
+```
+
+Multiple values can map to the same result:
+
+```tsx
+circleColor: [
+  'match',
+  ['get', 'type'],
+  ['park', 'garden', 'forest'], '#00ff00',
+  ['lake', 'river', 'ocean'], '#0000ff',
+  '#cccccc',
+]
+```
+
+### case
+
+Conditional styling with boolean conditions:
+
+```tsx
+style={{
+  circleRadius: [
+    'case',
+    ['>', ['get', 'population'], 1000000], 10,  // If > 1M, radius 10
+    ['>', ['get', 'population'], 100000], 6,    // Else if > 100k, radius 6
+    3,  // Default radius
+  ],
+}}
+```
+
+With feature state:
+
+```tsx
+style={{
+  circleColor: [
+    'case',
+    ['boolean', ['feature-state', 'hover'], false],
+    '#ff0000',  // If hovering
+    '#0000ff',  // Default
+  ],
+}}
+```
+
+### Comparison Operators
+
+```tsx
+==  // Equal
+!=  // Not equal
+>   // Greater than
+>=  // Greater than or equal
+<   // Less than
+<=  // Less than or equal
+```
+
+Example:
+
+```tsx
+filter={[
+  '>=',
+  ['get', 'magnitude'],
+  4.5
+]}
+```
+
+### Logical Operators
+
+```tsx
+all    // Logical AND
+any    // Logical OR
+!      // Logical NOT
+```
+
+Example:
+
+```tsx
+filter={[
+  'all',
+  ['>=', ['get', 'magnitude'], 3],
+  ['<', ['get', 'magnitude'], 6],
+  ['==', ['get', 'type'], 'earthquake'],
+]}
+```
+
+## Interpolation
+
+Smooth transitions between values.
+
+### Linear Interpolation
+
+```tsx
+<CircleLayer
+  id="points"
+  style={{
+    circleRadius: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      5, 2,     // At zoom 5, radius is 2
+      10, 5,    // At zoom 10, radius is 5
+      15, 10,   // At zoom 15, radius is 10
+    ],
+  }}
+/>
+```
+
+### Exponential Interpolation
+
+Faster growth for a more dramatic effect:
+
+```tsx
+lineWidth: [
+  'interpolate',
+  ['exponential', 1.5],  // Base of 1.5
+  ['zoom'],
+  10, 1,
+  18, 10,
+]
+```
+
+### Cubic Bezier Interpolation
+
+Custom easing curves:
+
+```tsx
+circleOpacity: [
+  'interpolate',
+  ['cubic-bezier', 0.42, 0, 0.58, 1],
+  ['zoom'],
+  8, 0,
+  12, 1,
+]
+```
+
+### Property-based Interpolation
+
+```tsx
+circleRadius: [
+  'interpolate',
+  ['linear'],
+  ['get', 'population'],
+  0, 2,
+  1000000, 10,
+  10000000, 20,
+]
+```
+
+## Step Functions
+
+Discrete value changes (no interpolation):
+
+```tsx
+<FillLayer
+  id="population"
+  style={{
+    fillColor: [
+      'step',
+      ['get', 'density'],
+      '#ffffb2',    // Default (0-10)
+      10, '#fecc5c',  // 10-20
+      20, '#fd8d3c',  // 20-50
+      50, '#f03b20',  // 50-100
+      100, '#bd0026', // 100+
+    ],
+  }}
+/>
+```
+
+With zoom:
+
+```tsx
+lineWidth: [
+  'step',
+  ['zoom'],
+  1,     // Default (zoom < 8)
+  8, 2,  // Zoom >= 8
+  12, 4, // Zoom >= 12
+  16, 8, // Zoom >= 16
+]
+```
+
+## Mathematical Operations
+
+```tsx
++   // Addition
+-   // Subtraction
+*   // Multiplication
+/   // Division
+%   // Modulo
+^   // Exponentiation
+```
+
+Examples:
+
+```tsx
+// Calculate circle size based on two properties
+circleRadius: [
+  '*',
+  ['get', 'base_size'],
+  ['get', 'multiplier'],
+]
+
+// Offset position
+textOffset: [
+  'literal',
+  [0, ['+', ['get', 'offset'], 2]],
+]
+
+// Square root for area-based scaling
+circleRadius: [
+  'sqrt',
+  ['get', 'population'],
+]
+```
+
+## String Operations
+
+### concat
+
+Combine strings:
+
+```tsx
+textField: [
+  'concat',
+  ['get', 'name'],
+  ' (',
+  ['to-string', ['get', 'population']],
+  ')',
+]
+// Result: "New York (8000000)"
+```
+
+### upcase, downcase
+
+```tsx
+textField: ['upcase', ['get', 'name']]
+textField: ['downcase', ['get', 'code']]
+```
+
+## Zoom-based Expressions
+
+Access the current zoom level:
+
+```tsx
+<CircleLayer
+  style={{
+    circleRadius: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],  // Current zoom level
+      0, 1,
+      22, 100,
+    ],
+  }}
+/>
+```
+
+## Feature State Expressions
+
+Style based on dynamic feature state:
+
+```tsx
+style={{
+  fillColor: [
+    'case',
+    ['boolean', ['feature-state', 'hover'], false],
+    '#ff0000',
+    ['boolean', ['feature-state', 'selected'], false],
+    '#00ff00',
+    '#0000ff',
+  ],
+}}
+```
+
+Set feature state imperatively:
+
+```tsx
+const mapRef = useRef<MapView>(null);
+
+const handlePress = async (feature) => {
+  await mapRef.current?.setFeatureState(
+    feature.id,
+    { hover: true },
+    'my-source',
+    'source-layer'
+  );
+};
+```
+
+## Heatmap Color Expression
+
+Heatmap layers require a color expression:
+
+```tsx
+<HeatmapLayer
+  id="heatmap"
+  style={{
+    heatmapColor: [
+      'interpolate',
+      ['linear'],
+      ['heatmap-density'],  // Special property: 0 to 1
+      0, 'rgba(0, 0, 255, 0)',
+      0.1, 'royalblue',
+      0.3, 'cyan',
+      0.5, 'lime',
+      0.7, 'yellow',
+      1, 'red',
+    ],
+  }}
+/>
+```
+
+## Line Gradient Expression
+
+<Info>
+Line gradients require `lineMetrics: true` on the ShapeSource.
+</Info>
+
+```tsx
+<ShapeSource id="route" shape={routeGeoJSON} lineMetrics={true}>
+  <LineLayer
+    id="gradient-line"
+    style={{
+      lineWidth: 5,
+      lineGradient: [
+        'interpolate',
+        ['linear'],
+        ['line-progress'],  // Special property: 0 to 1
+        0, 'blue',
+        0.5, 'green',
+        1, 'red',
+      ],
+    }}
+  />
+</ShapeSource>
+```
+
+## Practical Examples
+
+### Earthquake Visualization
+
+```tsx
+const earthquakeStyle = {
+  // Size based on magnitude
+  circleRadius: [
+    'interpolate',
+    ['linear'],
+    ['get', 'magnitude'],
+    0, 2,
+    8, 40,
+  ],
+  
+  // Color based on depth
+  circleColor: [
+    'interpolate',
+    ['linear'],
+    ['get', 'depth'],
+    0, '#ffffb2',
+    100, '#fd8d3c',
+    300, '#bd0026',
+  ],
+  
+  // Opacity based on time (fade old earthquakes)
+  circleOpacity: [
+    'interpolate',
+    ['linear'],
+    ['-', ['number', ['get', 'time']], Date.now()],
+    -86400000, 0.2,  // 1 day old
+    0, 1,            // Current
+  ],
+};
+```
+
+### Population Density
+
+```tsx
+const densityStyle = {
+  fillColor: [
+    'step',
+    ['/', ['get', 'population'], ['get', 'area']],
+    '#f7fbff',
+    10, '#deebf7',
+    50, '#c6dbef',
+    100, '#9ecae1',
+    500, '#6baed6',
+    1000, '#3182bd',
+    5000, '#08519c',
+  ],
+  fillOpacity: 0.7,
+};
+```
+
+### Route Highlighting
+
+```tsx
+const routeStyle = {
+  lineWidth: [
+    'case',
+    ['boolean', ['feature-state', 'selected'], false],
+    8,   // Selected route
+    [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      10, 2,
+      16, 4,
+    ],  // Normal route
+  ],
+  lineColor: [
+    'case',
+    ['boolean', ['feature-state', 'selected'], false],
+    '#007cbf',
+    '#cccccc',
+  ],
+};
+```
+
+### Zoom-dependent Icons
+
+```tsx
+const symbolStyle = {
+  iconImage: [
+    'step',
+    ['zoom'],
+    'marker-small',
+    12, 'marker-medium',
+    16, 'marker-large',
+  ],
+  iconSize: [
+    'interpolate',
+    ['linear'],
+    ['zoom'],
+    8, 0.5,
+    16, 1.5,
+  ],
+  textField: [
+    'case',
+    ['>=', ['zoom'], 14],
+    ['concat', ['get', 'name'], '\n', ['get', 'address']],
+    ['get', 'name'],
+  ],
+};
+```
+
+## Complete Example
+
+```tsx
+import { MapView, Camera, ShapeSource, CircleLayer, SymbolLayer } from '@rnmapbox/maps';
+
+const App = () => {
+  const pointsGeoJSON = {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-74.006, 40.7128] },
+        properties: {
+          name: 'Large City',
+          population: 8000000,
+          category: 'city',
+        },
+      },
+      {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-118.2437, 34.0522] },
+        properties: {
+          name: 'Medium City',
+          population: 3000000,
+          category: 'city',
+        },
+      },
+    ],
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera centerCoordinate={[-95, 37]} zoomLevel={4} />
+      
+      <ShapeSource id="cities" shape={pointsGeoJSON}>
+        <CircleLayer
+          id="city-circles"
+          style={{
+            // Size based on population
+            circleRadius: [
+              'interpolate',
+              ['linear'],
+              ['get', 'population'],
+              100000, 5,
+              10000000, 30,
+            ],
+            // Color based on category
+            circleColor: [
+              'match',
+              ['get', 'category'],
+              'city', '#007cbf',
+              'town', '#00bf7c',
+              '#cccccc',
+            ],
+            // Opacity based on zoom
+            circleOpacity: [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              4, 0.5,
+              10, 1,
+            ],
+            circleStrokeWidth: 2,
+            circleStrokeColor: '#ffffff',
+          }}
+        />
+        
+        <SymbolLayer
+          id="city-labels"
+          style={{
+            // Show name with population
+            textField: [
+              'concat',
+              ['get', 'name'],
+              '\n(',
+              ['to-string', ['get', 'population']],
+              ')'
+            ],
+            textSize: [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              4, 10,
+              10, 20,
+            ],
+            textColor: '#000000',
+            textHaloColor: '#ffffff',
+            textHaloWidth: 2,
+            textAnchor: 'top',
+            textOffset: [0, 1],
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+
+export default App;
+```
+
+## Best Practices
+
+<Note>
+1. **Use appropriate interpolation**: Linear for smooth transitions, exponential for dramatic effects, step for discrete categories
+2. **Combine expressions**: Nest expressions for complex logic
+3. **Consider performance**: Complex expressions can impact performance - test on devices
+4. **Use feature state**: For interactive styling without updating GeoJSON
+5. **Validate types**: Use type conversion operators to ensure correct data types
+</Note>
+
+## Related
+
+- [Styling](/concepts/styling) - Layer style properties
+- [Layers](/concepts/layers) - Layer types and configuration
+- [Mapbox Expression Reference](https://docs.mapbox.com/mapbox-gl-js/style-spec/expressions/) - Complete specification

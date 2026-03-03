@@ -1,0 +1,133 @@
+---
+title: SkyLayer
+description: Renders a spherical dome around the map
+---
+
+SkyLayer is a spherical dome around the map that is always rendered behind all other layers.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#sky)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain data.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="layerIndex" type="number">
+  Inserts the layer at a specified index.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="SkyLayerStyleProps">
+  Customizable style attributes.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.skyType" type="'gradient' | 'atmosphere'" default="atmosphere">
+  The type of the sky. `gradient` renders the sky with a gradient that can be configured. `atmosphere` renders with a simulated atmospheric scattering algorithm.
+</ParamField>
+
+<ParamField path="style.skyAtmosphereSun" type="number[]">
+  Position of the sun center [azimuthal angle, polar angle] in degrees. The azimuthal angle indicates the position of the sun relative to 0° north. The polar angle indicates the height of the sun.
+</ParamField>
+
+<ParamField path="style.skyAtmosphereSunIntensity" type="number" default="10">
+  Intensity of the sun as a light source in the atmosphere. Range: 0-100.
+</ParamField>
+
+<ParamField path="style.skyGradientCenter" type="number[]" default="[0,0]">
+  Position of the gradient center [azimuthal angle, polar angle] in degrees.
+</ParamField>
+
+<ParamField path="style.skyGradientRadius" type="number" default="90">
+  The angular distance (measured in degrees) from skyGradientCenter up to which the gradient extends. Range: 0-180.
+</ParamField>
+
+<ParamField path="style.skyGradient" type="string">
+  Defines a radial color gradient with which to color the sky.
+</ParamField>
+
+<ParamField path="style.skyAtmosphereHaloColor" type="string" default="white">
+  The color of the atmosphere region immediately above the horizon.
+</ParamField>
+
+<ParamField path="style.skyAtmosphereColor" type="string" default="white">
+  The color of the atmosphere region above the horizon.
+</ParamField>
+
+<ParamField path="style.skyOpacity" type="number" default="1">
+  The opacity of the entire sky layer. Range: 0-1.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, SkyLayer } from '@rnmapbox/maps';
+
+function Map() {
+  return (
+    <MapView>
+      <SkyLayer
+        id="sky"
+        style={{
+          skyType: 'atmosphere',
+          skyAtmosphereSun: [0, 90],
+          skyAtmosphereSunIntensity: 15,
+        }}
+      />
+    </MapView>
+  );
+}
+```
+
+## Gradient Sky Example
+
+```tsx
+import { MapView, SkyLayer } from '@rnmapbox/maps';
+
+function Map() {
+  return (
+    <MapView>
+      <SkyLayer
+        id="sky"
+        style={{
+          skyType: 'gradient',
+          skyGradientCenter: [0, 0],
+          skyGradientRadius: 90,
+          skyGradient: [
+            'interpolate',
+            ['linear'],
+            ['sky-radial-progress'],
+            0.8, 'rgba(135, 206, 235, 1.0)',
+            1, 'rgba(0,0,0,0.1)',
+          ],
+        }}
+      />
+    </MapView>
+  );
+}
+```

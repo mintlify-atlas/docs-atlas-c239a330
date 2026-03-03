@@ -1,0 +1,113 @@
+---
+title: 'RasterDemSource'
+description: 'A map content source that supplies raster DEM (Digital Elevation Model) tiles'
+---
+
+## Overview
+
+RasterDemSource is a map content source that supplies raster DEM (Digital Elevation Model) tiles to be shown on the map. This source type is typically used with HillshadeLayer to display terrain elevation data.
+
+## Import
+
+```tsx
+import { RasterDemSource } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, RasterDemSource, HillshadeLayer } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <RasterDemSource
+        id="mapbox-dem"
+        url="mapbox://mapbox.mapbox-terrain-dem-v1"
+        maxZoomLevel={14}
+      >
+        <HillshadeLayer
+          id="hillshade-layer"
+          style={{
+            hillshadeExaggeration: 1,
+            hillshadeIlluminationDirection: 335,
+            hillshadeShadowColor: '#473B24',
+            hillshadeHighlightColor: '#FDFCFA',
+          }}
+        />
+      </RasterDemSource>
+    </MapView>
+  );
+}
+```
+
+## Using Custom DEM Tiles
+
+```tsx
+<RasterDemSource
+  id="custom-dem"
+  tileUrlTemplates={[
+    'https://example.com/dem-tiles/{z}/{x}/{y}.png'
+  ]}
+  tileSize={256}
+  minZoomLevel={0}
+  maxZoomLevel={15}
+>
+  <HillshadeLayer id="hillshade" />
+</RasterDemSource>
+```
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A string that uniquely identifies the source.
+  
+  **Default:** `Mapbox.StyleSource.DefaultSourceID`
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  The id refers to an existing source in the style. Does not create a new source.
+</ParamField>
+
+<ParamField path="url" type="string">
+  A URL to a TileJSON configuration file describing the source's contents and other metadata.
+  
+  Example: `"mapbox://mapbox.mapbox-terrain-dem-v1"`
+</ParamField>
+
+<ParamField path="tileUrlTemplates" type="string[]">
+  An array of tile URL templates. If multiple endpoints are specified, clients may use any combination of endpoints.
+  
+  Example: `["https://example.com/raster-tiles/{z}/{x}/{y}.png"]`
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  An unsigned integer that specifies the minimum zoom level at which to display tiles from the source. The value should be between 0 and 22, inclusive, and less than `maxZoomLevel`, if specified.
+  
+  **Default:** `0`
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  An unsigned integer that specifies the maximum zoom level at which to display tiles from the source. The value should be between 0 and 22, inclusive, and greater than `minZoomLevel`, if specified.
+  
+  **Default:** `22`
+</ParamField>
+
+<ParamField path="tileSize" type="number">
+  Size of the map tiles. Mapbox URLs default to 256, all others default to 512.
+</ParamField>
+
+<ParamField path="children" type="React.ReactElement | React.ReactElement[]">
+  Child layer components (typically HillshadeLayer) that will use this source.
+</ParamField>
+
+## Methods
+
+RasterDemSource inherits methods from AbstractSource. Use a ref to access these methods.
+
+## Related Components
+
+- [RasterSource](/api/raster-source) - For raster image tiles
+- [RasterArraySource](/api/raster-array-source) - For particle animations
+- [HillshadeLayer](/api/hillshade-layer) - Used to render DEM data as hillshading
+- [Terrain](/api/terrain) - For 3D terrain visualization

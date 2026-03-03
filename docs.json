@@ -1,122 +1,174 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Mapbox Maps SDK for React Native",
+  "theme": "palm",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#4264FB",
+    "light": "#5B7DFF",
+    "dark": "#2E4BC9"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/rnmapbox/maps"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/rnmapbox/maps"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "installation",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Guides",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "guides/setup-access-token",
+              "guides/ios-setup",
+              "guides/android-setup",
+              "guides/expo-setup",
+              "guides/migration"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "concepts/map-view",
+              "concepts/camera",
+              "concepts/sources",
+              "concepts/layers",
+              "concepts/styling",
+              "concepts/expressions"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Features",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "features/user-location",
+              "features/annotations",
+              "features/offline-maps",
+              "features/snapshots",
+              "features/terrain-3d",
+              "features/animations"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "examples/overview",
+              "examples/basic-map",
+              "examples/custom-styles",
+              "examples/markers-annotations",
+              "examples/data-visualization"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Core Components",
             "pages": [
-              "api-reference/introduction"
+              "api/mapview",
+              "api/camera",
+              "api/style-import",
+              "api/light",
+              "api/atmosphere"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Sources",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/vector-source",
+              "api/shape-source",
+              "api/raster-source",
+              "api/raster-dem-source",
+              "api/raster-array-source",
+              "api/image-source"
+            ]
+          },
+          {
+            "group": "Layers",
+            "pages": [
+              "api/background-layer",
+              "api/circle-layer",
+              "api/fill-layer",
+              "api/fill-extrusion-layer",
+              "api/line-layer",
+              "api/symbol-layer",
+              "api/raster-layer",
+              "api/raster-particle-layer",
+              "api/heatmap-layer",
+              "api/hillshade-layer",
+              "api/sky-layer",
+              "api/model-layer"
+            ]
+          },
+          {
+            "group": "Annotations",
+            "pages": [
+              "api/point-annotation",
+              "api/marker-view",
+              "api/callout",
+              "api/annotation"
+            ]
+          },
+          {
+            "group": "Location",
+            "pages": [
+              "api/user-location",
+              "api/location-puck",
+              "api/custom-location-provider",
+              "api/location-manager"
+            ]
+          },
+          {
+            "group": "Assets",
+            "pages": [
+              "api/images",
+              "api/image",
+              "api/models"
+            ]
+          },
+          {
+            "group": "Terrain",
+            "pages": [
+              "api/terrain",
+              "api/viewport"
+            ]
+          },
+          {
+            "group": "Offline & Utilities",
+            "pages": [
+              "api/offline-manager",
+              "api/tile-store",
+              "api/snapshot-manager",
+              "api/logger",
+              "api/custom-http-headers"
+            ]
+          },
+          {
+            "group": "Modules",
+            "pages": [
+              "api/mapbox-module",
+              "api/style-sheet",
+              "api/animated"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

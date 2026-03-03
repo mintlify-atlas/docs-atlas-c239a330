@@ -1,0 +1,451 @@
+---
+title: 3D Terrain and Atmosphere
+description: Add realistic 3D terrain elevation and atmospheric effects to your maps
+---
+
+The 3D Terrain and Atmosphere features allow you to create stunning, realistic map visualizations with elevation data and atmospheric effects. These features work together to create immersive 3D map experiences.
+
+## Overview
+
+The SDK provides two main components:
+
+- **Terrain** - Adds 3D elevation to the map using raster DEM (Digital Elevation Model) data
+- **Atmosphere** - Creates realistic sky and atmospheric effects around the globe
+
+## Basic Setup
+
+<Steps>
+  <Step title="Import the components">
+    ```tsx
+    import {
+      MapView,
+      Camera,
+      RasterDemSource,
+      Terrain,
+      Atmosphere,
+    } from '@rnmapbox/maps';
+    ```
+  </Step>
+
+  <Step title="Add a RasterDemSource">
+    ```tsx
+    <RasterDemSource
+      id="mapbox-dem"
+      url="mapbox://mapbox.mapbox-terrain-dem-v1"
+      tileSize={514}
+      maxZoomLevel={14}
+    >
+      {/* Terrain and Atmosphere go here */}
+    </RasterDemSource>
+    ```
+  </Step>
+
+  <Step title="Add Terrain and Atmosphere">
+    ```tsx
+    <RasterDemSource id="mapbox-dem" url="mapbox://mapbox.mapbox-terrain-dem-v1">
+      <Terrain style={{ exaggeration: 1.5 }} />
+      <Atmosphere
+        style={{
+          color: 'rgb(186, 210, 235)',
+          highColor: 'rgb(36, 92, 223)',
+          horizonBlend: 0.02,
+        }}
+      />
+    </RasterDemSource>
+    ```
+  </Step>
+</Steps>
+
+## Terrain Component
+
+The `Terrain` component adds 3D elevation data to your map, creating realistic mountain ranges, valleys, and topographic features.
+
+### Basic Terrain
+
+```tsx
+import { MapView, Camera, RasterDemSource, Terrain } from '@rnmapbox/maps';
+
+const TerrainMap = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        centerCoordinate={[-114.34411, 32.6141]}
+        zoomLevel={13}
+        pitch={60}
+        heading={80}
+      />
+
+      <RasterDemSource
+        id="terrain-source"
+        url="mapbox://mapbox.mapbox-terrain-dem-v1"
+        tileSize={514}
+        maxZoomLevel={14}
+      >
+        <Terrain style={{ exaggeration: 1.5 }} />
+      </RasterDemSource>
+    </MapView>
+  );
+};
+```
+
+### Terrain Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `sourceID` | `string` | Name of the raster DEM source to use for elevation |
+| `style` | `TerrainLayerStyleProps` | Terrain style properties |
+
+### Terrain Style Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `exaggeration` | `number \| Expression` | `1.0` | Multiplier for elevation values (1.0 = actual elevation) |
+
+### Exaggeration Examples
+
+<CodeGroup>
+```tsx Subtle Terrain
+<Terrain style={{ exaggeration: 1.0 }} />
+// Actual terrain elevation
+```
+
+```tsx Enhanced Terrain
+<Terrain style={{ exaggeration: 1.5 }} />
+// 1.5x elevation for dramatic effect
+```
+
+```tsx Dramatic Terrain
+<Terrain style={{ exaggeration: 2.5 }} />
+// 2.5x elevation for mountainous regions
+```
+
+```tsx Zoom-based Exaggeration
+<Terrain
+  style={{
+    exaggeration: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      10, 1.0,  // At zoom 10, use 1.0x
+      15, 2.0,  // At zoom 15, use 2.0x
+    ],
+  }}
+/>
+```
+</CodeGroup>
+
+<Note>
+  Higher exaggeration values make terrain more dramatic but may look unrealistic. Experiment to find the right balance for your use case.
+</Note>
+
+## Atmosphere Component
+
+The `Atmosphere` component creates realistic atmospheric effects, including horizon blending, sky gradients, and star fields.
+
+### Basic Atmosphere
+
+```tsx
+import { Atmosphere } from '@rnmapbox/maps';
+
+<Atmosphere
+  style={{
+    color: 'rgb(186, 210, 235)',
+    highColor: 'rgb(36, 92, 223)',
+    horizonBlend: 0.02,
+    spaceColor: 'rgb(11, 11, 25)',
+    starIntensity: 0.6,
+  }}
+/>
+```
+
+### Atmosphere Style Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `color` | `string` | `'rgb(255, 255, 255)'` | Color of the atmosphere near the horizon |
+| `highColor` | `string` | `'rgb(255, 255, 255)'` | Color of the atmosphere at high altitudes |
+| `horizonBlend` | `number` | `0.1` | Blend factor between horizon and high altitude (0-1) |
+| `spaceColor` | `string` | `'rgb(0, 0, 0)'` | Color of outer space |
+| `starIntensity` | `number` | `0.0` | Intensity of stars (0-1) |
+
+### Atmosphere Presets
+
+<CodeGroup>
+```tsx Daytime Sky
+<Atmosphere
+  style={{
+    color: 'rgb(186, 210, 235)',      // Light blue
+    highColor: 'rgb(36, 92, 223)',     // Deeper blue
+    horizonBlend: 0.02,
+    spaceColor: 'rgb(11, 11, 25)',     // Dark space
+    starIntensity: 0.0,                 // No stars
+  }}
+/>
+```
+
+```tsx Night Sky
+<Atmosphere
+  style={{
+    color: 'rgb(25, 25, 50)',          // Dark blue
+    highColor: 'rgb(10, 10, 30)',      // Darker blue
+    horizonBlend: 0.05,
+    spaceColor: 'rgb(0, 0, 0)',        // Black space
+    starIntensity: 0.8,                 // Bright stars
+  }}
+/>
+```
+
+```tsx Sunset
+<Atmosphere
+  style={{
+    color: 'rgb(255, 140, 60)',        // Orange horizon
+    highColor: 'rgb(120, 60, 180)',    // Purple sky
+    horizonBlend: 0.08,
+    spaceColor: 'rgb(20, 10, 30)',     // Dark purple space
+    starIntensity: 0.3,
+  }}
+/>
+```
+
+```tsx Arctic
+<Atmosphere
+  style={{
+    color: 'rgb(220, 230, 240)',       // Icy blue
+    highColor: 'rgb(180, 200, 220)',   // Pale blue
+    horizonBlend: 0.03,
+    spaceColor: 'rgb(30, 40, 60)',     // Cold space
+    starIntensity: 0.5,
+  }}
+/>
+```
+</CodeGroup>
+
+## Complete 3D Terrain Example
+
+```tsx
+import React, { useRef } from 'react';
+import { View, Button } from 'react-native';
+import {
+  MapView,
+  Camera,
+  RasterDemSource,
+  Terrain,
+  Atmosphere,
+  SkyLayer,
+} from '@rnmapbox/maps';
+
+const TerrainExample = () => {
+  const cameraRef = useRef<Camera>(null);
+
+  const flyToMountains = () => {
+    cameraRef.current?.setCamera({
+      centerCoordinate: [-114.34411, 32.6141],
+      zoomLevel: 13.5,
+      pitch: 85,
+      heading: 60,
+      animationDuration: 3000,
+    });
+  };
+
+  return (
+    <>
+      <MapView
+        style={{ flex: 1 }}
+        styleURL="mapbox://styles/mapbox-map-design/ckhqrf2tz0dt119ny6azh975y"
+      >
+        <Camera
+          ref={cameraRef}
+          centerCoordinate={[-114.34411, 32.6141]}
+          zoomLevel={13.1}
+          pitch={85}
+          heading={80}
+        />
+
+        <RasterDemSource
+          id="mapbox-dem"
+          url="mapbox://mapbox.mapbox-terrain-dem-v1"
+          tileSize={514}
+          maxZoomLevel={14}
+        >
+          {/* 3D Terrain */}
+          <Terrain style={{ exaggeration: 1.5 }} />
+
+          {/* Atmosphere Effects */}
+          <Atmosphere
+            style={{
+              color: 'rgb(186, 210, 235)',
+              highColor: 'rgb(36, 92, 223)',
+              horizonBlend: 0.02,
+              spaceColor: 'rgb(11, 11, 25)',
+              starIntensity: 0.6,
+            }}
+          />
+
+          {/* Sky Layer */}
+          <SkyLayer
+            id="sky-layer"
+            style={{
+              skyType: 'atmosphere',
+              skyAtmosphereSun: [0.0, 0.0],
+              skyAtmosphereSunIntensity: 15.0,
+            }}
+          />
+        </RasterDemSource>
+      </MapView>
+
+      <View style={{ position: 'absolute', top: 20, left: 20 }}>
+        <Button title="Fly to Mountains" onPress={flyToMountains} />
+      </View>
+    </>
+  );
+};
+
+export default TerrainExample;
+```
+
+## SkyLayer Integration
+
+Combine `Atmosphere` with `SkyLayer` for enhanced sky effects:
+
+```tsx
+import { SkyLayer, Atmosphere } from '@rnmapbox/maps';
+
+<RasterDemSource id="mapbox-dem" url="mapbox://mapbox.mapbox-terrain-dem-v1">
+  <Atmosphere
+    style={{
+      color: 'rgb(186, 210, 235)',
+      highColor: 'rgb(36, 92, 223)',
+      horizonBlend: 0.02,
+    }}
+  />
+  
+  <SkyLayer
+    id="sky"
+    style={{
+      skyType: 'atmosphere',
+      skyAtmosphereSun: [0.0, 0.0],
+      skyAtmosphereSunIntensity: 15.0,
+    }}
+  />
+  
+  <Terrain style={{ exaggeration: 1.5 }} />
+</RasterDemSource>
+```
+
+## Camera Settings for 3D Terrain
+
+Optimal camera settings to showcase terrain:
+
+```tsx
+<Camera
+  centerCoordinate={[-114.34411, 32.6141]}
+  zoomLevel={13}      // Close enough to see detail
+  pitch={60}          // Tilt for 3D perspective (0-85 degrees)
+  heading={80}        // Rotation angle
+/>
+```
+
+### Recommended Values
+
+| Terrain Type | Zoom | Pitch | Exaggeration |
+|--------------|------|-------|---------------|
+| Mountains | 12-14 | 60-85 | 1.5-2.5 |
+| Hills | 11-13 | 45-60 | 1.2-1.8 |
+| Valleys | 12-15 | 50-70 | 1.3-2.0 |
+| Flat areas | 10-12 | 30-45 | 1.0-1.5 |
+
+## Custom DEM Sources
+
+Use your own terrain data:
+
+```tsx
+<RasterDemSource
+  id="custom-dem"
+  url="https://example.com/terrain/{z}/{x}/{y}.png"
+  tileSize={256}
+  encoding="terrarium" // or 'mapbox'
+>
+  <Terrain style={{ exaggeration: 2.0 }} />
+</RasterDemSource>
+```
+
+### DEM Encoding Types
+
+- `mapbox` - Mapbox Terrain-DEM v1 format
+- `terrarium` - Terrarium format (elevation = (R * 256 + G + B / 256) - 32768)
+
+## Performance Considerations
+
+<Note>
+  - Terrain rendering is GPU-intensive; test on target devices
+  - Higher `maxZoomLevel` on DEM sources increases memory usage
+  - Lower `tileSize` values improve performance but reduce quality
+  - Disable terrain for low-end devices if needed
+</Note>
+
+## Toggling Terrain
+
+```tsx
+import { useState } from 'react';
+
+const ToggleableTerrain = () => {
+  const [terrainEnabled, setTerrainEnabled] = useState(true);
+
+  return (
+    <>
+      <MapView style={{ flex: 1 }}>
+        <Camera centerCoordinate={[-114.34411, 32.6141]} zoomLevel={13} pitch={60} />
+        
+        {terrainEnabled && (
+          <RasterDemSource
+            id="mapbox-dem"
+            url="mapbox://mapbox.mapbox-terrain-dem-v1"
+            tileSize={514}
+          >
+            <Terrain style={{ exaggeration: 1.5 }} />
+            <Atmosphere style={{ color: 'rgb(186, 210, 235)' }} />
+          </RasterDemSource>
+        )}
+      </MapView>
+      
+      <Button
+        title={terrainEnabled ? 'Disable Terrain' : 'Enable Terrain'}
+        onPress={() => setTerrainEnabled(!terrainEnabled)}
+      />
+    </>
+  );
+};
+```
+
+## Best Practices
+
+- Use pitch values of 45-85 degrees to showcase terrain
+- Adjust exaggeration based on terrain type (subtle for plains, dramatic for mountains)
+- Combine with appropriate map styles (satellite works great with terrain)
+- Test atmosphere colors with your map style
+- Consider device performance when enabling terrain
+- Use appropriate zoom levels for the terrain detail level
+
+<Warning>
+  High terrain exaggeration values (>3.0) may cause visual artifacts or performance issues on some devices.
+</Warning>
+
+## Style Compatibility
+
+Terrain works best with these Mapbox styles:
+
+```tsx
+import { StyleURL } from '@rnmapbox/maps';
+
+// Recommended styles
+styleURL={StyleURL.Satellite}        // Best for terrain
+styleURL={StyleURL.SatelliteStreet}  // Good balance
+styleURL={StyleURL.Outdoors}         // Topographic feel
+```
+
+## Reference
+
+- Terrain: `src/components/Terrain.tsx:1`
+- Atmosphere: `src/components/Atmosphere.tsx:1`
+- RasterDemSource: `src/components/RasterDemSource.tsx:1`
+- SkyLayer: `src/components/SkyLayer.tsx:1`

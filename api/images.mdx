@@ -1,0 +1,264 @@
+---
+title: Images
+description: Images component API reference for Mapbox Maps SDK for React Native
+---
+
+# Images
+
+The Images component defines the images used in Symbol and other layers. It provides a way to register images with the map so they can be referenced in layer styles.
+
+## Import
+
+```tsx
+import { Images } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Images, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+
+function MapWithImages() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Images
+        images={{
+          pin: require('./assets/pin.png'),
+          marker: { uri: 'https://example.com/marker.png' },
+        }}
+      />
+      <ShapeSource id="points" shape={pointsGeoJSON}>
+        <SymbolLayer id="symbols" style={{ iconImage: 'pin' }} />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### images
+
+<ParamField path="images" type="{ [key: string]: ImageEntry }">
+  Specifies the external images in key-value pairs required for the shape source. Keys are names that can be referenced in layer styles (e.g., in `iconImage` expressions). Values can be:
+  
+  - URL strings (e.g., `'https://...'`, `'file://...'`, `'asset://...'`)
+  - Objects with format `{ uri: 'http://...' }`
+  - `require('image.png')`
+  - `import 'image.png'`
+  - Objects with additional properties for SDF icons and stretchable images
+
+  ```tsx
+  <Images
+    images={{
+      // URL string
+      marker: 'https://example.com/marker.png',
+      
+      // URI object
+      pin: { uri: 'https://example.com/pin.png' },
+      
+      // Required asset
+      icon: require('./assets/icon.png'),
+      
+      // With SDF and stretch properties
+      button: {
+        image: require('./assets/button.png'),
+        sdf: true,
+        stretchX: [[10, 20]],
+        stretchY: [[10, 20]],
+        content: [5, 5, 25, 25],
+        scale: 2,
+      },
+    }}
+  />
+  ```
+</ParamField>
+
+### nativeAssetImages
+
+<ParamField path="nativeAssetImages" type="Array<string | NativeImage>">
+  If you have assets under `Image.xcassets` on iOS and the `drawables` directory on Android, you can specify an array of string names or objects with additional properties.
+  
+  Objects can include properties for [SDF icons](https://docs.mapbox.com/help/troubleshooting/using-recolorable-images-in-mapbox-maps/) and stretchable images:
+  - `name`: string - The asset name
+  - `sdf`: boolean - Whether the image is an SDF icon
+  - `stretchX`: [number, number][] - Horizontal stretch areas
+  - `stretchY`: [number, number][] - Vertical stretch areas
+  - `content`: [number, number, number, number] - Content box for text fitting
+  - `scale`: number - Scale factor
+
+  ```tsx
+  <Images
+    nativeAssetImages={[
+      'pin',
+      'marker',
+      {
+        name: 'icon',
+        sdf: true,
+        stretchX: [[10, 20]],
+        stretchY: [[10, 20]],
+      },
+    ]}
+  />
+  ```
+</ParamField>
+
+### onImageMissing
+
+<ParamField path="onImageMissing" type="(imageKey: string) => void">
+  Called when a layer is trying to render an image whose key is not present in any of the `Images` components of the map. This is useful for lazy-loading images.
+
+  ```tsx
+  <Images
+    images={currentImages}
+    onImageMissing={(imageKey) => {
+      console.log('Missing image:', imageKey);
+      // Load the missing image dynamically
+      loadImage(imageKey);
+    }}
+  />
+  ```
+</ParamField>
+
+### children
+
+<ParamField path="children" type="ReactElement<Image> | Array<ReactElement<Image>>">
+  Child `Image` components for more advanced image configuration. Each child must be an `Image` component.
+
+  ```tsx
+  <Images>
+    <Image name="marker">
+      <View style={{ width: 30, height: 30, backgroundColor: 'red' }} />
+    </Image>
+    <Image name="pin" sdf={true}>
+      <FastImage source={require('./pin.png')} />
+    </Image>
+  </Images>
+  ```
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Images">
+    ```tsx
+    import { MapView, Images, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+
+    function BasicImages() {
+      const images = {
+        marker: require('./assets/marker.png'),
+        pin: require('./assets/pin.png'),
+      };
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images images={images} />
+          <ShapeSource id="points" shape={pointsGeoJSON}>
+            <SymbolLayer
+              id="symbols"
+              style={{ iconImage: 'marker', iconSize: 1.5 }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="SDF Icons">
+    ```tsx
+    import { MapView, Images, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+
+    function SDFIcons() {
+      const images = {
+        sdfIcon: {
+          image: require('./assets/icon.png'),
+          sdf: true,
+        },
+      };
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images images={images} />
+          <ShapeSource id="points" shape={pointsGeoJSON}>
+            <SymbolLayer
+              id="symbols"
+              style={{
+                iconImage: 'sdfIcon',
+                iconColor: '#FF0000', // SDF icons can be recolored
+              }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Native Assets">
+    ```tsx
+    import { MapView, Images, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+
+    function NativeAssetImages() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images
+            nativeAssetImages={[
+              'pin',
+              'marker',
+              { name: 'icon', sdf: true },
+            ]}
+          />
+          <ShapeSource id="points" shape={pointsGeoJSON}>
+            <SymbolLayer
+              id="symbols"
+              style={{ iconImage: 'pin' }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Lazy Loading">
+    ```tsx
+    import { useState } from 'react';
+    import { MapView, Images, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+
+    function LazyLoadingImages() {
+      const [images, setImages] = useState({
+        default: require('./assets/default.png'),
+      });
+
+      const handleImageMissing = (imageKey: string) => {
+        console.log('Loading missing image:', imageKey);
+        // Dynamically load the image
+        const imageUrl = `https://example.com/images/${imageKey}.png`;
+        setImages((prev) => ({
+          ...prev,
+          [imageKey]: { uri: imageUrl },
+        }));
+      };
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images images={images} onImageMissing={handleImageMissing} />
+          <ShapeSource id="points" shape={pointsGeoJSON}>
+            <SymbolLayer
+              id="symbols"
+              style={{ iconImage: ['get', 'icon'] }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Related Components
+
+- [Image](/api/image) - Individual image component
+- [SymbolLayer](/api/symbol-layer) - Layer that displays icons and text
+- [ShapeSource](/api/shape-source) - GeoJSON data source

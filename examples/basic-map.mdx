@@ -1,0 +1,297 @@
+---
+title: "Basic Map Examples"
+description: "Get started with Mapbox Maps SDK for React Native with these basic map examples"
+---
+
+## Simple Map
+
+The most basic example renders a map with default settings:
+
+```tsx
+import Mapbox from '@rnmapbox/maps';
+
+const SimpleMap = () => {
+  return (
+    <Mapbox.MapView style={{ flex: 1 }}>
+      <Mapbox.Camera
+        defaultSettings={{
+          centerCoordinate: [-122.4, 37.8],
+          zoomLevel: 12,
+        }}
+      />
+    </Mapbox.MapView>
+  );
+};
+
+export default SimpleMap;
+```
+
+## Map with User Location
+
+Display the map with the user's location and follow their movement:
+
+```tsx
+import { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+import { ButtonGroup } from '@rneui/base';
+
+const ShowMap = () => {
+  const mapOptions = Object.keys(Mapbox.StyleURL)
+    .map((key) => ({
+      label: key,
+      data: Mapbox.StyleURL[key],
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  const [styleURL, setStyleURL] = useState({ 
+    styleURL: mapOptions[0].data 
+  });
+
+  useEffect(() => {
+    Mapbox.locationManager.start();
+    return () => {
+      Mapbox.locationManager.stop();
+    };
+  }, []);
+
+  const onUserMarkerPress = () => {
+    Alert.alert('You pressed on the user location annotation');
+  };
+
+  return (
+    <>
+      <ButtonGroup
+        buttons={mapOptions.map((i) => i.label)}
+        selectedIndex={mapOptions.findIndex(
+          (i) => i.data === styleURL.styleURL
+        )}
+        onPress={(index) => setStyleURL({ 
+          styleURL: mapOptions[index].data 
+        })}
+      />
+      <Mapbox.MapView
+        styleURL={styleURL.styleURL}
+        style={{ flex: 1 }}
+      >
+        <Mapbox.Camera 
+          followZoomLevel={12} 
+          followUserLocation 
+        />
+        <Mapbox.UserLocation onPress={onUserMarkerPress} />
+      </Mapbox.MapView>
+    </>
+  );
+};
+
+export default ShowMap;
+```
+
+<Note>
+  The `followUserLocation` prop on `Camera` makes the map automatically follow the user's location.
+</Note>
+
+## Camera Controls
+
+### Fly To Location
+
+Animate the camera to different locations:
+
+```tsx
+import React, { useState } from 'react';
+import { Alert } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+import { ButtonGroup } from '@rneui/base';
+
+const FlyTo = () => {
+  const locations = [
+    { label: 'SF', data: [-122.400021, 37.789085] },
+    { label: 'DC', data: [-77.036086, 38.910233] },
+    { label: 'NYC', data: [-74.006, 40.7128] },
+  ];
+
+  const [location, setLocation] = useState(locations[0].data);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onFlyToPress = (i) => {
+    setLocation(locations[i].data);
+    setSelectedIndex(i);
+  };
+
+  return (
+    <>
+      <ButtonGroup
+        buttons={locations.map((i) => i.label)}
+        selectedIndex={selectedIndex}
+        onPress={onFlyToPress}
+      />
+      <Mapbox.MapView style={{ flex: 1 }}>
+        <Mapbox.Camera
+          zoomLevel={16}
+          animationMode="flyTo"
+          animationDuration={6000}
+          centerCoordinate={location}
+        />
+        <Mapbox.UserLocation />
+      </Mapbox.MapView>
+    </>
+  );
+};
+
+export default FlyTo;
+```
+
+### Set Camera Properties
+
+<CodeGroup>
+
+```tsx Default Settings
+<Mapbox.Camera
+  defaultSettings={{
+    centerCoordinate: [-122.4, 37.8],
+    zoomLevel: 12,
+    pitch: 45,
+    heading: 90,
+  }}
+/>
+```
+
+```tsx Follow User
+<Mapbox.Camera
+  followUserLocation
+  followZoomLevel={14}
+  followPitch={45}
+/>
+```
+
+```tsx Animated
+<Mapbox.Camera
+  centerCoordinate={[-122.4, 37.8]}
+  zoomLevel={12}
+  animationMode="flyTo"
+  animationDuration={2000}
+/>
+```
+
+</CodeGroup>
+
+## Map Interaction
+
+Handle map press events:
+
+```tsx
+import { useState } from 'react';
+import { Text } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+
+const ShowClick = () => {
+  const [message, setMessage] = useState('Click the map!');
+
+  const onPress = (feature) => {
+    const { geometry } = feature;
+    const coords = geometry.coordinates;
+    setMessage(`You clicked at: ${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`);
+  };
+
+  return (
+    <>
+      <Mapbox.MapView 
+        onPress={onPress}
+        style={{ flex: 1 }}
+      >
+        <Mapbox.Camera
+          defaultSettings={{
+            centerCoordinate: [-73.99155, 40.73581],
+            zoomLevel: 12,
+          }}
+        />
+      </Mapbox.MapView>
+      <Text style={{ 
+        position: 'absolute', 
+        bottom: 20, 
+        left: 20, 
+        backgroundColor: 'white',
+        padding: 10,
+      }}>
+        {message}
+      </Text>
+    </>
+  );
+};
+```
+
+## Map Styles
+
+Mapbox provides several built-in style URLs:
+
+```tsx
+import Mapbox from '@rnmapbox/maps';
+
+// Available styles
+Mapbox.StyleURL.Street      // Standard street map
+Mapbox.StyleURL.Dark        // Dark theme
+Mapbox.StyleURL.Light       // Light theme
+Mapbox.StyleURL.Outdoors    // Outdoor/terrain
+Mapbox.StyleURL.Satellite   // Satellite imagery
+Mapbox.StyleURL.SatelliteStreet // Satellite with labels
+
+// Use in MapView
+<Mapbox.MapView 
+  styleURL={Mapbox.StyleURL.Dark}
+  style={{ flex: 1 }}
+/>
+```
+
+## Common Props
+
+### MapView Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `style` | `ViewStyle` | React Native style object |
+| `styleURL` | `string` | Mapbox style URL |
+| `onPress` | `function` | Called when map is tapped |
+| `onLongPress` | `function` | Called when map is long-pressed |
+| `onRegionDidChange` | `function` | Called when visible region changes |
+| `onCameraChanged` | `function` | Called when camera position changes |
+
+### Camera Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `centerCoordinate` | `[number, number]` | Center position [lng, lat] |
+| `zoomLevel` | `number` | Zoom level (0-22) |
+| `pitch` | `number` | Camera pitch in degrees (0-60) |
+| `heading` | `number` | Camera heading in degrees (0-360) |
+| `animationMode` | `'flyTo' \| 'easeTo' \| 'moveTo'` | Animation style |
+| `animationDuration` | `number` | Animation duration in milliseconds |
+| `followUserLocation` | `boolean` | Follow user's location |
+
+## Tips
+
+<Tip>
+  Always wrap your map in a container with defined dimensions. Using `flex: 1` is the most common approach.
+</Tip>
+
+<Warning>
+  Remember to start the location manager with `Mapbox.locationManager.start()` before using user location features, and stop it with `Mapbox.locationManager.stop()` when done.
+</Warning>
+
+## Source Code
+
+View the complete examples on GitHub:
+
+- [ShowMap.tsx](https://github.com/rnmapbox/maps/blob/main/example/src/examples/Map/ShowMap.tsx)
+- [FlyTo.js](https://github.com/rnmapbox/maps/blob/main/example/src/examples/Camera/FlyTo.js)
+- [ShowClick.js](https://github.com/rnmapbox/maps/blob/main/example/src/examples/Map/ShowClick.js)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Styles" icon="palette" href="/examples/custom-styles">
+    Learn to customize your map's appearance
+  </Card>
+  <Card title="Markers" icon="location-dot" href="/examples/markers-annotations">
+    Add markers and annotations to your map
+  </Card>
+</CardGroup>

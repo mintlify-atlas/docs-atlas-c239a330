@@ -1,0 +1,139 @@
+---
+title: "Android Setup Guide"
+description: "Complete Android configuration for Mapbox Maps SDK in React Native"
+---
+
+## Overview
+
+This guide covers the Android-specific setup required for `@rnmapbox/maps`. The SDK supports Mapbox Maps SDK v11 for Android.
+
+## Prerequisites
+
+- React Native 0.79 or higher
+- Node.js (v22.16.0 recommended)
+- Android Studio
+- Android SDK with minimum API level 21 (Android 5.0)
+- Mapbox access token (see [Setup Access Token](/guides/setup-access-token))
+
+## Installation Steps
+
+<Steps>
+  <Step title="Install the package">
+    Install `@rnmapbox/maps` via npm or yarn:
+
+    <CodeGroup>
+
+    ```bash npm
+    npm install @rnmapbox/maps
+    ```
+
+    ```bash yarn
+    yarn add @rnmapbox/maps
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Add Mapbox Maven repository">
+    Add the Mapbox Maven repository to your `android/build.gradle` file:
+
+    ```groovy android/build.gradle
+    allprojects {
+        repositories {
+            // ...other repos
+            maven {
+                url 'https://api.mapbox.com/downloads/v2/releases/maven'
+            }
+            // ...even more repos?
+        }
+    }
+    ```
+
+    <Note>
+      Mapbox has removed the authentication requirement for downloads, so you no longer need to configure `MAPBOX_DOWNLOADS_TOKEN`.
+    </Note>
+  </Step>
+
+  <Step title="Sync project">
+    Sync your Gradle files in Android Studio or run:
+
+    ```bash
+    cd android
+    ./gradlew clean
+    ```
+  </Step>
+</Steps>
+
+That's it! Your Android setup is complete.
+
+## Advanced Configuration
+
+### Using a Custom Mapbox SDK Version
+
+You can specify a custom Mapbox Maps SDK version by setting the `RNMapboxMapsVersion` variable in your `android/build.gradle` file:
+
+```groovy android/build.gradle
+buildscript {
+    ext {
+        RNMapboxMapsVersion = '11.16.2'
+    }
+}
+```
+
+<Warning>
+  If you set a custom version, make sure to revisit it whenever you update `@rnmapbox/maps`. Using an earlier version than what the library expects will likely result in a build error.
+</Warning>
+
+## Troubleshooting
+
+### Duplicate library files error
+
+If you encounter this error:
+
+```
+2 files found with path 'lib/arm64-v8a/libc++_shared.so' from inputs
+```
+
+**Solution:** Add packaging options to your `android/app/build.gradle`:
+
+```gradle android/app/build.gradle
+android {
+    packagingOptions {
+        pickFirst 'lib/x86/libc++_shared.so'
+        pickFirst 'lib/x86_64/libc++_shared.so'
+        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+    }
+}
+```
+
+This tells Gradle to pick the first occurrence of these shared libraries when multiple copies are found.
+
+### Build fails with "unable to resolve dependency"
+
+1. Make sure you've added the Mapbox Maven repository to your `android/build.gradle`
+2. Check your internet connection
+3. Try running `./gradlew clean` in the `android` directory
+4. Invalidate caches in Android Studio: **File > Invalidate Caches / Restart**
+
+### ProGuard issues
+
+If you're using ProGuard and encountering crashes, you may need to add ProGuard rules. Check the Mapbox documentation for the latest ProGuard configuration.
+
+### AndroidX compatibility
+
+This library uses AndroidX. Make sure your project has migrated to AndroidX. In your `gradle.properties`:
+
+```properties
+android.useAndroidX=true
+android.enableJetifier=true
+```
+
+## Next Steps
+
+After completing the Android setup:
+
+- [Set up your Mapbox access token](/guides/setup-access-token)
+- Explore the component documentation
+- Check out the example applications
+- If you're also targeting iOS, see the [iOS Setup Guide](/guides/ios-setup)

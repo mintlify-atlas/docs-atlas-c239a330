@@ -1,0 +1,279 @@
+---
+title: Models
+description: Models component API reference for Mapbox Maps SDK for React Native
+---
+
+# Models
+
+The Models component registers 3D model assets to be used in the map. Models can be referenced by model layers to display 3D objects on the map.
+
+## Import
+
+```tsx
+import { Models } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Models, ModelLayer } from '@rnmapbox/maps';
+
+function MapWith3DModels() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Models
+        models={{
+          car: 'https://example.com/models/car.gltf',
+          building: require('./assets/building.glb'),
+        }}
+      />
+      <ModelLayer
+        id="3d-models"
+        sourceId="modelSource"
+        style={{ modelId: 'car' }}
+      />
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### models
+
+<ParamField path="models" type="{ [key: string]: string | number }" required>
+  Pairs of model names to GLTF/GLB file paths, URLs, or asset IDs.
+  
+  Keys are the model names that will be used to reference the model in layer styles. Values can be:
+  - URL strings pointing to `.gltf` or `.glb` files
+  - Asset IDs from `require()` statements
+  - Local file paths (with `file://` prefix)
+
+  ```tsx
+  <Models
+    models={{
+      // URL to GLTF model
+      car: 'https://example.com/models/car.gltf',
+      
+      // URL to GLB model
+      building: 'https://example.com/models/building.glb',
+      
+      // Required asset (GLB)
+      tree: require('./assets/models/tree.glb'),
+      
+      // Required asset (GLTF)
+      furniture: require('./assets/models/furniture.gltf'),
+      
+      // Local file path
+      monument: 'file:///path/to/monument.glb',
+    }}
+  />
+  ```
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic 3D Models">
+    ```tsx
+    import { MapView, Models, ModelLayer, ShapeSource } from '@rnmapbox/maps';
+
+    function Basic3DModels() {
+      const modelLocations = {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [-122.4194, 37.7749],
+            },
+            properties: {
+              modelId: 'car',
+            },
+          },
+        ],
+      };
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Models
+            models={{
+              car: 'https://example.com/models/car.glb',
+            }}
+          />
+          
+          <ShapeSource id="modelLocations" shape={modelLocations}>
+            <ModelLayer
+              id="3d-cars"
+              style={{
+                modelId: ['get', 'modelId'],
+                modelScale: [1, 1, 1],
+                modelRotation: [0, 0, 90],
+              }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Multiple Models">
+    ```tsx
+    import { MapView, Models, ModelLayer, ShapeSource } from '@rnmapbox/maps';
+
+    function MultipleModels() {
+      const modelData = {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [-122.4194, 37.7749] },
+            properties: { type: 'car' },
+          },
+          {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [-122.4184, 37.7739] },
+            properties: { type: 'tree' },
+          },
+          {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [-122.4204, 37.7759] },
+            properties: { type: 'building' },
+          },
+        ],
+      };
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Models
+            models={{
+              car: require('./assets/models/car.glb'),
+              tree: require('./assets/models/tree.glb'),
+              building: 'https://example.com/models/building.glb',
+            }}
+          />
+          
+          <ShapeSource id="models" shape={modelData}>
+            <ModelLayer
+              id="3d-objects"
+              style={{
+                modelId: ['get', 'type'],
+                modelScale: [1, 1, 1],
+              }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Dynamic Models">
+    ```tsx
+    import { useState } from 'react';
+    import { MapView, Models, ModelLayer, ShapeSource } from '@rnmapbox/maps';
+    import { Button } from 'react-native';
+
+    function DynamicModels() {
+      const [models, setModels] = useState({
+        default: require('./assets/models/default.glb'),
+      });
+
+      const addModel = (name: string, url: string) => {
+        setModels((prev) => ({
+          ...prev,
+          [name]: url,
+        }));
+      };
+
+      return (
+        <>
+          <MapView style={{ flex: 1 }}>
+            <Models models={models} />
+            
+            <ShapeSource id="modelPoints" shape={pointsGeoJSON}>
+              <ModelLayer
+                id="3d-models"
+                style={{
+                  modelId: ['get', 'modelName'],
+                  modelScale: [1, 1, 1],
+                }}
+              />
+            </ShapeSource>
+          </MapView>
+          
+          <Button
+            title="Add Car Model"
+            onPress={() => addModel('car', 'https://example.com/car.glb')}
+          />
+        </>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Animated Models">
+    ```tsx
+    import { MapView, Models, ModelLayer, ShapeSource } from '@rnmapbox/maps';
+
+    function AnimatedModels() {
+      const vehicleLocation = {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [-122.4194, 37.7749],
+        },
+        properties: {
+          bearing: 90,
+        },
+      };
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Models
+            models={{
+              car: require('./assets/models/car-animated.glb'),
+            }}
+          />
+          
+          <ShapeSource id="vehicle" shape={vehicleLocation}>
+            <ModelLayer
+              id="animated-car"
+              style={{
+                modelId: 'car',
+                modelScale: [1, 1, 1],
+                modelRotation: [0, 0, ['get', 'bearing']],
+                modelOpacity: 1,
+              }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Model Format Support
+
+The Models component supports:
+- **GLTF** (`.gltf`) - Text-based format with external resources
+- **GLB** (`.glb`) - Binary format with embedded resources (recommended for better performance)
+
+Models should follow the [glTF 2.0 specification](https://www.khronos.org/gltf/).
+
+## Performance Considerations
+
+- Use GLB format instead of GLTF for better loading performance
+- Keep model file sizes small (under 1MB when possible)
+- Reduce polygon count for models that will be displayed at small scales
+- Consider using LOD (Level of Detail) techniques for complex models
+- Cache models locally when possible instead of loading from remote URLs
+
+## Related Components
+
+- [ModelLayer](/api/model-layer) - Layer that renders 3D models
+- [ShapeSource](/api/shape-source) - Data source for model positions
+- [MapView](/api/mapview) - The map container

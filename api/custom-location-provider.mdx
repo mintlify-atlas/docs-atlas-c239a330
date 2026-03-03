@@ -1,0 +1,325 @@
+---
+title: CustomLocationProvider
+description: Provide custom location data to override native location services
+---
+
+The `CustomLocationProvider` component allows you to override the native location services and provide custom location data to the map. This is useful for testing, simulation, or using alternative location sources.
+
+## Basic Usage
+
+```tsx
+import { MapView, CustomLocationProvider, LocationPuck } from '@rnmapbox/maps';
+
+<MapView>
+  <CustomLocationProvider 
+    coordinate={[-122.4194, 37.7749]}
+    heading={45}
+  >
+    <LocationPuck visible={true} />
+  </CustomLocationProvider>
+</MapView>
+```
+
+## Props
+
+<ParamField path="coordinate" type="Position">
+  Longitude and latitude coordinates to use for the custom location provider. This position will be applied to any `LocationPuck` component within the provider.
+  
+  **Format:** `[longitude, latitude]`
+  
+  ```tsx
+  <CustomLocationProvider 
+    coordinate={[-122.4194, 37.7749]}
+  />
+  ```
+</ParamField>
+
+<ParamField path="heading" type="number">
+  Heading/bearing value (in degrees) to use for the custom location provider. This will be applied to the `LocationPuck` component.
+  
+  **Range:** 0-360 degrees, where:
+  - 0° = North
+  - 90° = East
+  - 180° = South
+  - 270° = West
+  
+  ```tsx
+  <CustomLocationProvider 
+    coordinate={[-122.4194, 37.7749]}
+    heading={45}  // Northeast
+  />
+  ```
+</ParamField>
+
+## Types
+
+### Position
+
+```tsx
+type Position = [longitude: number, latitude: number]
+```
+
+A tuple containing longitude and latitude coordinates.
+
+<ResponseField name="longitude" type="number" required>
+  The longitude coordinate (first element in the array).
+  
+  **Range:** -180 to 180
+</ResponseField>
+
+<ResponseField name="latitude" type="number" required>
+  The latitude coordinate (second element in the array).
+  
+  **Range:** -90 to 90
+</ResponseField>
+
+## Examples
+
+### Basic Custom Location
+
+```tsx
+import { MapView, CustomLocationProvider, LocationPuck } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView>
+      <CustomLocationProvider 
+        coordinate={[-122.4194, 37.7749]}  // San Francisco
+      >
+        <LocationPuck visible={true} />
+      </CustomLocationProvider>
+    </MapView>
+  );
+}
+```
+
+### With Heading
+
+```tsx
+import { MapView, CustomLocationProvider, LocationPuck } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView>
+      <CustomLocationProvider 
+        coordinate={[-73.9857, 40.7484]}  // New York
+        heading={90}  // Facing East
+      >
+        <LocationPuck 
+          puckBearing="heading"
+          puckBearingEnabled={true}
+        />
+      </CustomLocationProvider>
+    </MapView>
+  );
+}
+```
+
+### Animated Location Updates
+
+```tsx
+import { MapView, CustomLocationProvider, LocationPuck } from '@rnmapbox/maps';
+import { useState, useEffect } from 'react';
+
+function MyMap() {
+  const [position, setPosition] = useState<[number, number]>([
+    -122.4194, 37.7749
+  ]);
+  const [heading, setHeading] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Simulate movement
+      setPosition(([lng, lat]) => [
+        lng + 0.001,
+        lat + 0.001
+      ]);
+      
+      // Rotate heading
+      setHeading((prev) => (prev + 10) % 360);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <MapView>
+      <CustomLocationProvider 
+        coordinate={position}
+        heading={heading}
+      >
+        <LocationPuck 
+          puckBearing="heading"
+          puckBearingEnabled={true}
+        />
+      </CustomLocationProvider>
+    </MapView>
+  );
+}
+```
+
+### Route Playback
+
+```tsx
+import { MapView, CustomLocationProvider, LocationPuck } from '@rnmapbox/maps';
+import { useState, useEffect } from 'react';
+
+const route = [
+  [-122.4194, 37.7749],
+  [-122.4184, 37.7759],
+  [-122.4174, 37.7769],
+  // ... more coordinates
+];
+
+function RoutePlayback() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % route.length);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <MapView>
+      <CustomLocationProvider 
+        coordinate={route[currentIndex]}
+      >
+        <LocationPuck visible={true} />
+      </CustomLocationProvider>
+    </MapView>
+  );
+}
+```
+
+### Testing Location Features
+
+```tsx
+import { MapView, CustomLocationProvider, LocationPuck } from '@rnmapbox/maps';
+import { useState } from 'react';
+
+function LocationTest() {
+  const [testLocation, setTestLocation] = useState<[number, number]>([
+    -122.4194, 37.7749
+  ]);
+  
+  const testLocations = {
+    sanFrancisco: [-122.4194, 37.7749],
+    newYork: [-73.9857, 40.7484],
+    london: [-0.1278, 51.5074],
+    tokyo: [139.6917, 35.6895],
+  };
+  
+  return (
+    <>
+      <MapView>
+        <CustomLocationProvider coordinate={testLocation}>
+          <LocationPuck visible={true} />
+        </CustomLocationProvider>
+      </MapView>
+      
+      <View>
+        <Button 
+          title="San Francisco" 
+          onPress={() => setTestLocation(testLocations.sanFrancisco)}
+        />
+        <Button 
+          title="New York" 
+          onPress={() => setTestLocation(testLocations.newYork)}
+        />
+        <Button 
+          title="London" 
+          onPress={() => setTestLocation(testLocations.london)}
+        />
+        <Button 
+          title="Tokyo" 
+          onPress={() => setTestLocation(testLocations.tokyo)}
+        />
+      </View>
+    </>
+  );
+}
+```
+
+### With Camera Following
+
+```tsx
+import { MapView, Camera, CustomLocationProvider, LocationPuck } from '@rnmapbox/maps';
+import { useState } from 'react';
+
+function MyMap() {
+  const [location, setLocation] = useState<[number, number]>([
+    -122.4194, 37.7749
+  ]);
+  
+  return (
+    <MapView>
+      <Camera 
+        centerCoordinate={location}
+        zoomLevel={14}
+        animationMode="flyTo"
+        animationDuration={1000}
+      />
+      
+      <CustomLocationProvider coordinate={location}>
+        <LocationPuck visible={true} />
+      </CustomLocationProvider>
+    </MapView>
+  );
+}
+```
+
+## Use Cases
+
+### Testing
+
+Use `CustomLocationProvider` to test location-based features without requiring actual device movement:
+
+```tsx
+if (__DEV__) {
+  return (
+    <CustomLocationProvider coordinate={testCoordinate}>
+      <LocationPuck />
+    </CustomLocationProvider>
+  );
+}
+```
+
+### Simulation
+
+Simulate GPS tracks or routes for demonstrations:
+
+```tsx
+// Play back recorded GPS data
+<CustomLocationProvider 
+  coordinate={recordedTrack[currentIndex]}
+  heading={recordedHeading[currentIndex]}
+/>
+```
+
+### Alternative Location Sources
+
+Integrate with custom positioning systems (indoor positioning, etc.):
+
+```tsx
+const indoorPosition = useIndoorPositioning();
+
+<CustomLocationProvider 
+  coordinate={[indoorPosition.lng, indoorPosition.lat]}
+/>
+```
+
+## Notes
+
+- The `CustomLocationProvider` overrides native location services only for components within its scope
+- You can use it in conjunction with `UserLocation` component, but `LocationPuck` is recommended
+- The provider does not emit location update events - it simply provides a static or controlled location
+- For real device location, use `LocationPuck` or `UserLocation` without a `CustomLocationProvider`
+
+## See Also
+
+- [LocationPuck](/api/location-puck) - Native location puck component
+- [UserLocation](/api/user-location) - Legacy user location component
+- [locationManager](/api/location-manager) - Location manager singleton for native location services

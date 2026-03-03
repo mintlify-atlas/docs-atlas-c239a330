@@ -1,0 +1,260 @@
+---
+title: "Expo Setup Guide"
+description: "Configure Mapbox Maps SDK with Expo using the config plugin"
+---
+
+## Overview
+
+This guide covers how to use `@rnmapbox/maps` with Expo. The library includes a config plugin that automates most of the native configuration.
+
+<Warning>
+  This package cannot be used in the **Expo Go** app because it requires custom native code. You must use a custom development build or bare workflow.
+</Warning>
+
+## Prerequisites
+
+- Expo SDK 48 or higher
+- Node.js (v22.16.0 recommended)
+- Mapbox access token (see [Setup Access Token](/guides/setup-access-token))
+- [EAS CLI](https://docs.expo.dev/build/setup/) (for custom development builds)
+
+## Installation
+
+<Steps>
+  <Step title="Install the package">
+    Install `@rnmapbox/maps` using the Expo CLI:
+
+    ```bash
+    expo install @rnmapbox/maps
+    ```
+
+    This ensures you get a version compatible with your Expo SDK.
+  </Step>
+
+  <Step title="Add config plugin">
+    Add the config plugin to your `app.json`, `app.config.js`, or `app.config.ts`:
+
+    <CodeGroup>
+
+    ```json app.json
+    {
+      "expo": {
+        "plugins": [
+          [
+            "@rnmapbox/maps",
+            {
+              "RNMapboxMapsVersion": "11.18.2"
+            }
+          ]
+        ]
+      }
+    }
+    ```
+
+    ```js app.config.js
+    module.exports = {
+      expo: {
+        plugins: [
+          [
+            '@rnmapbox/maps',
+            {
+              RNMapboxMapsVersion: '11.18.2',
+            },
+          ],
+        ],
+      },
+    };
+    ```
+
+    ```ts app.config.ts
+    import { ExpoConfig } from 'expo/config';
+
+    const config: ExpoConfig = {
+      expo: {
+        plugins: [
+          [
+            '@rnmapbox/maps',
+            {
+              RNMapboxMapsVersion: '11.18.2',
+            },
+          ],
+        ],
+      },
+    };
+
+    export default config;
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Configure location permissions (Optional)">
+    If you want to show the user's current location, install and configure the `expo-location` plugin:
+
+    ```bash
+    npx expo install expo-location
+    ```
+
+    Then add it to your plugins array:
+
+    ```json app.json
+    {
+      "expo": {
+        "plugins": [
+          [
+            "expo-location",
+            {
+              "locationWhenInUsePermission": "Show current location on map."
+            }
+          ],
+          [
+            "@rnmapbox/maps",
+            {
+              "RNMapboxMapsVersion": "11.18.2"
+            }
+          ]
+        ]
+      }
+    }
+    ```
+
+    <Note>
+      You can customize the `locationWhenInUsePermission` message to better fit your app's use case.
+    </Note>
+  </Step>
+
+  <Step title="Create a custom development build">
+    Since this package requires custom native code, you need to create a custom development build:
+
+    <Tabs>
+      <Tab title="Local build">
+        ```bash
+        npx expo prebuild
+        npx expo run:ios
+        # or
+        npx expo run:android
+        ```
+      </Tab>
+      
+      <Tab title="EAS Build (Cloud)">
+        ```bash
+        eas build --profile development --platform ios
+        # or
+        eas build --profile development --platform android
+        ```
+      </Tab>
+    </Tabs>
+
+    For more information, see Expo's guide on [adding custom native code](https://docs.expo.io/workflow/customizing/).
+  </Step>
+</Steps>
+
+## Plugin Configuration Options
+
+The `@rnmapbox/maps` config plugin accepts the following options:
+
+### RNMapboxMapsVersion
+
+Override the native Mapbox SDK version:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.18.2"
+        }
+      ]
+    ]
+  }
+}
+```
+
+<Warning>
+  If you set a custom version, make sure to revisit it whenever you update `@rnmapbox/maps`. Using an incompatible version may cause build errors.
+</Warning>
+
+## Usage Example
+
+Once your custom build is ready, you can use Mapbox in your Expo app:
+
+```jsx App.js
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox, { MapView } from '@rnmapbox/maps';
+
+// Set your Mapbox access token
+Mapbox.setAccessToken('<YOUR_ACCESSTOKEN>');
+
+const App = () => {
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <MapView style={styles.map} />
+      </View>
+    </View>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    flex: 1,
+  },
+});
+```
+
+## Bare Workflow
+
+If you're using the bare workflow, you can follow the manual setup guides instead:
+
+- [iOS Setup Guide](/guides/ios-setup)
+- [Android Setup Guide](/guides/android-setup)
+
+## Troubleshooting
+
+### "Expo Go" compatibility error
+
+The library requires custom native code and cannot run in Expo Go. You must create a custom development build using `expo prebuild` or EAS Build.
+
+### Build fails after adding plugin
+
+1. Clear your build cache:
+   ```bash
+   npx expo prebuild --clean
+   ```
+
+2. Rebuild your app:
+   ```bash
+   npx expo run:ios
+   # or
+   npx expo run:android
+   ```
+
+### Changes to config plugin not taking effect
+
+After modifying the config plugin settings:
+
+1. Run `npx expo prebuild --clean` to regenerate native files
+2. Rebuild your app
+
+## Next Steps
+
+After completing the Expo setup:
+
+- [Set up your Mapbox access token](/guides/setup-access-token)
+- Explore the component documentation
+- Check out the example applications
+- Learn about [UserLocation](../docs/UserLocation.md) component for showing current location

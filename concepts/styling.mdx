@@ -1,0 +1,483 @@
+---
+title: Style Specifications
+description: Understanding Mapbox style properties and how to customize layer appearance
+---
+
+Mapbox styles control the visual appearance of map features. The SDK follows the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/), supporting both static values and dynamic expressions.
+
+## Style Properties
+
+Each layer type has specific style properties. Properties are categorized as:
+
+- **Paint properties** - Visual appearance (colors, opacity, width)
+- **Layout properties** - Feature placement and visibility
+
+## Property Value Types
+
+### Static Values
+
+Simple, constant values:
+
+```tsx
+<CircleLayer
+  id="points"
+  style={{
+    circleRadius: 8,              // number
+    circleColor: '#007cbf',       // color string
+    circleOpacity: 0.8,           // number (0-1)
+    circleStrokeWidth: 2,         // number
+  }}
+/>
+```
+
+### Color Formats
+
+Colors can be specified in multiple formats:
+
+```tsx
+style={{
+  circleColor: '#ff0000',                    // Hex
+  circleColor: 'rgb(255, 0, 0)',            // RGB
+  circleColor: 'rgba(255, 0, 0, 0.5)',      // RGBA
+  circleColor: 'hsl(0, 100%, 50%)',         // HSL
+  circleColor: 'hsla(0, 100%, 50%, 0.5)',   // HSLA
+}}
+```
+
+### Arrays
+
+Some properties accept arrays:
+
+```tsx
+style={{
+  lineDasharray: [2, 1],         // [dash, gap]
+  textOffset: [0, 1.5],          // [x, y]
+  iconOffset: [0, -10],          // [x, y]
+}}
+```
+
+## Property Reference by Layer
+
+### Circle Layer
+
+<Tabs>
+  <Tab title="Paint">
+    ```tsx
+    {
+      circleRadius: 10,
+      circleColor: '#007cbf',
+      circleBlur: 0,
+      circleOpacity: 1,
+      circleStrokeWidth: 2,
+      circleStrokeColor: '#ffffff',
+      circleStrokeOpacity: 1,
+      circlePitchAlignment: 'viewport',  // or 'map'
+      circlePitchScale: 'viewport',      // or 'map'
+    }
+    ```
+  </Tab>
+  <Tab title="Layout">
+    ```tsx
+    {
+      visibility: 'visible',  // or 'none'
+      circleSortKey: 0,       // rendering order
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Symbol Layer
+
+<Tabs>
+  <Tab title="Text Paint">
+    ```tsx
+    {
+      textColor: '#000000',
+      textHaloColor: '#ffffff',
+      textHaloWidth: 2,
+      textHaloBlur: 0,
+      textOpacity: 1,
+    }
+    ```
+  </Tab>
+  <Tab title="Text Layout">
+    ```tsx
+    {
+      textField: ['get', 'name'],
+      textFont: ['Open Sans Regular'],
+      textSize: 14,
+      textMaxWidth: 10,
+      textLineHeight: 1.2,
+      textAnchor: 'center',     // center|left|right|top|bottom|etc.
+      textOffset: [0, 0],
+      textRotate: 0,
+      textTransform: 'none',    // none|uppercase|lowercase
+      textAllowOverlap: false,
+      textIgnorePlacement: false,
+    }
+    ```
+  </Tab>
+  <Tab title="Icon Paint">
+    ```tsx
+    {
+      iconColor: '#000000',
+      iconHaloColor: '#ffffff',
+      iconHaloWidth: 0,
+      iconHaloBlur: 0,
+      iconOpacity: 1,
+    }
+    ```
+  </Tab>
+  <Tab title="Icon Layout">
+    ```tsx
+    {
+      iconImage: 'marker-icon',
+      iconSize: 1,
+      iconRotate: 0,
+      iconOffset: [0, 0],
+      iconAnchor: 'center',
+      iconAllowOverlap: false,
+      iconIgnorePlacement: false,
+      iconOptional: false,
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Line Layer
+
+<Tabs>
+  <Tab title="Paint">
+    ```tsx
+    {
+      lineColor: '#000000',
+      lineWidth: 1,
+      lineOpacity: 1,
+      lineGapWidth: 0,
+      lineOffset: 0,
+      lineBlur: 0,
+      lineDasharray: [1, 0],
+      linePattern: 'pattern-name',
+      lineGradient: [...],  // Requires lineMetrics: true
+    }
+    ```
+  </Tab>
+  <Tab title="Layout">
+    ```tsx
+    {
+      lineCap: 'butt',      // butt|round|square
+      lineJoin: 'miter',    // miter|round|bevel
+      lineMiterLimit: 2,
+      lineRoundLimit: 1.05,
+      lineSortKey: 0,
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Fill Layer
+
+<Tabs>
+  <Tab title="Paint">
+    ```tsx
+    {
+      fillColor: '#000000',
+      fillOpacity: 1,
+      fillOutlineColor: '#000000',
+      fillPattern: 'pattern-name',
+      fillAntialias: true,
+    }
+    ```
+  </Tab>
+  <Tab title="Layout">
+    ```tsx
+    {
+      fillSortKey: 0,
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Fill Extrusion Layer
+
+```tsx
+style={{
+  // Paint properties
+  fillExtrusionColor: '#000000',
+  fillExtrusionOpacity: 1,
+  fillExtrusionHeight: 0,
+  fillExtrusionBase: 0,
+  fillExtrusionPattern: 'pattern-name',
+  fillExtrusionVerticalGradient: true,
+}}
+```
+
+### Raster Layer
+
+```tsx
+style={{
+  rasterOpacity: 1,
+  rasterHueRotate: 0,
+  rasterBrightnessMin: 0,
+  rasterBrightnessMax: 1,
+  rasterSaturation: 0,
+  rasterContrast: 0,
+  rasterResampling: 'linear',  // linear|nearest
+  rasterFadeDuration: 300,
+}}
+```
+
+### Heatmap Layer
+
+```tsx
+style={{
+  heatmapRadius: 30,
+  heatmapWeight: 1,
+  heatmapIntensity: 1,
+  heatmapColor: [...],  // Expression required
+  heatmapOpacity: 1,
+}}
+```
+
+## Property Functions
+
+Properties can be dynamic based on zoom level or feature data.
+
+### Zoom Functions
+
+Change values based on zoom level:
+
+```tsx
+<CircleLayer
+  id="points"
+  style={{
+    circleRadius: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      5, 2,      // At zoom 5, radius is 2
+      10, 5,     // At zoom 10, radius is 5
+      15, 10,    // At zoom 15, radius is 10
+    ],
+  }}
+/>
+```
+
+### Step Functions
+
+Discrete value changes:
+
+```tsx
+style={{
+  circleColor: [
+    'step',
+    ['zoom'],
+    '#blue',     // Default color
+    8, '#green', // Zoom >= 8
+    12, '#red',  // Zoom >= 12
+  ],
+}}
+```
+
+### Property-based Values
+
+Use feature properties:
+
+```tsx
+style={{
+  circleColor: [
+    'match',
+    ['get', 'category'],
+    'restaurant', '#ff0000',
+    'hotel', '#0000ff',
+    'shop', '#00ff00',
+    '#cccccc',  // default
+  ],
+}}
+```
+
+### Case Expressions
+
+Conditional styling:
+
+```tsx
+style={{
+  circleRadius: [
+    'case',
+    ['boolean', ['feature-state', 'hover'], false],
+    10,  // If hovering
+    6,   // Default
+  ],
+}}
+```
+
+## Transitions
+
+Animate property changes:
+
+```tsx
+<CircleLayer
+  id="points"
+  style={{
+    circleRadius: 8,
+    circleColor: '#007cbf',
+  }}
+/>
+
+// Later, update with smooth transition
+<CircleLayer
+  id="points"
+  style={{
+    circleRadius: 12,
+    circleColor: '#ff0000',
+    // Transitions happen automatically
+  }}
+/>
+```
+
+<Info>
+Transitions are handled automatically by the native SDK. Duration and easing are based on the Mapbox GL style specification defaults.
+</Info>
+
+## Using Images in Styles
+
+Register images before using them in styles:
+
+```tsx
+import { Images } from '@rnmapbox/maps';
+
+<Images
+  images={{
+    'custom-marker': require('./marker.png'),
+    'stripe-pattern': require('./stripe.png'),
+  }}
+/>
+
+<SymbolLayer
+  id="markers"
+  style={{
+    iconImage: 'custom-marker',
+    iconSize: 1.5,
+  }}
+/>
+
+<FillLayer
+  id="patterned-fill"
+  style={{
+    fillPattern: 'stripe-pattern',
+  }}
+/>
+```
+
+## Complete Example
+
+```tsx
+import { MapView, Camera, ShapeSource, CircleLayer, SymbolLayer, LineLayer, Images } from '@rnmapbox/maps';
+
+const styles = {
+  // Zoom-based circle sizing
+  circles: {
+    circleRadius: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      8, 2,
+      16, 10,
+    ],
+    // Category-based coloring
+    circleColor: [
+      'match',
+      ['get', 'type'],
+      'restaurant', '#ff6b6b',
+      'hotel', '#4ecdc4',
+      'attraction', '#45b7d1',
+      '#95a5a6',  // default
+    ],
+    circleOpacity: 0.8,
+    circleStrokeWidth: 2,
+    circleStrokeColor: '#ffffff',
+  },
+  
+  // Data-driven line styling
+  routes: {
+    lineWidth: [
+      'interpolate',
+      ['exponential', 1.5],
+      ['zoom'],
+      10, 1,
+      18, 8,
+    ],
+    lineColor: [
+      'case',
+      ['boolean', ['get', 'active'], false],
+      '#007cbf',
+      '#cccccc',
+    ],
+    lineCap: 'round',
+    lineJoin: 'round',
+  },
+  
+  // Complex symbol styling
+  labels: {
+    iconImage: ['get', 'icon'],
+    iconSize: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      10, 0.5,
+      16, 1.2,
+    ],
+    textField: ['get', 'name'],
+    textSize: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      10, 10,
+      16, 16,
+    ],
+    textColor: '#000000',
+    textHaloColor: '#ffffff',
+    textHaloWidth: 2,
+    textAnchor: 'top',
+    textOffset: [0, 1],
+  },
+};
+
+const App = () => (
+  <MapView style={{ flex: 1 }}>
+    <Camera centerCoordinate={[-74.006, 40.7128]} zoomLevel={12} />
+    
+    <Images
+      images={{
+        'restaurant-icon': require('./restaurant.png'),
+        'hotel-icon': require('./hotel.png'),
+      }}
+    />
+    
+    <ShapeSource id="points" shape={pointsGeoJSON}>
+      <CircleLayer id="point-circles" style={styles.circles} />
+      <SymbolLayer id="point-labels" style={styles.labels} />
+    </ShapeSource>
+    
+    <ShapeSource id="routes" shape={routesGeoJSON}>
+      <LineLayer id="route-lines" style={styles.routes} />
+    </ShapeSource>
+  </MapView>
+);
+```
+
+## Best Practices
+
+<Note>
+1. **Use expressions for dynamic styling**: Leverage zoom and feature properties for responsive designs
+2. **Group related styles**: Keep style objects organized and reusable
+3. **Optimize property functions**: Minimize the number of stops in interpolations
+4. **Test across zoom levels**: Ensure styles work well at all supported zoom levels
+5. **Use appropriate property types**: Follow the spec for each layer type
+</Note>
+
+## Related
+
+- [Expressions](/concepts/expressions) - Data-driven styling with expressions
+- [Layers](/concepts/layers) - Layer types and usage
+- [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/) - Complete reference

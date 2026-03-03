@@ -1,0 +1,774 @@
+---
+title: MapView
+description: MapView component API reference for Mapbox Maps SDK for React Native
+---
+
+# MapView
+
+MapView backed by Mapbox Native GL. This is the core component that renders the map.
+
+## Import
+
+```tsx
+import { MapView } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Camera } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView
+      style={{ flex: 1 }}
+      styleURL="mapbox://styles/mapbox/streets-v12"
+    >
+      <Camera
+        centerCoordinate={[-74.006, 40.7128]}
+        zoomLevel={14}
+      />
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### projection
+
+<ParamField path="projection" type="'mercator' | 'globe'">
+  The projection used when rendering the map.
+</ParamField>
+
+### styleURL
+
+<ParamField path="styleURL" type="string">
+  Style URL for map. If none is set, it will default to `Mapbox.StyleURL.Street`.
+
+  ```tsx
+  <MapView styleURL="mapbox://styles/mapbox/streets-v12" />
+  ```
+</ParamField>
+
+### styleJSON
+
+<ParamField path="styleJSON" type="string">
+  StyleJSON for map according to [TileJSON specs](https://github.com/mapbox/tilejson-spec).
+</ParamField>
+
+### preferredFramesPerSecond
+
+<ParamField path="preferredFramesPerSecond" type="number">
+  **iOS:** The preferred frame rate at which the map view is rendered. The default value adapts based on the device capability.
+  
+  **Android:** The maximum frame rate at which the map view is rendered, limited by device hardware capability.
+  
+  This property can be set to arbitrary integer values.
+</ParamField>
+
+### zoomEnabled
+
+<ParamField path="zoomEnabled" type="boolean">
+  Enable or disable zoom gestures on the map.
+</ParamField>
+
+### scrollEnabled
+
+<ParamField path="scrollEnabled" type="boolean" default="true">
+  Enable or disable scroll/pan gestures on the map.
+</ParamField>
+
+### pitchEnabled
+
+<ParamField path="pitchEnabled" type="boolean" default="true">
+  Enable or disable pitch gestures on the map.
+</ParamField>
+
+### maxPitch
+
+<ParamField path="maxPitch" type="number">
+  Maximum allowed pitch in degrees. Mirrors the Mapbox map option `maxPitch`.
+</ParamField>
+
+### rotateEnabled
+
+<ParamField path="rotateEnabled" type="boolean" default="true">
+  Enable or disable rotation gestures on the map.
+</ParamField>
+
+### attributionEnabled
+
+<ParamField path="attributionEnabled" type="boolean" default="true">
+  Enable or disable attribution on the map. 
+  
+  <Warning>
+  The Mapbox terms of service require attribution notices to accompany maps using Mapbox-designed styles, OpenStreetMap data, or other Mapbox data. Do not hide this view or remove notices from it.
+  
+  You must also provide users with the option to disable telemetry. For iOS, add `MGLMapboxMetricsEnabledSettingShownInApp=YES` to your Info.plist.
+  </Warning>
+</ParamField>
+
+### attributionPosition
+
+<ParamField path="attributionPosition" type="{ top?: number, bottom?: number, left?: number, right?: number }">
+  Adds attribution offset. For example, `{top: 8, left: 8}` will put the attribution button in the top-left corner of the map.
+  
+  By default:
+  - **Android:** Attribution with information icon (i) on bottom left
+  - **iOS:** Mapbox logo on bottom left, information icon (i) on bottom right
+</ParamField>
+
+### tintColor
+
+<ParamField path="tintColor" type="string | number[]">
+  MapView's tint color.
+</ParamField>
+
+### logoEnabled
+
+<ParamField path="logoEnabled" type="boolean" default="true">
+  Enable or disable the Mapbox logo on the map.
+</ParamField>
+
+### logoPosition
+
+<ParamField path="logoPosition" type="{ top?: number, bottom?: number, left?: number, right?: number }">
+  Adds logo offset. For example, `{top: 8, left: 8}` will put the logo in the top-left corner of the map.
+</ParamField>
+
+### compassEnabled
+
+<ParamField path="compassEnabled" type="boolean" default="false">
+  Enable or disable the compass from appearing on the map.
+</ParamField>
+
+### compassFadeWhenNorth
+
+<ParamField path="compassFadeWhenNorth" type="boolean" default="false">
+  Enable or disable the compass fading out when the map is pointing north. **V10+ only.**
+</ParamField>
+
+### compassPosition
+
+<ParamField path="compassPosition" type="{ top?: number, bottom?: number, left?: number, right?: number }">
+  Adds compass offset. For example, `{top: 8, left: 8}` will put the compass in the top-left corner of the map. **V10+ only.**
+</ParamField>
+
+### compassViewPosition
+
+<ParamField path="compassViewPosition" type="number">
+  Change corner of map the compass starts at:
+  - `0`: TopLeft
+  - `1`: TopRight
+  - `2`: BottomLeft
+  - `3`: BottomRight
+</ParamField>
+
+### compassViewMargins
+
+<ParamField path="compassViewMargins" type="{ x: number, y: number }">
+  Add margins to the compass with x and y values.
+</ParamField>
+
+### compassImage
+
+<ParamField path="compassImage" type="string">
+  A string referencing an image key. Requires an `Images` component. **iOS only, V10+ only.**
+</ParamField>
+
+### scaleBarEnabled
+
+<ParamField path="scaleBarEnabled" type="boolean" default="true">
+  Enable or disable the scale bar from appearing on the map. **V10+ only.**
+</ParamField>
+
+### scaleBarPosition
+
+<ParamField path="scaleBarPosition" type="{ top?: number, bottom?: number, left?: number, right?: number }">
+  Adds scale bar offset. For example, `{top: 8, left: 8}` will put the scale bar in the top-left corner of the map. **V10+ only.**
+</ParamField>
+
+### surfaceView
+
+<ParamField path="surfaceView" type="boolean" default="true">
+  Enable or disable use of GLSurfaceView instead of TextureView. **Android only.**
+</ParamField>
+
+### requestDisallowInterceptTouchEvent
+
+<ParamField path="requestDisallowInterceptTouchEvent" type="boolean" default="false">
+  Experimental: Call requestDisallowInterceptTouchEvent on parent with onTouchEvent. This allows touch interaction to work when embedded into a scroll view. **Android only.**
+</ParamField>
+
+### localizeLabels
+
+<ParamField path="localizeLabels" type="{ locale: string, layerIds?: string[] } | true">
+  Set map's label locale. **V10+ only.**
+  
+  - `{ locale: "es" }` - Localize labels to Spanish
+  - `{ locale: "current" }` - Localize labels to system locale
+  - `true` - Equivalent to `{ locale: "current" }`
+  
+  Optionally specify `layerIds` to localize only specific layers.
+  
+  ```tsx
+  <MapView localizeLabels={{ locale: "es" }} />
+  ```
+</ParamField>
+
+### gestureSettings
+
+<ParamField path="gestureSettings" type="GestureSettings">
+  Gesture configuration to control user touch interaction.
+  
+  ```tsx
+  <MapView
+    gestureSettings={{
+      doubleTapToZoomInEnabled: true,
+      pinchZoomEnabled: true,
+      rotateEnabled: true,
+    }}
+  />
+  ```
+  
+  **GestureSettings Properties:**
+  
+  - `doubleTapToZoomInEnabled?: boolean` - Double tap with one touch to zoom in
+  - `doubleTouchToZoomOutEnabled?: boolean` - Single tap with two touches to zoom out
+  - `pinchPanEnabled?: boolean` - Pan/scroll for pinch gesture
+  - `pinchZoomEnabled?: boolean` - Zoom for pinch gesture
+  - `pinchZoomDecelerationEnabled?: boolean` - Deceleration animation after pinch-zoom (Android only)
+  - `pitchEnabled?: boolean` - Pitch gesture enabled
+  - `quickZoomEnabled?: boolean` - Quick zoom gesture enabled
+  - `rotateEnabled?: boolean` - Rotate gesture enabled
+  - `rotateDecelerationEnabled?: boolean` - Deceleration animation after rotate (Android only)
+  - `panEnabled?: boolean` - Single-touch pan/scroll gesture
+  - `panDecelerationFactor?: number` - Pan deceleration speed factor
+  - `simultaneousRotateAndPinchZoomEnabled?: boolean` - Rotation during pinch zoom
+  - `zoomAnimationAmount?: number` - Zoom level change during double-tap gestures (Android only)
+</ParamField>
+
+### contentInset
+
+<ParamField path="contentInset" type="number | number[]">
+  <Warning>Deprecated: Use Camera `padding` instead.</Warning>
+  
+  The distance from the edges of the map view's frame to the edges of the map view's logical viewport.
+</ParamField>
+
+### deselectAnnotationOnTap
+
+<ParamField path="deselectAnnotationOnTap" type="boolean" default="false">
+  Set to true to deselect any selected annotation when the map is tapped. If set to true, you will not receive the onPress event for taps that deselect an annotation.
+</ParamField>
+
+## Events
+
+### onPress
+
+<ParamField path="onPress" type="(feature: GeoJSON.Feature) => void">
+  Called when a user presses the map.
+  
+  ```tsx
+  <MapView
+    onPress={(feature) => {
+      console.log('Pressed at:', feature.geometry.coordinates);
+    }}
+  />
+  ```
+</ParamField>
+
+### onLongPress
+
+<ParamField path="onLongPress" type="(feature: GeoJSON.Feature) => void">
+  Called when a user long presses the map.
+</ParamField>
+
+### onCameraChanged
+
+<ParamField path="onCameraChanged" type="(state: MapState) => void">
+  Called whenever the map camera is changing. **V10+ only, replaces onRegionIsChanging.**
+  
+  ```tsx
+  <MapView
+    onCameraChanged={(state) => {
+      console.log('Camera:', state.properties.center, state.properties.zoom);
+    }}
+  />
+  ```
+</ParamField>
+
+### onMapIdle
+
+<ParamField path="onMapIdle" type="(state: MapState) => void">
+  Called when the map becomes idle after camera movement. **V10+ only, replaces onRegionDidChange.**
+</ParamField>
+
+### onRegionWillChange
+
+<ParamField path="onRegionWillChange" type="(feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => void">
+  <Warning>Deprecated: Use onCameraChanged instead. Will be removed in v10.</Warning>
+  
+  Called when the displayed map region is about to change.
+</ParamField>
+
+### onRegionIsChanging
+
+<ParamField path="onRegionIsChanging" type="(feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => void">
+  <Warning>Deprecated: Use onCameraChanged instead.</Warning>
+  
+  Called when the displayed map region is changing.
+</ParamField>
+
+### onRegionDidChange
+
+<ParamField path="onRegionDidChange" type="(feature: GeoJSON.Feature<GeoJSON.Point, RegionPayload>) => void">
+  <Warning>Deprecated: Use onMapIdle instead.</Warning>
+  
+  Called when the displayed map region finished changing.
+</ParamField>
+
+### onWillStartLoadingMap
+
+<ParamField path="onWillStartLoadingMap" type="() => void">
+  Called when the map is about to start loading a new style.
+</ParamField>
+
+### onDidFinishLoadingMap
+
+<ParamField path="onDidFinishLoadingMap" type="() => void">
+  Called when the map has successfully loaded a new style.
+</ParamField>
+
+### onMapLoadingError
+
+<ParamField path="onMapLoadingError" type="() => void">
+  Called when there is an error during map load. **V10+ only, replaces onDidFailLoadingMap.**
+</ParamField>
+
+### onDidFailLoadingMap
+
+<ParamField path="onDidFailLoadingMap" type="() => void">
+  <Warning>Deprecated: Use onMapLoadingError instead.</Warning>
+  
+  Called when the map has failed to load a new style.
+</ParamField>
+
+### onWillStartRenderingFrame
+
+<ParamField path="onWillStartRenderingFrame" type="() => void">
+  Called when the map will start rendering a frame.
+</ParamField>
+
+### onDidFinishRenderingFrame
+
+<ParamField path="onDidFinishRenderingFrame" type="() => void">
+  Called when the map finished rendering a frame.
+</ParamField>
+
+### onDidFinishRenderingFrameFully
+
+<ParamField path="onDidFinishRenderingFrameFully" type="() => void">
+  Called when the map fully finished rendering a frame.
+</ParamField>
+
+### onWillStartRenderingMap
+
+<ParamField path="onWillStartRenderingMap" type="() => void">
+  Called when the map will start rendering.
+</ParamField>
+
+### onDidFinishRenderingMap
+
+<ParamField path="onDidFinishRenderingMap" type="() => void">
+  Called when the map finished rendering.
+</ParamField>
+
+### onDidFinishRenderingMapFully
+
+<ParamField path="onDidFinishRenderingMapFully" type="() => void">
+  Called when the map fully finished rendering.
+</ParamField>
+
+### onUserLocationUpdate
+
+<ParamField path="onUserLocationUpdate" type="(location: Location) => void">
+  Called when the user location is updated.
+</ParamField>
+
+### onDidFinishLoadingStyle
+
+<ParamField path="onDidFinishLoadingStyle" type="() => void">
+  Called when a style has finished loading.
+</ParamField>
+
+### regionWillChangeDebounceTime
+
+<ParamField path="regionWillChangeDebounceTime" type="number" default="10">
+  The emitted frequency of regionwillchange events in milliseconds.
+</ParamField>
+
+### regionDidChangeDebounceTime
+
+<ParamField path="regionDidChangeDebounceTime" type="number" default="500">
+  The emitted frequency of regiondidchange events in milliseconds.
+</ParamField>
+
+## Methods
+
+To use imperative methods, create a ref:
+
+```tsx
+const mapRef = useRef<MapView>(null);
+
+<MapView ref={mapRef} />
+```
+
+### getPointInView()
+
+```tsx
+getPointInView(coordinate: Position): Promise<Position>
+```
+
+Converts a geographic coordinate to a point in the map view's coordinate system.
+
+```tsx
+const pointInView = await mapRef.current?.getPointInView([-37.817070, 144.949901]);
+```
+
+### getCoordinateFromView()
+
+```tsx
+getCoordinateFromView(point: Position): Promise<Position>
+```
+
+Converts a point in the map view's coordinate system to a geographic coordinate.
+
+```tsx
+const coordinate = await mapRef.current?.getCoordinateFromView([100, 100]);
+```
+
+### getVisibleBounds()
+
+```tsx
+getVisibleBounds(): Promise<[Position, Position]>
+```
+
+Returns the coordinate bounds (ne, sw) visible in the viewport.
+
+```tsx
+const visibleBounds = await mapRef.current?.getVisibleBounds();
+```
+
+### queryRenderedFeaturesAtPoint()
+
+```tsx
+queryRenderedFeaturesAtPoint(
+  coordinate: Position,
+  filter?: FilterExpression | [],
+  layerIDs?: string[]
+): Promise<GeoJSON.FeatureCollection | undefined>
+```
+
+Returns rendered map features that intersect with a given point.
+
+```tsx
+const features = await mapRef.current?.queryRenderedFeaturesAtPoint(
+  [30, 40],
+  ['==', 'type', 'Point'],
+  ['poi-layer']
+);
+```
+
+### queryRenderedFeaturesInRect()
+
+```tsx
+queryRenderedFeaturesInRect(
+  bbox: [number, number, number, number] | [],
+  filter?: FilterExpression | [],
+  layerIDs?: string[] | null
+): Promise<GeoJSON.FeatureCollection | undefined>
+```
+
+Returns rendered map features that intersect with the given rectangle. In v10, passing an empty array queries the entire visible bounds.
+
+```tsx
+const features = await mapRef.current?.queryRenderedFeaturesInRect(
+  [30, 40, 20, 10], // [top, right, bottom, left]
+  ['==', 'type', 'Point'],
+  ['poi-layer']
+);
+```
+
+### querySourceFeatures()
+
+```tsx
+querySourceFeatures(
+  sourceId: string,
+  filter?: FilterExpression | [],
+  sourceLayerIDs?: string[]
+): Promise<GeoJSON.FeatureCollection>
+```
+
+Returns GeoJSON features within a vector tile or GeoJSON source that satisfy the query parameters.
+
+```tsx
+const features = await mapRef.current?.querySourceFeatures(
+  'composite',
+  ['==', 'type', 'park'],
+  ['landuse']
+);
+```
+
+### takeSnap()
+
+```tsx
+takeSnap(writeToDisk?: boolean): Promise<string>
+```
+
+Takes a snapshot of the map with current tiles and returns a URI to the image.
+
+```tsx
+const uri = await mapRef.current?.takeSnap(true);
+```
+
+### getZoom()
+
+```tsx
+getZoom(): Promise<number>
+```
+
+Returns the current zoom level of the map.
+
+```tsx
+const zoom = await mapRef.current?.getZoom();
+```
+
+### getCenter()
+
+```tsx
+getCenter(): Promise<Position>
+```
+
+Returns the map's geographical center point.
+
+```tsx
+const center = await mapRef.current?.getCenter();
+```
+
+### clearData()
+
+```tsx
+clearData(): Promise<void>
+```
+
+Clears temporary map data from the data path. Useful to reduce disk usage or clear invalid cache. **V10+ only.**
+
+### queryTerrainElevation()
+
+```tsx
+queryTerrainElevation(coordinate: Position): Promise<number>
+```
+
+Queries elevation at a geographical location. Returns elevation in meters relative to mean sea-level. Returns null if terrain is disabled or data hasn't loaded.
+
+```tsx
+const elevation = await mapRef.current?.queryTerrainElevation([-122.4194, 37.7749]);
+```
+
+### setSourceVisibility()
+
+```tsx
+setSourceVisibility(
+  visible: boolean,
+  sourceId: string,
+  sourceLayerId?: string | null
+): void
+```
+
+Sets the visibility of all layers referencing the specified source.
+
+```tsx
+await mapRef.current?.setSourceVisibility(false, 'composite', 'building');
+```
+
+### setFeatureState()
+
+```tsx
+setFeatureState(
+  featureId: string,
+  state: { [k: string]: any },
+  sourceId: string,
+  sourceLayerId?: string | null
+): Promise<void>
+```
+
+Updates the state map of a feature within a style source. Only listed entries are updated; others retain previous values.
+
+```tsx
+await mapRef.current?.setFeatureState(
+  'feature-1',
+  { hover: true },
+  'my-source',
+  'my-source-layer'
+);
+```
+
+### getFeatureState()
+
+```tsx
+getFeatureState(
+  featureId: string,
+  sourceId: string,
+  sourceLayerId?: string | null
+): Promise<Record<string, unknown>>
+```
+
+Returns the state map of a feature within a style source.
+
+```tsx
+const state = await mapRef.current?.getFeatureState(
+  'feature-1',
+  'my-source',
+  'my-source-layer'
+);
+```
+
+### removeFeatureState()
+
+```tsx
+removeFeatureState(
+  featureId: string,
+  stateKey: string | null,
+  sourceId: string,
+  sourceLayerId?: string | null
+): Promise<void>
+```
+
+Removes entries from a feature state object. If `stateKey` is null, all properties are removed.
+
+```tsx
+await mapRef.current?.removeFeatureState(
+  'feature-1',
+  'hover',
+  'my-source',
+  'my-source-layer'
+);
+```
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Map">
+    ```tsx
+    import { MapView, Camera } from '@rnmapbox/maps';
+
+    function BasicMap() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          styleURL="mapbox://styles/mapbox/streets-v12"
+        >
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={14}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With Gestures">
+    ```tsx
+    import { MapView, Camera } from '@rnmapbox/maps';
+
+    function MapWithGestures() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          zoomEnabled={true}
+          scrollEnabled={true}
+          pitchEnabled={true}
+          rotateEnabled={true}
+          gestureSettings={{
+            doubleTapToZoomInEnabled: true,
+            pinchZoomEnabled: true,
+          }}
+          onPress={(feature) => {
+            console.log('Tapped at:', feature.geometry.coordinates);
+          }}
+        >
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={14}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Globe Projection">
+    ```tsx
+    import { MapView, Camera } from '@rnmapbox/maps';
+
+    function GlobeMap() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          projection="globe"
+          styleURL="mapbox://styles/mapbox/standard"
+        >
+          <Camera
+            centerCoordinate={[0, 0]}
+            zoomLevel={1}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With Methods">
+    ```tsx
+    import { useRef } from 'react';
+    import { MapView, Camera } from '@rnmapbox/maps';
+    import { Button } from 'react-native';
+
+    function MapWithMethods() {
+      const mapRef = useRef<MapView>(null);
+
+      const handleSnapshot = async () => {
+        const uri = await mapRef.current?.takeSnap(true);
+        console.log('Snapshot saved to:', uri);
+      };
+
+      const handleGetZoom = async () => {
+        const zoom = await mapRef.current?.getZoom();
+        console.log('Current zoom:', zoom);
+      };
+
+      return (
+        <>
+          <MapView ref={mapRef} style={{ flex: 1 }}>
+            <Camera
+              centerCoordinate={[-74.006, 40.7128]}
+              zoomLevel={14}
+            />
+          </MapView>
+          <Button title="Take Snapshot" onPress={handleSnapshot} />
+          <Button title="Get Zoom" onPress={handleGetZoom} />
+        </>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Related Components
+
+- [Camera](/api/camera) - Control the map camera
+- [UserLocation](/api/user-location) - Show user location
+- [StyleImport](/api/style-import) - Configure standard style

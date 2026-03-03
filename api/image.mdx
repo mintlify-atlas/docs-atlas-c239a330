@@ -1,0 +1,310 @@
+---
+title: Image
+description: Image component API reference for Mapbox Maps SDK for React Native
+---
+
+# Image
+
+The Image component allows you to register a single image with the map using a React Native View as the source. This is useful for creating custom marker icons from React components.
+
+## Import
+
+```tsx
+import { Image } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Images, Image } from '@rnmapbox/maps';
+import { View, Text } from 'react-native';
+
+function MapWithCustomImage() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Images>
+        <Image name="customMarker">
+          <View style={{ width: 30, height: 30, backgroundColor: 'red' }}>
+            <Text>📍</Text>
+          </View>
+        </Image>
+      </Images>
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### name
+
+<ParamField path="name" type="string" required>
+  ID of the image. This name is used to reference the image in layer styles.
+
+  ```tsx
+  <Image name="myMarker">
+    <View style={{ width: 30, height: 30 }} />
+  </Image>
+  ```
+</ParamField>
+
+### sdf
+
+<ParamField path="sdf" type="boolean">
+  Make image an SDF (Signed Distance Field) icon. SDF icons can be recolored using style properties.
+  
+  See [SDF icons documentation](https://docs.mapbox.com/help/troubleshooting/using-recolorable-images-in-mapbox-maps/) for more information.
+
+  ```tsx
+  <Image name="sdfIcon" sdf={true}>
+    <View style={{ width: 30, height: 30 }} />
+  </Image>
+  ```
+</ParamField>
+
+### stretchX
+
+<ParamField path="stretchX" type="[number, number][]">
+  An array of two-element arrays, consisting of two numbers that represent the from position and the to position of areas that can be stretched horizontally.
+  
+  Useful for creating resizable UI elements like buttons or speech bubbles.
+
+  ```tsx
+  <Image name="button" stretchX={[[10, 20], [30, 40]]}>
+    <View style={{ width: 50, height: 30 }} />
+  </Image>
+  ```
+</ParamField>
+
+### stretchY
+
+<ParamField path="stretchY" type="[number, number][]">
+  An array of two-element arrays, consisting of two numbers that represent the from position and the to position of areas that can be stretched vertically.
+  
+  Useful for creating resizable UI elements like buttons or speech bubbles.
+
+  ```tsx
+  <Image name="button" stretchY={[[10, 20]]}>
+    <View style={{ width: 50, height: 30 }} />
+  </Image>
+  ```
+</ParamField>
+
+### content
+
+<ParamField path="content" type="[number, number, number, number]">
+  An array of four numbers, with the first two specifying the left-top corner, and the last two specifying the right-bottom corner.
+  
+  If present, and if the icon uses `icon-text-fit`, the symbol's text will be fit inside the content box.
+
+  ```tsx
+  <Image name="textBox" content={[5, 5, 45, 25]}>
+    <View style={{ width: 50, height: 30 }} />
+  </Image>
+  ```
+</ParamField>
+
+### scale
+
+<ParamField path="scale" type="number">
+  Scale factor for the image. Use values greater than 1 for higher resolution displays.
+
+  ```tsx
+  <Image name="hdIcon" scale={2}>
+    <View style={{ width: 60, height: 60 }} />
+  </Image>
+  ```
+</ParamField>
+
+### children
+
+<ParamField path="children" type="ReactElement" required>
+  Single React Native view rendering the image. This can be any React Native component.
+
+  ```tsx
+  <Image name="marker">
+    <View style={{ width: 30, height: 30, backgroundColor: 'blue' }} />
+  </Image>
+  ```
+</ParamField>
+
+## Methods
+
+### refresh()
+
+```tsx
+refresh(): void
+```
+
+Forces the image to re-render. Useful when the child view has changed and you need to update the image on the map.
+
+```tsx
+import { useRef } from 'react';
+import { Image } from '@rnmapbox/maps';
+
+function MyComponent() {
+  const imageRef = useRef<Image>(null);
+  
+  const updateImage = () => {
+    // Update the view content somehow
+    // Then refresh the image
+    imageRef.current?.refresh();
+  };
+  
+  return (
+    <Image name="marker" ref={imageRef}>
+      <DynamicView />
+    </Image>
+  );
+}
+```
+
+## Examples
+
+<Tabs>
+  <Tab title="Custom Marker">
+    ```tsx
+    import { MapView, Images, Image, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+    import { View, Text } from 'react-native';
+
+    function CustomMarkerExample() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images>
+            <Image name="customPin">
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  backgroundColor: '#FF5722',
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 20 }}>📍</Text>
+              </View>
+            </Image>
+          </Images>
+          
+          <ShapeSource id="point" shape={pointGeoJSON}>
+            <SymbolLayer id="marker" style={{ iconImage: 'customPin' }} />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="SDF Icon">
+    ```tsx
+    import { MapView, Images, Image, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+    import { View } from 'react-native';
+
+    function SDFIconExample() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images>
+            <Image name="sdfMarker" sdf={true}>
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  backgroundColor: 'white',
+                  borderRadius: 15,
+                }}
+              />
+            </Image>
+          </Images>
+          
+          <ShapeSource id="points" shape={pointsGeoJSON}>
+            <SymbolLayer
+              id="markers"
+              style={{
+                iconImage: 'sdfMarker',
+                iconColor: ['get', 'color'], // Dynamic color from feature properties
+              }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With FastImage">
+    ```tsx
+    import { MapView, Images, Image, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+    import FastImage from 'react-native-fast-image';
+
+    function FastImageExample() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images>
+            <Image name="avatar">
+              <FastImage
+                source={{ uri: 'https://example.com/avatar.png' }}
+                style={{ width: 40, height: 40, borderRadius: 20 }}
+              />
+            </Image>
+          </Images>
+          
+          <ShapeSource id="users" shape={usersGeoJSON}>
+            <SymbolLayer id="avatars" style={{ iconImage: 'avatar' }} />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Stretchable Image">
+    ```tsx
+    import { MapView, Images, Image, SymbolLayer, ShapeSource } from '@rnmapbox/maps';
+    import { View, Text } from 'react-native';
+
+    function StretchableImageExample() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Images>
+            <Image
+              name="speechBubble"
+              stretchX={[[10, 30]]}
+              stretchY={[[10, 20]}
+              content={[5, 5, 35, 25]}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 30,
+                  backgroundColor: 'white',
+                  borderRadius: 5,
+                  borderWidth: 2,
+                  borderColor: '#333',
+                }}
+              />
+            </Image>
+          </Images>
+          
+          <ShapeSource id="labels" shape={labelsGeoJSON}>
+            <SymbolLayer
+              id="bubbles"
+              style={{
+                iconImage: 'speechBubble',
+                iconTextFit: 'both',
+                textField: ['get', 'label'],
+              }}
+            />
+          </ShapeSource>
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Related Components
+
+- [Images](/api/images) - Container for multiple images
+- [SymbolLayer](/api/symbol-layer) - Layer that displays icons and text
+- [ShapeSource](/api/shape-source) - GeoJSON data source

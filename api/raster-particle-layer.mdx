@@ -1,0 +1,124 @@
+---
+title: RasterParticleLayer
+description: Renders particle animations driven by velocity data
+---
+
+RasterParticleLayer renders a particle animation driven by velocity data from a raster array source. This is typically used to visualize wind patterns, ocean currents, or other directional flow data.
+
+**Experimental:** This component requires Mapbox Maps SDK v11.4.0 or later.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#raster-particle)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain data.
+</ParamField>
+
+<ParamField path="sourceLayerID" type="string">
+  Identifier of the layer within the source.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="slot" type="'bottom' | 'middle' | 'top'">
+  The slot this layer is assigned to. v11 only
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  Minimum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  Maximum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="RasterParticleLayerStyleProps" required>
+  Customizable style attributes.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.rasterParticleArrayBand" type="string">
+  Displayed band of raster array source layer.
+</ParamField>
+
+<ParamField path="style.rasterParticleCount" type="number" default="512">
+  Defines the amount of particles per tile. Minimum: 1
+</ParamField>
+
+<ParamField path="style.rasterParticleColor" type="string">
+  Defines a color map by which to colorize a raster particle layer, parameterized by the rasterParticleSpeed expression.
+</ParamField>
+
+<ParamField path="style.rasterParticleMaxSpeed" type="number" default="1">
+  Defines the maximum speed for particles. Velocities with magnitudes equal to or exceeding this value are clamped to the max value. Minimum: 1
+</ParamField>
+
+<ParamField path="style.rasterParticleSpeedFactor" type="number" default="0.2">
+  Defines a coefficient for the speed of particles' motion. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.rasterParticleFadeOpacityFactor" type="number" default="0.98">
+  Defines the opacity coefficient applied to the faded particles in each frame. In practice, this property controls the length of the particle tail. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.rasterParticleResetRateFactor" type="number" default="0.8">
+  Defines a coefficient for a time period at which particles will restart at a random position, to avoid degeneration (empty areas without particles). Range: 0-1.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, RasterSource, RasterParticleLayer } from '@rnmapbox/maps';
+
+function Map() {
+  return (
+    <MapView>
+      <RasterSource
+        id="wind-data"
+        url="mapbox://wind-velocity-data"
+      >
+        <RasterParticleLayer
+          id="wind-particles"
+          style={{
+            rasterParticleCount: 1024,
+            rasterParticleMaxSpeed: 20,
+            rasterParticleSpeedFactor: 0.3,
+            rasterParticleColor: [
+              'interpolate',
+              ['linear'],
+              ['raster-particle-speed'],
+              0, 'rgba(0,0,255,0.5)',
+              10, 'rgba(255,255,0,0.5)',
+              20, 'rgba(255,0,0,0.5)',
+            ],
+          }}
+        />
+      </RasterSource>
+    </MapView>
+  );
+}
+```

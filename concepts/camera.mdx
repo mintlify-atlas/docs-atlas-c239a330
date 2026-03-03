@@ -1,0 +1,425 @@
+---
+title: Camera
+description: Control camera position, animation, and user tracking with the Camera component
+---
+
+The `Camera` component controls the perspective from which users view the map. It manages position (center coordinate), zoom level, bearing (heading), pitch (tilt), and padding.
+
+## Basic Usage
+
+```tsx
+import { MapView, Camera } from '@rnmapbox/maps';
+
+<MapView style={{ flex: 1 }}>
+  <Camera
+    centerCoordinate={[-74.006, 40.7128]}  // [longitude, latitude]
+    zoomLevel={12}
+  />
+</MapView>
+```
+
+## Camera Properties
+
+### Position and Zoom
+
+```tsx
+<Camera
+  centerCoordinate={[-122.4194, 37.7749]}  // San Francisco
+  zoomLevel={14}
+  heading={90}     // Rotation in degrees (0-360)
+  pitch={60}       // Tilt in degrees (0-60)
+/>
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `centerCoordinate` | `[number, number]` | Map center as `[longitude, latitude]` |
+| `zoomLevel` | `number` | Zoom level (0-22) |
+| `heading` | `number` | Map bearing/rotation (0-360°) |
+| `pitch` | `number` | Map tilt (0-60°) |
+
+### Viewport Padding
+
+Add padding to offset the camera center:
+
+```tsx
+<Camera
+  centerCoordinate={[-74.006, 40.7128]}
+  zoomLevel={12}
+  padding={{
+    paddingTop: 100,
+    paddingBottom: 50,
+    paddingLeft: 20,
+    paddingRight: 20,
+  }}
+/>
+```
+
+<Info>
+Padding is useful when UI elements overlay the map. The camera center will be offset so the geographic center appears in the unobstructed area.
+</Info>
+
+### Bounds
+
+Fit the camera to a bounding box:
+
+```tsx
+<Camera
+  bounds={{
+    ne: [-73.9712, 40.7831],  // Northeast corner
+    sw: [-74.0402, 40.6829],  // Southwest corner
+  }}
+  padding={{
+    paddingTop: 50,
+    paddingBottom: 50,
+    paddingLeft: 50,
+    paddingRight: 50,
+  }}
+/>
+```
+
+## Animation
+
+### Animation Modes
+
+Control how the camera transitions between positions:
+
+<CodeGroup>
+```tsx easeTo (Default)
+<Camera
+  centerCoordinate={[-74.006, 40.7128]}
+  zoomLevel={12}
+  animationMode="easeTo"      // Smooth easing animation
+  animationDuration={2000}     // 2 seconds
+/>
+```
+
+```tsx flyTo
+<Camera
+  centerCoordinate={[-122.4194, 37.7749]}
+  animationMode="flyTo"        // Realistic flight path
+  animationDuration={3000}
+/>
+```
+
+```tsx linearTo
+<Camera
+  centerCoordinate={[-0.1276, 51.5074]}
+  animationMode="linearTo"     // Linear interpolation
+  animationDuration={1000}
+/>
+```
+
+```tsx moveTo
+<Camera
+  centerCoordinate={[2.3522, 48.8566]}
+  animationMode="moveTo"       // Instant, no animation
+/>
+```
+</CodeGroup>
+
+| Mode | Description | Best For |
+|------|-------------|----------|
+| `easeTo` | Smooth easing transition | Short distances |
+| `flyTo` | Zooms out then in, like flying | Long distances |
+| `linearTo` | Linear interpolation | Controlled animations |
+| `moveTo` | Instant jump, no animation | Immediate updates |
+| `none` | No animation | Static updates |
+
+## Zoom Constraints
+
+Limit the user's ability to zoom:
+
+```tsx
+<Camera
+  centerCoordinate={[-74.006, 40.7128]}
+  zoomLevel={12}
+  minZoomLevel={10}   // Prevent zooming out past level 10
+  maxZoomLevel={16}   // Prevent zooming in past level 16
+/>
+```
+
+## Bounds Constraints
+
+Restrict camera panning to a geographic area:
+
+```tsx
+<Camera
+  centerCoordinate={[-74.006, 40.7128]}
+  zoomLevel={12}
+  maxBounds={{
+    ne: [-73.9, 40.8],   // Northeast boundary
+    sw: [-74.1, 40.7],   // Southwest boundary
+  }}
+/>
+```
+
+## User Location Tracking
+
+Follow the user's location with various tracking modes:
+
+```tsx
+import { Camera, UserTrackingMode } from '@rnmapbox/maps';
+
+<Camera
+  followUserLocation={true}
+  followUserMode={UserTrackingMode.Follow}  // or FollowWithHeading, FollowWithCourse
+  followZoomLevel={16}
+  followPitch={45}
+/>
+```
+
+### Tracking Modes
+
+| Mode | Behavior |
+|------|----------|
+| `UserTrackingMode.Follow` | Centers on user location |
+| `UserTrackingMode.FollowWithHeading` | Centers and rotates map to device heading |
+| `UserTrackingMode.FollowWithCourse` | Centers and rotates to movement direction |
+
+## Imperative Camera Control
+
+Use a ref to control the camera programmatically:
+
+```tsx
+import { useRef } from 'react';
+import { Camera } from '@rnmapbox/maps';
+import type { CameraRef } from '@rnmapbox/maps';
+
+const App = () => {
+  const cameraRef = useRef<CameraRef>(null);
+
+  const flyToNewYork = () => {
+    cameraRef.current?.setCamera({
+      centerCoordinate: [-74.006, 40.7128],
+      zoomLevel: 14,
+      animationDuration: 2000,
+    });
+  };
+
+  const fitToBounds = () => {
+    cameraRef.current?.fitBounds(
+      [-73.9712, 40.7831],  // Northeast
+      [-74.0402, 40.6829],  // Southwest
+      [50, 50, 50, 50],     // Padding [top, right, bottom, left]
+      1000                   // Duration
+    );
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera ref={cameraRef} />
+    </MapView>
+  );
+};
+```
+
+### Camera Methods
+
+#### setCamera
+
+Set multiple camera properties at once:
+
+```tsx
+cameraRef.current?.setCamera({
+  centerCoordinate: [-122.4194, 37.7749],
+  zoomLevel: 14,
+  heading: 90,
+  pitch: 60,
+  animationMode: 'flyTo',
+  animationDuration: 2000,
+});
+```
+
+#### flyTo
+
+Fly to a coordinate with realistic animation:
+
+```tsx
+cameraRef.current?.flyTo(
+  [-0.1276, 51.5074],  // London
+  3000                  // Duration in ms
+);
+```
+
+#### moveTo
+
+Move to a coordinate with easing:
+
+```tsx
+cameraRef.current?.moveTo(
+  [2.3522, 48.8566],  // Paris
+  1000                 // Duration in ms
+);
+```
+
+#### zoomTo
+
+Zoom to a specific level:
+
+```tsx
+cameraRef.current?.zoomTo(
+  16,    // Zoom level
+  500    // Duration in ms
+);
+```
+
+#### fitBounds
+
+Fit camera to bounds with padding:
+
+```tsx
+cameraRef.current?.fitBounds(
+  [-73.9712, 40.7831],  // Northeast
+  [-74.0402, 40.6829],  // Southwest
+  100,                   // Uniform padding, or [top, right, bottom, left]
+  2000                   // Duration
+);
+```
+
+#### moveBy
+
+Move camera by screen coordinates:
+
+```tsx
+cameraRef.current?.moveBy({
+  x: 100,              // Pixels to move right
+  y: -50,              // Pixels to move up
+  animationMode: 'easeTo',
+  animationDuration: 500,
+});
+```
+
+#### scaleBy
+
+Scale (zoom) around a point:
+
+```tsx
+cameraRef.current?.scaleBy({
+  x: 200,              // Screen x coordinate
+  y: 300,              // Screen y coordinate
+  scaleFactor: 2.0,    // 2x zoom in (0.5 = zoom out)
+  animationMode: 'easeTo',
+  animationDuration: 300,
+});
+```
+
+## Default Settings
+
+Provide fallback camera settings:
+
+```tsx
+<Camera
+  defaultSettings={{
+    centerCoordinate: [-74.006, 40.7128],
+    zoomLevel: 10,
+  }}
+  // These will override defaults when set:
+  centerCoordinate={userLocation}
+  zoomLevel={14}
+/>
+```
+
+## Performance Optimization
+
+### Conditional Updates
+
+Prevent unnecessary updates when map is not visible:
+
+```tsx
+const [mapVisible, setMapVisible] = useState(true);
+
+<Camera
+  centerCoordinate={[-74.006, 40.7128]}
+  zoomLevel={12}
+  allowUpdates={mapVisible}  // Only update when visible
+/>
+```
+
+## Complete Example
+
+```tsx
+import { useState, useRef } from 'react';
+import { View, Button, StyleSheet } from 'react-native';
+import { MapView, Camera, UserTrackingMode } from '@rnmapbox/maps';
+import type { CameraRef } from '@rnmapbox/maps';
+
+const cities = {
+  nyc: [-74.006, 40.7128],
+  sf: [-122.4194, 37.7749],
+  london: [-0.1276, 51.5074],
+};
+
+const App = () => {
+  const cameraRef = useRef<CameraRef>(null);
+  const [following, setFollowing] = useState(false);
+
+  const flyToCity = (coords: [number, number]) => {
+    setFollowing(false);
+    cameraRef.current?.flyTo(coords, 2000);
+  };
+
+  const toggleUserTracking = () => {
+    setFollowing(!following);
+  };
+
+  return (
+    <View style={styles.container}>
+      <MapView style={styles.map}>
+        <Camera
+          ref={cameraRef}
+          defaultSettings={{
+            centerCoordinate: cities.nyc,
+            zoomLevel: 12,
+          }}
+          followUserLocation={following}
+          followUserMode={UserTrackingMode.FollowWithHeading}
+          followZoomLevel={16}
+          animationMode="flyTo"
+          animationDuration={2000}
+        />
+      </MapView>
+
+      <View style={styles.controls}>
+        <Button title="NYC" onPress={() => flyToCity(cities.nyc)} />
+        <Button title="SF" onPress={() => flyToCity(cities.sf)} />
+        <Button title="London" onPress={() => flyToCity(cities.london)} />
+        <Button
+          title={following ? 'Stop Following' : 'Follow Me'}
+          onPress={toggleUserTracking}
+        />
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { flex: 1 },
+  controls: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 16,
+  },
+});
+
+export default App;
+```
+
+## Best Practices
+
+<Note>
+1. **Use appropriate animation modes**: `easeTo` for nearby transitions, `flyTo` for long distances
+2. **Set bounds constraints**: Prevent users from panning too far from your area of interest
+3. **Control frame rate**: Set reasonable `animationDuration` values to maintain 60fps
+4. **Use `allowUpdates`**: Disable camera updates when the map is not visible to save resources
+</Note>
+
+## Related
+
+- [MapView](/concepts/map-view) - Understanding the MapView component
+- [Styling](/concepts/styling) - Customize map appearance

@@ -1,0 +1,490 @@
+---
+title: "Markers & Annotations Examples"
+description: "Add interactive markers, point annotations, and custom callouts to your map"
+---
+
+## Point Annotations
+
+Point annotations are interactive markers that can display custom views:
+
+```tsx
+import { useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import {
+  Callout,
+  Camera,
+  FillLayer,
+  MapView,
+  PointAnnotation,
+  ShapeSource,
+  getAnnotationsLayerID,
+} from '@rnmapbox/maps';
+import { Point } from 'geojson';
+import { Button } from '@rneui/base';
+
+const ANNOTATION_SIZE = 40;
+
+const styles = StyleSheet.create({
+  annotationContainer: {
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderColor: 'rgba(0, 0, 0, 0.45)',
+    borderRadius: ANNOTATION_SIZE / 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: ANNOTATION_SIZE,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: ANNOTATION_SIZE,
+  },
+  matchParent: {
+    flex: 1,
+  },
+});
+
+const ShowPointAnnotation = () => {
+  const [coordinates, setCoordinates] = useState([
+    [-73.99155, 40.73581],
+    [-73.99155, 40.73681],
+  ]);
+
+  const renderAnnotations = () => {
+    return coordinates.map((coordinate, i) => {
+      const title = `Lon: ${coordinate[0]} Lat: ${coordinate[1]}`;
+      const id = `pointAnnotation${i}`;
+
+      return (
+        <PointAnnotation
+          key={id}
+          id={id}
+          coordinate={coordinate}
+          title={title}
+          draggable
+          onSelected={(feature) =>
+            console.log('Selected:', feature.id)
+          }
+          onDrag={(feature) =>
+            console.log('Dragging:', feature.geometry.coordinates)
+          }
+        >
+          <View style={styles.annotationContainer} />
+          <Callout title="Click to see details" />
+        </PointAnnotation>
+      );
+    });
+  };
+
+  return (
+    <MapView
+      onPress={(feature) => {
+        setCoordinates(prev => [
+          ...prev,
+          (feature.geometry as Point).coordinates,
+        ]);
+      }}
+      style={styles.matchParent}
+      deselectAnnotationOnTap={true}
+    >
+      <Camera
+        defaultSettings={{ 
+          centerCoordinate: coordinates[0], 
+          zoomLevel: 16 
+        }}
+      />
+      {renderAnnotations()}
+    </MapView>
+  );
+};
+
+export default ShowPointAnnotation;
+```
+
+<Note>
+  Set `deselectAnnotationOnTap={true}` on `MapView` to automatically deselect annotations when tapping the map.
+</Note>
+
+## Annotations with Remote Images
+
+Load remote images in annotations:
+
+```tsx
+const AnnotationWithRemoteImage = ({ id, coordinate, title }) => {
+  const pointAnnotation = useRef<PointAnnotation>(null);
+
+  return (
+    <PointAnnotation
+      id={id}
+      coordinate={coordinate}
+      title={title}
+      ref={pointAnnotation}
+    >
+      <View style={styles.annotationContainer}>
+        <Image
+          source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
+          style={{ width: ANNOTATION_SIZE, height: ANNOTATION_SIZE }}
+          onLoad={() => pointAnnotation.current?.refresh()}
+          fadeDuration={0}
+        />
+      </View>
+      <Callout title="This is a remote image" />
+    </PointAnnotation>
+  );
+};
+```
+
+<Tip>
+  Call `pointAnnotation.current?.refresh()` after the image loads to update the annotation's appearance.
+</Tip>
+
+## MarkerView
+
+MarkerView renders React Native views as markers that stay upright and sized correctly:
+
+```tsx
+import React, { useState } from 'react';
+import { Button, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+
+const styles = StyleSheet.create({
+  touchableContainer: { 
+    borderColor: 'black', 
+    borderWidth: 1.0, 
+    width: 60 
+  },
+  touchable: {
+    backgroundColor: 'blue',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  touchableText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  matchParent: { flex: 1 },
+});
+
+const AnnotationContent = ({ title }) => (
+  <View style={styles.touchableContainer} collapsable={false}>
+    <Text>{title}</Text>
+    <TouchableOpacity style={styles.touchable}>
+      <Text style={styles.touchableText}>Btn</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const ShowMarkerView = () => {
+  const [pointList, setPointList] = useState([
+    [-73.99155, 40.73581],
+    [-73.99155, 40.73681],
+  ]);
+  const [allowOverlapWithPuck, setAllowOverlapWithPuck] = useState(false);
+
+  const onPressMap = (e) => {
+    const geometry = e.geometry;
+    setPointList(pl => [...pl, geometry.coordinates]);
+  };
+
+  return (
+    <>
+      <Button
+        title={allowOverlapWithPuck ? 
+          'allowOverlapWithPuck true' : 
+          'allowOverlapWithPuck false'
+        }
+        onPress={() => setAllowOverlapWithPuck(prev => !prev)}
+      />
+      <Mapbox.MapView onPress={onPressMap} style={styles.matchParent}>
+        <Mapbox.Camera
+          defaultSettings={{
+            zoomLevel: 16,
+            centerCoordinate: pointList[0],
+          }}
+        />
+
+        <Mapbox.MarkerView
+          coordinate={pointList[0]}
+          allowOverlapWithPuck={allowOverlapWithPuck}
+        >
+          <AnnotationContent title="Marker View" />
+        </Mapbox.MarkerView>
+
+        {pointList.slice(1).map((coordinate, index) => (
+          <Mapbox.PointAnnotation
+            coordinate={coordinate}
+            id={`pt-ann-${index}`}
+            key={`pt-ann-${index}`}
+          >
+            <AnnotationContent title="Point Annotation" />
+          </Mapbox.PointAnnotation>
+        ))}
+
+        <Mapbox.NativeUserLocation />
+      </Mapbox.MapView>
+    </>
+  );
+};
+
+export default ShowMarkerView;
+```
+
+## Custom Callouts
+
+Create custom callout views:
+
+```tsx
+import { View, Text, StyleSheet } from 'react-native';
+import { Callout, PointAnnotation } from '@rnmapbox/maps';
+
+const CustomCallout = () => {
+  return (
+    <PointAnnotation
+      id="custom-callout"
+      coordinate={[-73.99155, 40.73581]}
+    >
+      <View style={styles.marker} />
+      <Callout>
+        <View style={styles.callout}>
+          <Text style={styles.calloutTitle}>Custom Callout</Text>
+          <Text style={styles.calloutDescription}>
+            This is a custom callout with any React Native components
+          </Text>
+          <Button title="Action" onPress={() => console.log('Pressed')} />
+        </View>
+      </Callout>
+    </PointAnnotation>
+  );
+};
+
+const styles = StyleSheet.create({
+  marker: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'red',
+  },
+  callout: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 8,
+    minWidth: 200,
+  },
+  calloutTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  calloutDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+});
+```
+
+## Annotation Events
+
+Handle annotation interactions:
+
+<CodeGroup>
+
+```tsx Selection Events
+<PointAnnotation
+  id="annotation"
+  coordinate={[-73.99155, 40.73581]}
+  onSelected={(feature) => {
+    console.log('Selected:', feature);
+  }}
+  onDeselected={(feature) => {
+    console.log('Deselected:', feature);
+  }}
+>
+  <View style={styles.marker} />
+</PointAnnotation>
+```
+
+```tsx Drag Events
+<PointAnnotation
+  id="annotation"
+  coordinate={[-73.99155, 40.73581]}
+  draggable
+  onDragStart={(feature) => {
+    console.log('Drag started:', feature);
+  }}
+  onDrag={(feature) => {
+    console.log('Dragging:', feature.geometry.coordinates);
+  }}
+  onDragEnd={(feature) => {
+    console.log('Drag ended:', feature);
+  }}
+>
+  <View style={styles.marker} />
+</PointAnnotation>
+```
+
+</CodeGroup>
+
+## Layer Rendering Order
+
+Control whether annotations render above or below other layers:
+
+```tsx
+import { getAnnotationsLayerID } from '@rnmapbox/maps';
+
+// Render polygon below annotations
+<ShapeSource id="polygon" shape={polygonGeoJSON}>
+  <FillLayer
+    id="polygon-fill"
+    belowLayerID={getAnnotationsLayerID('PointAnnotations')}
+    style={{
+      fillColor: 'rgba(255, 0, 0, 0.5)',
+      fillOutlineColor: 'red',
+    }}
+  />
+</ShapeSource>
+
+// Or render above annotations
+<FillLayer
+  id="polygon-fill"
+  aboveLayerID={getAnnotationsLayerID('PointAnnotations')}
+  style={{ fillColor: 'rgba(255, 0, 0, 0.5)' }}
+/>
+```
+
+## Symbol Layer with Icons
+
+Use `SymbolLayer` for icon-based markers from GeoJSON:
+
+```tsx
+import {
+  MapView,
+  Camera,
+  Images,
+  ShapeSource,
+  SymbolLayer,
+} from '@rnmapbox/maps';
+
+const features = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      id: 'a-feature',
+      properties: {
+        icon: 'example',
+        text: 'example-icon-and-label',
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [-74.00597, 40.71427],
+      },
+    },
+  ],
+};
+
+const IconExample = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-74.00597, 40.71427],
+          zoomLevel: 12,
+        }}
+      />
+      <Images images={{ 
+        example: require('./assets/example.png') 
+      }} />
+      <ShapeSource id="icons-source" shape={features}>
+        <SymbolLayer
+          id="icons"
+          style={{
+            iconImage: ['get', 'icon'],
+            iconSize: 1.5,
+            textField: ['get', 'text'],
+            textSize: 12,
+            textOffset: [0, 2],
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+```
+
+## Comparison: PointAnnotation vs MarkerView vs SymbolLayer
+
+<Tabs>
+  <Tab title="PointAnnotation">
+    **Use when:** You need interactive annotations with callouts
+    
+    **Pros:**
+    - Built-in callout support
+    - Selection/deselection events
+    - Draggable
+    - Custom React Native views
+    
+    **Cons:**
+    - Limited performance with many markers
+    - May not scale well with zoom
+  </Tab>
+  <Tab title="MarkerView">
+    **Use when:** You need React Native views that stay upright
+    
+    **Pros:**
+    - Renders React Native views
+    - Stays upright when map rotates
+    - Proper sizing at all zoom levels
+    - Good for complex UI
+    
+    **Cons:**
+    - Performance with many markers
+    - More resource intensive
+  </Tab>
+  <Tab title="SymbolLayer">
+    **Use when:** You have many markers or need high performance
+    
+    **Pros:**
+    - Extremely performant (GPU-rendered)
+    - Can handle thousands of markers
+    - Data-driven styling
+    - Collision detection
+    
+    **Cons:**
+    - No custom React views
+    - Limited to image icons and text
+    - No built-in callouts
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<Warning>
+  Avoid using too many `PointAnnotation` or `MarkerView` components. For more than 50-100 markers, use `SymbolLayer` with a `ShapeSource` instead.
+</Warning>
+
+<Tip>
+  Use `refresh()` method when dynamically updating annotation content, especially with remote images.
+</Tip>
+
+<Note>
+  The `id` prop on annotations must be unique within the map.
+</Note>
+
+## Source Code
+
+View the complete examples on GitHub:
+
+- [ShowPointAnnotation.tsx](https://github.com/rnmapbox/maps/blob/main/example/src/examples/Annotations/ShowPointAnnotation.tsx)
+- [MarkerView.tsx](https://github.com/rnmapbox/maps/blob/main/example/src/examples/Annotations/MarkerView.tsx)
+- [CustomCallout.tsx](https://github.com/rnmapbox/maps/blob/main/example/src/examples/Annotations/CustomCallout.tsx)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Data Visualization" icon="chart-simple" href="/examples/data-visualization">
+    Learn to visualize complex datasets
+  </Card>
+  <Card title="Custom Styles" icon="palette" href="/examples/custom-styles">
+    Customize your map's appearance
+  </Card>
+</CardGroup>

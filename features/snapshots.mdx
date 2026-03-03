@@ -1,0 +1,521 @@
+---
+title: Map Snapshots
+description: Generate static raster images of map views programmatically
+---
+
+The Snapshot feature allows you to generate static images of map regions without rendering a full MapView component. This is useful for creating preview images, thumbnails, or sharing map content.
+
+## Overview
+
+The `snapshotManager` provides a simple API to create static map images with customizable:
+
+- Map center or bounds
+- Zoom level, pitch, and heading
+- Style URL
+- Image dimensions
+- Output format (file or base64)
+
+## Basic Usage
+
+<Steps>
+  <Step title="Import snapshotManager">
+    ```tsx
+    import { snapshotManager, StyleURL } from '@rnmapbox/maps';
+    ```
+  </Step>
+
+  <Step title="Take a snapshot">
+    ```tsx
+    const uri = await snapshotManager.takeSnap({
+      centerCoordinate: [-74.126410, 40.797968],
+      width: 400,
+      height: 300,
+      zoomLevel: 12,
+      styleURL: StyleURL.Street,
+    });
+    ```
+  </Step>
+
+  <Step title="Display the image">
+    ```tsx
+    <Image source={{ uri }} style={{ width: 400, height: 300 }} />
+    ```
+  </Step>
+</Steps>
+
+## Snapshot Options
+
+### Using Center Coordinate
+
+Create a snapshot centered on a specific location:
+
+```tsx
+import { snapshotManager, StyleURL } from '@rnmapbox/maps';
+import { Image, Dimensions } from 'react-native';
+
+const CreateSnapshot = async () => {
+  const { width } = Dimensions.get('window');
+  
+  const uri = await snapshotManager.takeSnap({
+    centerCoordinate: [-74.126410, 40.797968], // [longitude, latitude]
+    width: width - 32,
+    height: 200,
+    zoomLevel: 12,
+    pitch: 30,
+    heading: 20,
+    styleURL: StyleURL.Dark,
+    writeToDisk: true,
+  });
+
+  return <Image source={{ uri }} style={{ width: width - 32, height: 200 }} />;
+};
+```
+
+### Using Bounds
+
+Create a snapshot that fits specific geographic bounds:
+
+```tsx
+const uri = await snapshotManager.takeSnap({
+  bounds: [
+    [-74.126410, 40.797968], // Southwest corner [lng, lat]
+    [-74.143727, 40.772177], // Northeast corner [lng, lat]
+  ],
+  width: 400,
+  height: 300,
+  styleURL: StyleURL.Satellite,
+  writeToDisk: true,
+});
+```
+
+<Note>
+  When using `bounds`, the `zoomLevel`, `pitch`, and `heading` parameters are ignored. The map automatically calculates the optimal zoom to fit the bounds.
+</Note>
+
+## Snapshot Options Reference
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `centerCoordinate` | `[lng, lat]` | Yes* | - | Center point of the snapshot |
+| `bounds` | `[[lng, lat], [lng, lat]]` | Yes* | - | Southwest and northeast corners |
+| `width` | `number` | Yes | `50` | Image width in pixels |
+| `height` | `number` | Yes | `50` | Image height in pixels |
+| `styleURL` | `string` | No | `StyleURL.Street` | Map style URL |
+| `zoomLevel` | `number` | No | `16` | Zoom level (0-22) |
+| `pitch` | `number` | No | `0` | Camera pitch in degrees (0-60) |
+| `heading` | `number` | No | `0` | Camera heading in degrees (0-360) |
+| `writeToDisk` | `boolean` | No | `false` | Write to temporary file (returns file URI) |
+| `withLogo` | `boolean` | No | `true` | Include Mapbox logo (Android only) |
+
+*Either `centerCoordinate` or `bounds` must be provided.
+
+<Warning>
+  The `zoomLevel`, `pitch`, and `heading` parameters only work when `centerCoordinate` is set, not with `bounds`.
+</Warning>
+
+## Output Formats
+
+### Base64 String
+
+By default, snapshots return a base64-encoded PNG:
+
+```tsx
+const base64Uri = await snapshotManager.takeSnap({
+  centerCoordinate: [-74.126410, 40.797968],
+  width: 300,
+  height: 200,
+  zoomLevel: 10,
+  writeToDisk: false, // Returns base64
+});
+
+// base64Uri format: "data:image/png;base64,iVBORw0KG..."
+<Image source={{ uri: base64Uri }} style={{ width: 300, height: 200 }} />
+```
+
+### File URI
+
+Write to a temporary file for better performance with large images:
+
+```tsx
+const fileUri = await snapshotManager.takeSnap({
+  centerCoordinate: [-74.126410, 40.797968],
+  width: 800,
+  height: 600,
+  zoomLevel: 14,
+  writeToDisk: true, // Returns file path
+});
+
+// fileUri format: "file:///var/mobile/Containers/Data/.../snapshot.png"
+<Image source={{ uri: fileUri }} style={{ width: 800, height: 600 }} />
+```
+
+<Note>
+  Use `writeToDisk: true` for larger images to avoid memory issues with base64 encoding.
+</Note>
+
+## Practical Examples
+
+### Map Thumbnail Generator
+
+```tsx
+import React, { useState } from 'react';
+import { View, Image, Button, ActivityIndicator } from 'react-native';
+import { snapshotManager, StyleURL } from '@rnmapbox/maps';
+
+const MapThumbnail = ({ coordinate, zoom = 12 }) => {
+  const [thumbnail, setThumbnail] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const generateThumbnail = async () => {
+    setLoading(true);
+    try {
+      const uri = await snapshotManager.takeSnap({
+        centerCoordinate: coordinate,
+        width: 200,
+        height: 150,
+        zoomLevel: zoom,
+        styleURL: StyleURL.Street,
+        writeToDisk: true,
+      });
+      setThumbnail(uri);
+    } catch (error) {
+      console.error('Thumbnail generation failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View>
+      {loading && <ActivityIndicator />}
+      {thumbnail ? (
+        <Image
+          source={{ uri: thumbnail }}
+          style={{ width: 200, height: 150, borderRadius: 8 }}
+        />
+      ) : (
+        <Button title="Generate Thumbnail" onPress={generateThumbnail} />
+      )}
+    </View>
+  );
+};
+```
+
+### Multiple Style Comparisons
+
+```tsx
+import React, { useEffect, useState } from 'react';
+import { View, Image, Text, ScrollView } from 'react-native';
+import { snapshotManager, StyleURL } from '@rnmapbox/maps';
+
+const StyleComparison = ({ coordinate }) => {
+  const [snapshots, setSnapshots] = useState({});
+
+  useEffect(() => {
+    generateSnapshots();
+  }, []);
+
+  const generateSnapshots = async () => {
+    const styles = [
+      { name: 'Street', url: StyleURL.Street },
+      { name: 'Satellite', url: StyleURL.Satellite },
+      { name: 'Dark', url: StyleURL.Dark },
+      { name: 'Light', url: StyleURL.Light },
+    ];
+
+    const results = {};
+    
+    for (const style of styles) {
+      const uri = await snapshotManager.takeSnap({
+        centerCoordinate: coordinate,
+        width: 300,
+        height: 200,
+        zoomLevel: 14,
+        styleURL: style.url,
+        writeToDisk: true,
+      });
+      results[style.name] = uri;
+    }
+
+    setSnapshots(results);
+  };
+
+  return (
+    <ScrollView>
+      {Object.entries(snapshots).map(([name, uri]) => (
+        <View key={name} style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{name}</Text>
+          <Image
+            source={{ uri }}
+            style={{ width: 300, height: 200, marginTop: 8 }}
+          />
+        </View>
+      ))}
+    </ScrollView>
+  );
+};
+```
+
+### 3D Perspective Snapshot
+
+Create dramatic snapshots with pitch and heading:
+
+```tsx
+const create3DSnapshot = async () => {
+  const uri = await snapshotManager.takeSnap({
+    centerCoordinate: [-122.4194, 37.7749], // San Francisco
+    width: 400,
+    height: 400,
+    zoomLevel: 15,
+    pitch: 60,      // Tilt camera 60 degrees
+    heading: 45,    // Rotate 45 degrees
+    styleURL: StyleURL.Satellite,
+    writeToDisk: true,
+  });
+
+  return uri;
+};
+```
+
+### Share Map Location
+
+```tsx
+import { Share } from 'react-native';
+import { snapshotManager, StyleURL } from '@rnmapbox/maps';
+
+const shareLocation = async (coordinate, locationName) => {
+  try {
+    // Generate snapshot
+    const uri = await snapshotManager.takeSnap({
+      centerCoordinate: coordinate,
+      width: 600,
+      height: 400,
+      zoomLevel: 14,
+      styleURL: StyleURL.Street,
+      writeToDisk: true,
+    });
+
+    // Share the image
+    await Share.share({
+      title: `Check out ${locationName}`,
+      message: `Location: ${coordinate[1]}, ${coordinate[0]}`,
+      url: uri,
+    });
+  } catch (error) {
+    console.error('Share failed:', error);
+  }
+};
+```
+
+## Complete Example
+
+```tsx
+import React, { useState } from 'react';
+import {
+  View,
+  Image,
+  StyleSheet,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { snapshotManager, StyleURL } from '@rnmapbox/maps';
+
+const SnapshotGallery = () => {
+  const [snapshots, setSnapshots] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const generateSnapshots = async () => {
+    setLoading(true);
+
+    const configurations = [
+      {
+        label: 'Street View',
+        options: {
+          centerCoordinate: [-74.126410, 40.797968],
+          width: 350,
+          height: 200,
+          zoomLevel: 12,
+          styleURL: StyleURL.Street,
+          writeToDisk: true,
+        },
+      },
+      {
+        label: 'Satellite with Pitch',
+        options: {
+          centerCoordinate: [-122.4194, 37.7749],
+          width: 350,
+          height: 200,
+          zoomLevel: 14,
+          pitch: 45,
+          heading: 30,
+          styleURL: StyleURL.Satellite,
+          writeToDisk: true,
+        },
+      },
+      {
+        label: 'Bounded Area',
+        options: {
+          bounds: [
+            [-74.2, 40.7],
+            [-74.0, 40.9],
+          ],
+          width: 350,
+          height: 200,
+          styleURL: StyleURL.Dark,
+          writeToDisk: true,
+        },
+      },
+    ];
+
+    const results = [];
+    for (const config of configurations) {
+      try {
+        const uri = await snapshotManager.takeSnap(config.options);
+        results.push({ label: config.label, uri });
+      } catch (error) {
+        console.error(`Failed to create ${config.label}:`, error);
+      }
+    }
+
+    setSnapshots(results);
+    setLoading(false);
+  };
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={generateSnapshots}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Generating...' : 'Generate Snapshots'}
+        </Text>
+      </TouchableOpacity>
+
+      {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
+
+      <ScrollView style={styles.gallery}>
+        {snapshots.map((snapshot, index) => (
+          <View key={index} style={styles.snapshotContainer}>
+            <Text style={styles.label}>{snapshot.label}</Text>
+            <Image
+              source={{ uri: snapshot.uri }}
+              style={styles.snapshot}
+              resizeMode="contain"
+            />
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  button: {
+    backgroundColor: '#4264fb',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  gallery: {
+    marginTop: 20,
+  },
+  snapshotContainer: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  snapshot: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+  },
+});
+
+export default SnapshotGallery;
+```
+
+## Platform Differences
+
+### Android-Specific
+
+Control Mapbox logo visibility:
+
+```tsx
+const uri = await snapshotManager.takeSnap({
+  centerCoordinate: [-74.126410, 40.797968],
+  width: 400,
+  height: 300,
+  zoomLevel: 12,
+  withLogo: false, // Remove logo (Android only)
+});
+```
+
+<Warning>
+  Removing the Mapbox logo may violate the Mapbox Terms of Service. Check your license agreement before using `withLogo: false`.
+</Warning>
+
+### iOS-Specific
+
+On iOS, the logo is always included and cannot be removed via the API.
+
+## Performance Tips
+
+<Note>
+  - Use `writeToDisk: true` for images larger than 500x500 pixels
+  - Generate snapshots in the background to avoid blocking the UI
+  - Cache generated snapshots to avoid regenerating the same image
+  - Consider image dimensions - larger sizes take longer to generate
+  - Use lower zoom levels for faster generation
+</Note>
+
+## Error Handling
+
+```tsx
+const createSnapshot = async () => {
+  try {
+    const uri = await snapshotManager.takeSnap({
+      centerCoordinate: [-74.126410, 40.797968],
+      width: 400,
+      height: 300,
+      zoomLevel: 12,
+      styleURL: StyleURL.Street,
+    });
+    return uri;
+  } catch (error) {
+    console.error('Snapshot generation failed:', error);
+    // Handle error - show fallback image, retry, etc.
+    return null;
+  }
+};
+```
+
+## Best Practices
+
+- Always provide either `centerCoordinate` or `bounds`
+- Set reasonable image dimensions based on your use case
+- Use `writeToDisk` for images you'll display multiple times
+- Handle errors gracefully with try-catch
+- Consider generating thumbnails asynchronously
+- Test with different styles to find what works best
+
+## Reference
+
+- Snapshot Manager: `src/modules/snapshot/snapshotManager.ts:1`
+- Snapshot Options: `src/modules/snapshot/SnapshotOptions.ts:1`

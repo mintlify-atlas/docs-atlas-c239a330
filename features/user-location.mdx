@@ -1,0 +1,295 @@
+---
+title: User Location Tracking
+description: Track and display the user's location on the map with customizable styling and behavior
+---
+
+The User Location feature allows you to track and display the user's current location on the map. You can customize the appearance, listen to location updates, and control the tracking behavior.
+
+## Components
+
+There are two main ways to display user location:
+
+1. **UserLocation** - Customizable React component with full control over appearance
+2. **LocationPuck** - Native location puck with optimized performance
+
+## Basic Usage
+
+<Steps>
+  <Step title="Import the components">
+    ```tsx
+    import { MapView, Camera, UserLocation } from '@rnmapbox/maps';
+    ```
+  </Step>
+
+  <Step title="Add UserLocation to your map">
+    ```tsx
+    <MapView style={{ flex: 1 }}>
+      <Camera followUserLocation followZoomLevel={16} />
+      <UserLocation visible={true} />
+    </MapView>
+    ```
+  </Step>
+</Steps>
+
+## UserLocation Component
+
+The `UserLocation` component provides a customizable way to display the user's location with full React Native rendering capabilities.
+
+### Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `visible` | `boolean` | Whether the location icon is visible. Default: `true` |
+| `animated` | `boolean` | Whether location icon is animated between updates. Default: `true` |
+| `onUpdate` | `(location: Location) => void` | Callback triggered on location update |
+| `onPress` | `() => void` | Callback triggered when location icon is pressed |
+| `minDisplacement` | `number` | Minimum movement in meters before GPS location is updated. Default: `0` |
+| `showsUserHeadingIndicator` | `boolean` | Show arrow indicating device direction. Default: `false` |
+| `renderMode` | `UserLocationRenderMode` | Render mode: `'normal'` or `'native'`. Default: `'normal'` |
+| `requestsAlwaysUse` | `boolean` | Request always location permission (iOS only) |
+| `androidRenderMode` | `'normal' \| 'compass' \| 'gps'` | Android-specific render mode |
+| `children` | `ReactElement` | Custom location icon components |
+
+### Tracking Location Updates
+
+Listen to location changes using the `onUpdate` callback:
+
+```tsx
+import { useState } from 'react';
+import { Text } from 'react-native';
+import { MapView, Camera, UserLocation, Location } from '@rnmapbox/maps';
+
+const LocationTracker = () => {
+  const [location, setLocation] = useState<Location>();
+
+  return (
+    <>
+      <MapView style={{ flex: 1 }}>
+        <UserLocation onUpdate={(newLocation) => setLocation(newLocation)} />
+        <Camera followUserLocation followZoomLevel={16} />
+      </MapView>
+
+      {location && (
+        <View>
+          <Text>Latitude: {location.coords.latitude}</Text>
+          <Text>Longitude: {location.coords.longitude}</Text>
+          <Text>Heading: {location.coords.heading}</Text>
+          <Text>Speed: {location.coords.speed}</Text>
+          <Text>Accuracy: {location.coords.accuracy}</Text>
+        </View>
+      )}
+    </>
+  );
+};
+```
+
+### Setting Minimum Displacement
+
+Control how often location updates are triggered:
+
+```tsx
+<UserLocation
+  minDisplacement={10} // Update only after moving 10 meters
+  onUpdate={(location) => console.log('User moved 10m', location)}
+/>
+```
+
+<Note>
+  Setting a higher `minDisplacement` value reduces battery usage by decreasing the frequency of location updates.
+</Note>
+
+## LocationPuck Component
+
+For better performance with native rendering, use `LocationPuck`:
+
+```tsx
+import {
+  MapView,
+  Camera,
+  LocationPuck,
+  UserTrackingMode,
+  Images,
+  Image,
+} from '@rnmapbox/maps';
+
+const NativeUserLocation = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Images>
+        <Image name="customPin">
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: 'blue',
+              borderColor: 'white',
+              borderWidth: 2,
+            }}
+          />
+        </Image>
+      </Images>
+
+      <Camera
+        followUserLocation={true}
+        followUserMode={UserTrackingMode.Follow}
+        followZoomLevel={16}
+      />
+
+      <LocationPuck
+        topImage="customPin"
+        visible={true}
+        pulsing={{
+          isEnabled: true,
+          color: 'blue',
+          radius: 50.0,
+        }}
+        scale={['interpolate', ['linear'], ['zoom'], 10, 1.0, 20, 4.0]}
+      />
+    </MapView>
+  );
+};
+```
+
+### LocationPuck Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `topImage` | `string` | Name of image to use as the top layer |
+| `bearingImage` | `string` | Image shown when bearing is enabled |
+| `shadowImage` | `string` | Shadow image below the puck |
+| `visible` | `boolean` | Whether the puck is visible |
+| `pulsing` | `{ isEnabled: boolean, color: string, radius: number }` | Pulsing animation configuration |
+| `scale` | `Expression` | Scale expression based on zoom level |
+| `puckBearing` | `'heading' \| 'course'` | Type of bearing to display |
+| `puckBearingEnabled` | `boolean` | Enable bearing indicator |
+
+## Custom Location Icon
+
+Customize the appearance by passing custom children:
+
+```tsx
+import { UserLocation, CircleLayer } from '@rnmapbox/maps';
+
+const CustomUserLocation = () => (
+  <UserLocation visible={true}>
+    <CircleLayer
+      id="userLocationCircle"
+      style={{
+        circleRadius: 12,
+        circleColor: '#3498db',
+        circleStrokeWidth: 3,
+        circleStrokeColor: '#ffffff',
+      }}
+    />
+  </UserLocation>
+);
+```
+
+## Following User Location
+
+Combine with `Camera` to follow the user's location:
+
+<CodeGroup>
+```tsx Basic Follow
+<Camera
+  followUserLocation={true}
+  followZoomLevel={16}
+/>
+<UserLocation visible={true} />
+```
+
+```tsx Follow with Heading
+import { UserTrackingMode } from '@rnmapbox/maps';
+
+<Camera
+  followUserLocation={true}
+  followUserMode={UserTrackingMode.FollowWithHeading}
+  followZoomLevel={16}
+/>
+<UserLocation
+  visible={true}
+  showsUserHeadingIndicator={true}
+/>
+```
+
+```tsx Follow with Course
+<Camera
+  followUserLocation={true}
+  followUserMode={UserTrackingMode.FollowWithCourse}
+  followZoomLevel={16}
+  followPitch={45}
+/>
+<UserLocation visible={true} />
+```
+</CodeGroup>
+
+## User Tracking Modes
+
+| Mode | Description |
+|------|-------------|
+| `UserTrackingMode.Follow` | Camera follows user location |
+| `UserTrackingMode.FollowWithHeading` | Camera follows location and rotates to match device heading |
+| `UserTrackingMode.FollowWithCourse` | Camera follows location and rotates to match movement direction |
+
+## Platform-Specific Features
+
+### iOS
+
+**Always Location Permission:**
+```tsx
+<UserLocation
+  requestsAlwaysUse={true}
+  onUpdate={(location) => console.log(location)}
+/>
+```
+
+### Android
+
+**Render Modes:**
+```tsx
+<UserLocation
+  androidRenderMode="compass" // 'normal' | 'compass' | 'gps'
+  visible={true}
+/>
+```
+
+- `normal` - Simple circle
+- `compass` - Triangle with heading indicator
+- `gps` - Large arrow shape
+
+## Performance Considerations
+
+<Note>
+  - Use `LocationPuck` for better performance when you don't need custom React Native views
+  - Set appropriate `minDisplacement` to reduce update frequency
+  - Consider using `UserLocationRenderMode.Native` for optimal performance
+</Note>
+
+## Permissions
+
+Ensure you have location permissions configured:
+
+**iOS (Info.plist):**
+```xml
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We need your location to show it on the map</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>We need your location to track your position</string>
+```
+
+**Android (AndroidManifest.xml):**
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+<Warning>
+  Always request location permissions at runtime before enabling user location tracking.
+</Warning>
+
+## Reference
+
+- Source: `src/components/UserLocation.tsx:1`
+- Source: `src/components/LocationPuck.tsx:1`
+- Location Manager: `src/modules/location/locationManager.ts:1`

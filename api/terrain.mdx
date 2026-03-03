@@ -1,0 +1,304 @@
+---
+title: Terrain
+description: Terrain component API reference for Mapbox Maps SDK for React Native
+---
+
+# Terrain
+
+The Terrain component adds 3D terrain elevation to the map using a raster DEM (Digital Elevation Model) source.
+
+## Import
+
+```tsx
+import { Terrain } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Terrain, RasterDemSource } from '@rnmapbox/maps';
+
+function MapWithTerrain() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <RasterDemSource
+        id="terrainSource"
+        url="mapbox://mapbox.terrain-rgb"
+      />
+      <Terrain sourceID="terrainSource" />
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### sourceID
+
+<ParamField path="sourceID" type="string">
+  Name of a source of `raster_dem` type to be used for terrain elevation. The source must be added to the map before the Terrain component.
+
+  ```tsx
+  <RasterDemSource id="myTerrainSource" url="mapbox://mapbox.terrain-rgb" />
+  <Terrain sourceID="myTerrainSource" />
+  ```
+</ParamField>
+
+### exaggeration
+
+<ParamField path="exaggeration" type="number | Expression">
+  <Warning>Deprecated - Use `style.exaggeration` instead.</Warning>
+  
+  Exaggerates the elevation of the terrain by multiplying the data from the DEM with this value.
+
+  ```tsx
+  <Terrain sourceID="terrainSource" exaggeration={1.5} />
+  ```
+</ParamField>
+
+### style
+
+<ParamField path="style" type="TerrainLayerStyleProps">
+  Customizable style attributes for the terrain.
+
+  ```tsx
+  <Terrain
+    sourceID="terrainSource"
+    style={{
+      exaggeration: 1.5,
+      exaggerationTransition: { duration: 1000 },
+    }}
+  />
+  ```
+</ParamField>
+
+## Style Properties
+
+### exaggeration
+
+<ParamField path="style.exaggeration" type="number" default="1">
+  Exaggerates the elevation of the terrain by multiplying the data from the DEM with this value.
+  
+  - **Minimum:** 0
+  - **Maximum:** 1000
+  - **Supports expressions:** Yes (with `zoom` parameter)
+  - **Requires:** `sourceID` to be set
+
+  ```tsx
+  <Terrain
+    sourceID="terrainSource"
+    style={{
+      // Static value
+      exaggeration: 2,
+      
+      // Expression: increase exaggeration as you zoom in
+      exaggeration: [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        10, 1,    // At zoom 10, exaggeration = 1
+        15, 3,    // At zoom 15, exaggeration = 3
+      ],
+    }}
+  />
+  ```
+</ParamField>
+
+### exaggerationTransition
+
+<ParamField path="style.exaggerationTransition" type="{ duration: number, delay?: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the exaggeration property.
+  
+  - **Units:** milliseconds
+
+  ```tsx
+  <Terrain
+    sourceID="terrainSource"
+    style={{
+      exaggeration: 2,
+      exaggerationTransition: {
+        duration: 1000,
+        delay: 200,
+      },
+    }}
+  />
+  ```
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Terrain">
+    ```tsx
+    import { MapView, Camera, RasterDemSource, Terrain } from '@rnmapbox/maps';
+
+    function BasicTerrain() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Camera
+            centerCoordinate={[-122.4194, 37.7749]}
+            zoomLevel={12}
+            pitch={60}
+          />
+          
+          <RasterDemSource
+            id="mapboxTerrain"
+            url="mapbox://mapbox.terrain-rgb"
+            tileSize={514}
+          />
+          
+          <Terrain sourceID="mapboxTerrain" />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Exaggerated Terrain">
+    ```tsx
+    import { MapView, Camera, RasterDemSource, Terrain } from '@rnmapbox/maps';
+
+    function ExaggeratedTerrain() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Camera
+            centerCoordinate={[-122.4194, 37.7749]}
+            zoomLevel={12}
+            pitch={60}
+          />
+          
+          <RasterDemSource
+            id="terrainSource"
+            url="mapbox://mapbox.terrain-rgb"
+          />
+          
+          <Terrain
+            sourceID="terrainSource"
+            style={{
+              exaggeration: 2.5,
+            }}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Dynamic Exaggeration">
+    ```tsx
+    import { useState } from 'react';
+    import { MapView, Camera, RasterDemSource, Terrain } from '@rnmapbox/maps';
+    import { View, Button } from 'react-native';
+
+    function DynamicTerrain() {
+      const [exaggeration, setExaggeration] = useState(1);
+
+      return (
+        <>
+          <MapView style={{ flex: 1 }}>
+            <Camera
+              centerCoordinate={[-122.4194, 37.7749]}
+              zoomLevel={12}
+              pitch={60}
+            />
+            
+            <RasterDemSource
+              id="terrainSource"
+              url="mapbox://mapbox.terrain-rgb"
+            />
+            
+            <Terrain
+              sourceID="terrainSource"
+              style={{
+                exaggeration,
+                exaggerationTransition: { duration: 500 },
+              }}
+            />
+          </MapView>
+          
+          <View style={{ position: 'absolute', bottom: 20, left: 20 }}>
+            <Button title="Low (1x)" onPress={() => setExaggeration(1)} />
+            <Button title="Medium (2x)" onPress={() => setExaggeration(2)} />
+            <Button title="High (3x)" onPress={() => setExaggeration(3)} />
+          </View>
+        </>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Zoom-based Exaggeration">
+    ```tsx
+    import { MapView, Camera, RasterDemSource, Terrain } from '@rnmapbox/maps';
+
+    function ZoomBasedTerrain() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Camera
+            centerCoordinate={[-122.4194, 37.7749]}
+            zoomLevel={12}
+            pitch={60}
+          />
+          
+          <RasterDemSource
+            id="terrainSource"
+            url="mapbox://mapbox.terrain-rgb"
+          />
+          
+          <Terrain
+            sourceID="terrainSource"
+            style={{
+              // Increase exaggeration as you zoom in for better detail
+              exaggeration: [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                8, 0.5,   // Subtle at far zoom
+                12, 1.5,  // Medium at mid zoom
+                16, 3,    // Dramatic at close zoom
+              ],
+            }}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Using Custom DEM Sources
+
+You can use custom DEM sources instead of Mapbox's terrain:
+
+```tsx
+import { MapView, RasterDemSource, Terrain } from '@rnmapbox/maps';
+
+function CustomDEMTerrain() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <RasterDemSource
+        id="customTerrain"
+        url="https://example.com/tiles/{z}/{x}/{y}.png"
+        tileSize={256}
+        encoding="terrarium" // or "mapbox"
+      />
+      
+      <Terrain sourceID="customTerrain" />
+    </MapView>
+  );
+}
+```
+
+## Performance Considerations
+
+- Terrain rendering can be computationally expensive, especially on lower-end devices
+- Higher exaggeration values may impact performance
+- Consider reducing the `pitch` camera angle when not focusing on terrain
+- Use appropriate zoom levels - terrain is most effective at zoom levels 10-16
+
+## Related Components
+
+- [RasterDemSource](/api/raster-dem-source) - Provides elevation data for terrain
+- [Camera](/api/camera) - Control the viewing angle (pitch is important for terrain)
+- [MapView](/api/mapview) - The map container
+- [HillshadeLayer](/api/hillshade-layer) - Alternative way to visualize elevation

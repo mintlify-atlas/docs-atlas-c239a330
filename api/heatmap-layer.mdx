@@ -1,0 +1,130 @@
+---
+title: HeatmapLayer
+description: Renders heatmap visualization of point data
+---
+
+HeatmapLayer is a style layer that renders a heatmap visualization of point data.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#heatmap)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain data.
+</ParamField>
+
+<ParamField path="sourceLayerID" type="string">
+  Identifier of the layer within the source.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="slot" type="'bottom' | 'middle' | 'top'">
+  The slot this layer is assigned to. v11 only
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  Minimum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  Maximum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="HeatmapLayerStyleProps">
+  Customizable style attributes.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.heatmapRadius" type="number" default="30">
+  Radius of influence of one heatmap point in pixels. Increasing the value makes the heatmap smoother, but less detailed. Minimum: 1
+</ParamField>
+
+<ParamField path="style.heatmapWeight" type="number" default="1">
+  A measure of how much an individual point contributes to the heatmap. Minimum: 0
+</ParamField>
+
+<ParamField path="style.heatmapIntensity" type="number" default="1">
+  Similar to heatmap-weight but controls the intensity globally rather than per point. Minimum: 0
+</ParamField>
+
+<ParamField path="style.heatmapColor" type="string" default="interpolate expression">
+  Defines the color of each pixel based on its density value.
+</ParamField>
+
+<ParamField path="style.heatmapOpacity" type="number" default="1">
+  The global opacity at which the heatmap layer will be drawn. Range: 0-1.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, ShapeSource, HeatmapLayer } from '@rnmapbox/maps';
+
+const points = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [-122.4, 37.8],
+      },
+      properties: { intensity: 0.5 },
+    },
+    // ... more points
+  ],
+};
+
+function Map() {
+  return (
+    <MapView>
+      <ShapeSource id="points" shape={points}>
+        <HeatmapLayer
+          id="heatmap"
+          style={{
+            heatmapRadius: 40,
+            heatmapWeight: ['get', 'intensity'],
+            heatmapIntensity: 1,
+            heatmapColor: [
+              'interpolate',
+              ['linear'],
+              ['heatmap-density'],
+              0, 'rgba(33,102,172,0)',
+              0.2, 'rgb(103,169,207)',
+              0.4, 'rgb(209,229,240)',
+              0.6, 'rgb(253,219,199)',
+              0.8, 'rgb(239,138,98)',
+              1, 'rgb(178,24,43)',
+            ],
+            heatmapOpacity: 0.8,
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```

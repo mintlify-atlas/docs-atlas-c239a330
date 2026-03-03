@@ -1,0 +1,476 @@
+---
+title: Atmosphere
+description: Atmosphere component API reference for Mapbox Maps SDK for React Native
+---
+
+# Atmosphere
+
+Atmosphere configures the atmospheric effects around the globe, including fog, sky color, horizon blend, and stars. It creates a realistic visualization of the Earth's atmosphere when using globe projection.
+
+## Import
+
+```tsx
+import { Atmosphere } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Atmosphere, Camera } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView
+      style={{ flex: 1 }}
+      projection="globe"
+    >
+      <Atmosphere
+        style={{
+          color: '#add8e6',
+          highColor: '#245cdf',
+          horizonBlend: 0.1,
+          starIntensity: 0.5,
+        }}
+      />
+      <Camera
+        centerCoordinate={[0, 0]}
+        zoomLevel={1}
+      />
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### style
+
+<ParamField path="style" type="AtmosphereLayerStyleProps" required>
+  Customizable style attributes for the atmosphere.
+</ParamField>
+
+## Style Properties
+
+The `style` prop accepts an `AtmosphereLayerStyleProps` object with the following properties:
+
+### range
+
+<ParamField path="style.range" type="[number, number]" default="[0.5, 10]">
+  The start and end distance range in which fog fades from fully transparent to fully opaque. The distance to the point at the center of the map is defined as zero, so negative values are closer to the camera, and positive values are farther away.
+  
+  **Range:** -20 to 20
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      range: [0.5, 10],
+    }}
+  />
+  ```
+</ParamField>
+
+### rangeTransition
+
+<ParamField path="style.rangeTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the range property.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      range: [0.5, 10],
+      rangeTransition: { duration: 1000, delay: 0 },
+    }}
+  />
+  ```
+</ParamField>
+
+### color
+
+<ParamField path="style.color" type="string" default="#ffffff">
+  The color of the atmosphere region immediately below the horizon and within the `range`, and above the horizon and within `horizonBlend`. Using opacity is recommended only for smoothly transitioning fog on/off, as anything less than 100% opacity results in more tiles being loaded and drawn.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      color: '#add8e6',
+    }}
+  />
+  ```
+</ParamField>
+
+### colorTransition
+
+<ParamField path="style.colorTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the color property.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      color: '#add8e6',
+      colorTransition: { duration: 1000, delay: 0 },
+    }}
+  />
+  ```
+</ParamField>
+
+### highColor
+
+<ParamField path="style.highColor" type="string" default="#245cdf">
+  The color of the atmosphere region above the horizon. `highColor` extends further above the horizon than the `color` property, and its spread can be controlled with `horizonBlend`. The opacity can be set to `0` to remove the high atmosphere color contribution.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      highColor: '#245cdf',
+    }}
+  />
+  ```
+</ParamField>
+
+### highColorTransition
+
+<ParamField path="style.highColorTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the highColor property.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      highColor: '#245cdf',
+      highColorTransition: { duration: 1000, delay: 0 },
+    }}
+  />
+  ```
+</ParamField>
+
+### spaceColor
+
+<ParamField path="style.spaceColor" type="string" default="interpolate,linear,zoom,4,#010b19,7,#367ab9">
+  The color of the region above the horizon and after the end of the `horizonBlend` contribution. This represents outer space. The opacity can be set to `0` to have a transparent background.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      spaceColor: '#000000',
+    }}
+  />
+  ```
+</ParamField>
+
+### spaceColorTransition
+
+<ParamField path="style.spaceColorTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the spaceColor property.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      spaceColor: '#000000',
+      spaceColorTransition: { duration: 1000, delay: 0 },
+    }}
+  />
+  ```
+</ParamField>
+
+### horizonBlend
+
+<ParamField path="style.horizonBlend" type="number" default="interpolate,linear,zoom,4,0.2,7,0.1">
+  Horizon blend applies a smooth fade from the color of the atmosphere to the color of space. A value of zero leaves a sharp transition from atmosphere to space. Increasing the value blends the color of atmosphere into increasingly high angles of the sky.
+  
+  **Range:** 0 to 1
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      horizonBlend: 0.1,
+    }}
+  />
+  ```
+</ParamField>
+
+### horizonBlendTransition
+
+<ParamField path="style.horizonBlendTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the horizonBlend property.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      horizonBlend: 0.1,
+      horizonBlendTransition: { duration: 1000, delay: 0 },
+    }}
+  />
+  ```
+</ParamField>
+
+### starIntensity
+
+<ParamField path="style.starIntensity" type="number" default="interpolate,linear,zoom,5,0.35,6,0">
+  A value controlling the star intensity where `0` will show no stars and `1` will show stars at their maximum intensity.
+  
+  **Range:** 0 to 1
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      starIntensity: 0.5,
+    }}
+  />
+  ```
+</ParamField>
+
+### starIntensityTransition
+
+<ParamField path="style.starIntensityTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the starIntensity property.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      starIntensity: 0.5,
+      starIntensityTransition: { duration: 1000, delay: 0 },
+    }}
+  />
+  ```
+</ParamField>
+
+### verticalRange
+
+<ParamField path="style.verticalRange" type="[number, number]" default="[0, 0]">
+  An array of two number values, specifying the vertical range, measured in meters, over which the fog should gradually fade out. When both parameters are set to zero, the fog will be rendered without any vertical constraints.
+  
+  **Minimum:** 0
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      verticalRange: [0, 10000],
+    }}
+  />
+  ```
+</ParamField>
+
+### verticalRangeTransition
+
+<ParamField path="style.verticalRangeTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the verticalRange property.
+  
+  ```tsx
+  <Atmosphere
+    style={{
+      verticalRange: [0, 10000],
+      verticalRangeTransition: { duration: 1000, delay: 0 },
+    }}
+  />
+  ```
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Atmosphere">
+    ```tsx
+    import { MapView, Atmosphere, Camera } from '@rnmapbox/maps';
+
+    function BasicAtmosphere() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          projection="globe"
+        >
+          <Atmosphere
+            style={{
+              color: '#add8e6',
+              highColor: '#245cdf',
+              horizonBlend: 0.1,
+            }}
+          />
+          <Camera
+            centerCoordinate={[0, 0]}
+            zoomLevel={1}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Night Sky">
+    ```tsx
+    import { MapView, Atmosphere, Camera } from '@rnmapbox/maps';
+
+    function NightSky() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          projection="globe"
+          styleURL="mapbox://styles/mapbox/dark-v11"
+        >
+          <Atmosphere
+            style={{
+              color: '#1a1a2e',
+              highColor: '#16213e',
+              spaceColor: '#0f0e17',
+              horizonBlend: 0.2,
+              starIntensity: 0.8,
+            }}
+          />
+          <Camera
+            centerCoordinate={[0, 0]}
+            zoomLevel={1}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Sunrise">
+    ```tsx
+    import { MapView, Atmosphere, Camera } from '@rnmapbox/maps';
+
+    function Sunrise() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          projection="globe"
+        >
+          <Atmosphere
+            style={{
+              color: '#ffa07a',
+              highColor: '#ff6347',
+              spaceColor: '#191970',
+              horizonBlend: 0.3,
+              starIntensity: 0.3,
+            }}
+          />
+          <Camera
+            centerCoordinate={[0, 0]}
+            zoomLevel={1}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With Fog">
+    ```tsx
+    import { MapView, Atmosphere, Camera } from '@rnmapbox/maps';
+
+    function WithFog() {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          projection="globe"
+        >
+          <Atmosphere
+            style={{
+              range: [0.5, 8],
+              color: 'rgba(220, 220, 220, 0.5)',
+              highColor: '#87ceeb',
+              horizonBlend: 0.2,
+            }}
+          />
+          <Camera
+            centerCoordinate={[0, 20]}
+            zoomLevel={2}
+            pitch={60}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Time-Based Atmosphere">
+    ```tsx
+    import { useState, useEffect } from 'react';
+    import { MapView, Atmosphere, Camera } from '@rnmapbox/maps';
+
+    function TimeBasedAtmosphere() {
+      const [hour, setHour] = useState(new Date().getHours());
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setHour(new Date().getHours());
+        }, 60000); // Update every minute
+        return () => clearInterval(interval);
+      }, []);
+
+      const isDaytime = hour >= 6 && hour < 18;
+      const isEvening = hour >= 18 && hour < 21;
+
+      const getAtmosphereStyle = () => {
+        if (isDaytime) {
+          return {
+            color: '#add8e6',
+            highColor: '#245cdf',
+            spaceColor: '#87ceeb',
+            horizonBlend: 0.1,
+            starIntensity: 0,
+          };
+        } else if (isEvening) {
+          return {
+            color: '#ff6347',
+            highColor: '#ff4500',
+            spaceColor: '#191970',
+            horizonBlend: 0.3,
+            starIntensity: 0.5,
+          };
+        } else {
+          return {
+            color: '#1a1a2e',
+            highColor: '#16213e',
+            spaceColor: '#0f0e17',
+            horizonBlend: 0.2,
+            starIntensity: 0.9,
+          };
+        }
+      };
+
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          projection="globe"
+        >
+          <Atmosphere
+            style={{
+              ...getAtmosphereStyle(),
+              colorTransition: { duration: 2000, delay: 0 },
+              highColorTransition: { duration: 2000, delay: 0 },
+              spaceColorTransition: { duration: 2000, delay: 0 },
+              starIntensityTransition: { duration: 2000, delay: 0 },
+            }}
+          />
+          <Camera
+            centerCoordinate={[0, 0]}
+            zoomLevel={1}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+1. **Use with Globe Projection**: Atmosphere effects are most visible and impactful when using `projection="globe"` on the MapView.
+
+2. **Performance Considerations**: Using opacity values less than 100% on the `color` property results in more tiles being loaded. Use opacity sparingly.
+
+3. **Smooth Transitions**: Use transition properties to create smooth animations when changing atmospheric conditions.
+
+4. **Coordinate with Style**: Match your atmosphere colors with your map style for a cohesive visual experience.
+
+## Related Components
+
+- [MapView](/api/mapview) - The map container (use with `projection="globe"`)
+- [Light](/api/light) - Configure lighting for 3D features
+- [StyleImport](/api/style-import) - Configure the Mapbox Standard style
+- [SkyLayer](/api/sky-layer) - Alternative sky configuration
+
+## Additional Resources
+
+- [Mapbox Atmosphere Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#atmosphere)
+- [Mapbox Globe View Guide](https://docs.mapbox.com/mapbox-gl-js/example/globe/)

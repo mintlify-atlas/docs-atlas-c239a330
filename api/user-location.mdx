@@ -1,0 +1,249 @@
+---
+title: UserLocation
+description: Component for displaying the user's location on the map
+---
+
+The `UserLocation` component displays the user's current location on the map with customizable appearance and behavior.
+
+## Basic Usage
+
+```tsx
+import { MapView, Camera, UserLocation } from '@rnmapbox/maps';
+
+<MapView>
+  <Camera followUserLocation />
+  <UserLocation visible={true} />
+</MapView>
+```
+
+## Props
+
+<ParamField path="androidRenderMode" type="'normal' | 'compass' | 'gps'">
+  Android-only render mode for the location indicator.
+  
+  - `normal`: Simple circle
+  - `compass`: Triangle with heading
+  - `gps`: Large arrow
+  
+  **Platform:** Android only
+</ParamField>
+
+<ParamField path="animated" type="boolean" default="true">
+  Whether the location icon is animated between updates.
+</ParamField>
+
+<ParamField path="children" type="ReactElement | ReactElement[]">
+  Custom location icon using Mapbox GL Native components. When provided, replaces the default location indicator.
+  
+  ```tsx
+  <UserLocation>
+    <CircleLayer
+      id="custom-location"
+      style={{ circleRadius: 10, circleColor: '#007AFF' }}
+    />
+  </UserLocation>
+  ```
+</ParamField>
+
+<ParamField path="minDisplacement" type="number" default="0">
+  Minimum distance (in meters) the device must move before the GPS location is updated.
+  
+  ```tsx
+  <UserLocation minDisplacement={10} />
+  ```
+</ParamField>
+
+<ParamField path="onPress" type="() => void">
+  Callback function triggered when the location icon is pressed.
+  
+  ```tsx
+  <UserLocation 
+    onPress={() => console.log('Location pressed')}
+  />
+  ```
+</ParamField>
+
+<ParamField path="onUpdate" type="(location: Location) => void">
+  Callback function triggered when the location is updated.
+  
+  ```tsx
+  <UserLocation 
+    onUpdate={(location) => {
+      console.log('Location:', location.coords);
+    }}
+  />
+  ```
+</ParamField>
+
+<ParamField path="renderMode" type="UserLocationRenderMode" default="UserLocationRenderMode.Normal">
+  **Deprecated:** Use `LocationPuck` component instead of `UserLocationRenderMode.Native`.
+  
+  Specifies which render mode to use:
+  - `UserLocationRenderMode.Normal`: Custom React Native rendering
+  - `UserLocationRenderMode.Native`: Native platform rendering
+</ParamField>
+
+<ParamField path="requestsAlwaysUse" type="boolean" default="false">
+  Request "always" location permission to track location even when the app is in the background.
+  
+  **Platform:** iOS only
+</ParamField>
+
+<ParamField path="showsUserHeadingIndicator" type="boolean" default="false">
+  Show or hide a small arrow indicating the direction the device is pointing relative to north.
+</ParamField>
+
+<ParamField path="visible" type="boolean" default="true">
+  Controls whether the location icon is visible on the map.
+</ParamField>
+
+## Types
+
+### Location
+
+<ResponseField name="coords" type="Coordinates" required>
+  Location coordinates object.
+</ResponseField>
+
+<ResponseField name="timestamp" type="number">
+  Unix timestamp (in milliseconds) when the location was determined.
+</ResponseField>
+
+### Coordinates
+
+<ResponseField name="latitude" type="number" required>
+  The latitude in degrees.
+</ResponseField>
+
+<ResponseField name="longitude" type="number" required>
+  The longitude in degrees.
+</ResponseField>
+
+<ResponseField name="heading" type="number">
+  The heading (measured in degrees) relative to true north. Indicates the direction the device is pointing to (compass value).
+  
+  **Note:** On Android, this may incorrectly report the course value. See issue [#1213](https://github.com/rnmapbox/maps/issues/1213).
+</ResponseField>
+
+<ResponseField name="course" type="number">
+  The direction in which the device is traveling, measured in degrees relative to due north. Different from heading - this is the actual direction of movement.
+</ResponseField>
+
+<ResponseField name="speed" type="number">
+  The instantaneous speed of the device, measured in meters per second.
+</ResponseField>
+
+<ResponseField name="accuracy" type="number">
+  The radius of uncertainty for the location, measured in meters.
+</ResponseField>
+
+<ResponseField name="altitude" type="number">
+  The altitude, measured in meters.
+</ResponseField>
+
+## Methods
+
+### setLocationManager
+
+```tsx
+setLocationManager({ running }: { running?: boolean }): Promise<void>
+```
+
+Control whether to start or stop listening to location updates.
+
+**Note:** Location listening starts automatically when either `onUpdate` or `visible` props are set.
+
+<ParamField path="running" type="boolean">
+  `true` to start listening, `false` to stop.
+</ParamField>
+
+### needsLocationManagerRunning
+
+```tsx
+needsLocationManagerRunning(): boolean
+```
+
+Returns whether the location manager should be running based on current props.
+
+## Examples
+
+### Basic User Location
+
+```tsx
+import { MapView, Camera, UserLocation } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView>
+      <Camera followUserLocation />
+      <UserLocation visible={true} />
+    </MapView>
+  );
+}
+```
+
+### With Location Updates
+
+```tsx
+import { MapView, UserLocation } from '@rnmapbox/maps';
+import { useState } from 'react';
+
+function MyMap() {
+  const [location, setLocation] = useState(null);
+  
+  return (
+    <MapView>
+      <UserLocation 
+        onUpdate={(location) => setLocation(location.coords)}
+      />
+    </MapView>
+  );
+}
+```
+
+### Custom Location Indicator
+
+```tsx
+import { MapView, UserLocation, CircleLayer } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView>
+      <UserLocation animated={true}>
+        <CircleLayer
+          id="user-location-pulse"
+          style={{
+            circleRadius: 20,
+            circleColor: '#007AFF',
+            circleOpacity: 0.3,
+          }}
+        />
+        <CircleLayer
+          id="user-location-dot"
+          style={{
+            circleRadius: 8,
+            circleColor: '#007AFF',
+          }}
+        />
+      </UserLocation>
+    </MapView>
+  );
+}
+```
+
+### With Minimum Displacement
+
+```tsx
+<UserLocation
+  minDisplacement={10}
+  onUpdate={(location) => {
+    console.log('User moved at least 10 meters');
+  }}
+/>
+```
+
+## See Also
+
+- [LocationPuck](/api/location-puck) - Modern native location puck component
+- [CustomLocationProvider](/api/custom-location-provider) - Provide custom location data
+- [locationManager](/api/location-manager) - Location manager singleton

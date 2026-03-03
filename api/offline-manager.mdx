@@ -1,0 +1,562 @@
+---
+title: offlineManager
+description: Offline manager module API reference for Mapbox Maps SDK for React Native
+---
+
+# offlineManager
+
+The offlineManager module implements a singleton that manages offline packs. All methods are asynchronous, reflecting the fact that offline resources are stored in a database. The shared object maintains a canonical collection of offline packs.
+
+## Import
+
+```tsx
+import { offlineManager } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { offlineManager } from '@rnmapbox/maps';
+
+const progressListener = (offlineRegion, status) => {
+  console.log('Progress:', status.percentage);
+};
+
+const errorListener = (offlineRegion, err) => {
+  console.error('Error:', err.message);
+};
+
+await offlineManager.createPack(
+  {
+    name: 'myOfflinePack',
+    styleURL: 'mapbox://styles/mapbox/streets-v11',
+    minZoom: 10,
+    maxZoom: 16,
+    bounds: [[-74.0, 40.7], [-73.9, 40.8]],
+  },
+  progressListener,
+  errorListener
+);
+```
+
+## Methods
+
+### createPack()
+
+```tsx
+createPack(
+  options: OfflineCreatePackOptions,
+  progressListener?: (pack: OfflinePack, status: OfflineProgressStatus) => void,
+  errorListener?: (pack: OfflinePack, error: OfflinePackError) => void
+): Promise<void>
+```
+
+Creates and registers an offline pack that downloads the resources needed to use the given region offline.
+
+<ParamField path="options" type="OfflineCreatePackOptions" required>
+  Configuration for the offline pack.
+  
+  <ParamField path="options.name" type="string" required>
+    Unique name for the offline pack.
+  </ParamField>
+  
+  <ParamField path="options.styleURL" type="string" required>
+    The style URL to download (e.g., `'mapbox://styles/mapbox/streets-v11'`).
+  </ParamField>
+  
+  <ParamField path="options.bounds" type="[[number, number], [number, number]]" required>
+    The geographic bounds to download: `[[neLng, neLat], [swLng, swLat]]`.
+  </ParamField>
+  
+  <ParamField path="options.minZoom" type="number">
+    Minimum zoom level to download (0-22).
+  </ParamField>
+  
+  <ParamField path="options.maxZoom" type="number">
+    Maximum zoom level to download (0-22).
+  </ParamField>
+  
+  <ParamField path="options.metadata" type="object">
+    Optional metadata to store with the pack.
+  </ParamField>
+  
+  <ParamField path="options.tilesets" type="string[]">
+    Optional array of tileset identifiers to download.
+  </ParamField>
+</ParamField>
+
+<ParamField path="progressListener" type="function">
+  Callback that listens for download progress updates.
+  
+  Receives:
+  - `pack`: OfflinePack - The offline pack
+  - `status`: OfflineProgressStatus - Progress information
+</ParamField>
+
+<ParamField path="errorListener" type="function">
+  Callback that listens for download errors.
+  
+  Receives:
+  - `pack`: OfflinePack - The offline pack
+  - `error`: OfflinePackError - Error information
+</ParamField>
+
+**Example:**
+
+```tsx
+const progressListener = (offlineRegion, status) => {
+  console.log(`Downloaded ${status.percentage}%`);
+  console.log(`Tiles: ${status.completedTileCount}/${status.requiredResourceCount}`);
+};
+
+const errorListener = (offlineRegion, err) => {
+  console.error('Download error:', err.message);
+};
+
+await offlineManager.createPack(
+  {
+    name: 'sanFrancisco',
+    styleURL: 'mapbox://styles/mapbox/streets-v11',
+    minZoom: 10,
+    maxZoom: 16,
+    bounds: [[-122.5, 37.7], [-122.3, 37.9]],
+  },
+  progressListener,
+  errorListener
+);
+```
+
+### getPacks()
+
+```tsx
+getPacks(): Promise<OfflinePack[]>
+```
+
+Retrieves all offline packs stored in the database.
+
+**Example:**
+
+```tsx
+const packs = await offlineManager.getPacks();
+console.log(`Found ${packs.length} offline packs`);
+packs.forEach(pack => console.log(pack.name));
+```
+
+### getPack()
+
+```tsx
+getPack(name: string): Promise<OfflinePack | undefined>
+```
+
+Retrieves a specific offline pack by name.
+
+<ParamField path="name" type="string" required>
+  Name of the offline pack.
+</ParamField>
+
+**Example:**
+
+```tsx
+const pack = await offlineManager.getPack('sanFrancisco');
+if (pack) {
+  console.log('Pack found:', pack.name);
+}
+```
+
+### deletePack()
+
+```tsx
+deletePack(name: string): Promise<void>
+```
+
+Unregisters the given offline pack and allows resources that are no longer required by any remaining packs to be potentially freed.
+
+<ParamField path="name" type="string" required>
+  Name of the offline pack to delete.
+</ParamField>
+
+**Example:**
+
+```tsx
+await offlineManager.deletePack('sanFrancisco');
+console.log('Pack deleted');
+```
+
+### invalidatePack()
+
+```tsx
+invalidatePack(name: string): Promise<void>
+```
+
+Invalidates the specified offline pack. This method checks that the tiles in the offline pack match those from the server. Local tiles that do not match the latest version on the server are updated.
+
+This is more efficient than deleting the offline pack and downloading it again. If the data stored locally matches that on the server, new data will not be downloaded.
+
+<ParamField path="name" type="string" required>
+  Name of the offline pack.
+</ParamField>
+
+**Example:**
+
+```tsx
+await offlineManager.invalidatePack('sanFrancisco');
+console.log('Pack invalidated and updating...');
+```
+
+### subscribe()
+
+```tsx
+subscribe(
+  packName: string,
+  progressListener: (pack: OfflinePack, status: OfflineProgressStatus) => void,
+  errorListener?: (pack: OfflinePack, error: OfflinePackError) => void
+): Promise<void>
+```
+
+Subscribes to download status/error events for the requested offline pack. Note that `createPack` calls this internally if listeners are provided.
+
+<ParamField path="packName" type="string" required>
+  Name of the offline pack.
+</ParamField>
+
+<ParamField path="progressListener" type="function" required>
+  Callback for progress events.
+</ParamField>
+
+<ParamField path="errorListener" type="function">
+  Callback for error events.
+</ParamField>
+
+**Example:**
+
+```tsx
+const progressListener = (pack, status) => {
+  console.log(`${pack.name}: ${status.percentage}%`);
+};
+
+const errorListener = (pack, err) => {
+  console.error(`${pack.name} error:`, err.message);
+};
+
+offlineManager.subscribe('sanFrancisco', progressListener, errorListener);
+```
+
+### unsubscribe()
+
+```tsx
+unsubscribe(packName: string): void
+```
+
+Unsubscribes any listeners associated with the offline pack. It's a good idea to call this on component unmount.
+
+<ParamField path="packName" type="string" required>
+  Name of the offline pack.
+</ParamField>
+
+**Example:**
+
+```tsx
+offlineManager.unsubscribe('sanFrancisco');
+```
+
+### setProgressEventThrottle()
+
+```tsx
+setProgressEventThrottle(throttleValue: number): void
+```
+
+Sets the period at which download status events will be sent over the React Native bridge. The default is 300ms.
+
+<ParamField path="throttleValue" type="number" required>
+  Event throttle value in milliseconds.
+</ParamField>
+
+**Example:**
+
+```tsx
+offlineManager.setProgressEventThrottle(500);
+```
+
+### setTileCountLimit()
+
+```tsx
+setTileCountLimit(limit: number): void
+```
+
+Sets the maximum number of Mapbox-hosted tiles that may be downloaded and stored on the current device. The Mapbox Terms of Service prohibit changing or bypassing this limit without permission from Mapbox.
+
+<ParamField path="limit" type="number" required>
+  Maximum tile count.
+</ParamField>
+
+**Example:**
+
+```tsx
+offlineManager.setTileCountLimit(6000);
+```
+
+### setMaximumAmbientCacheSize()
+
+```tsx
+setMaximumAmbientCacheSize(size: number): Promise<void>
+```
+
+Sets the maximum size of the ambient cache in bytes. Disables the ambient cache if set to 0. This method may be computationally expensive because it will erase resources from the ambient cache if its size is decreased.
+
+<ParamField path="size" type="number" required>
+  Size of ambient cache in bytes.
+</ParamField>
+
+**Example:**
+
+```tsx
+// Set to 50MB
+await offlineManager.setMaximumAmbientCacheSize(50 * 1024 * 1024);
+```
+
+### invalidateAmbientCache()
+
+```tsx
+invalidateAmbientCache(): Promise<void>
+```
+
+<Warning>Deprecated - Not implemented in Maps SDK v10+</Warning>
+
+Forces a revalidation of the tiles in the ambient cache and downloads a fresh version of the tiles from the tile server.
+
+### clearAmbientCache()
+
+```tsx
+clearAmbientCache(): Promise<void>
+```
+
+<Warning>Deprecated - Not implemented in Maps SDK v10+</Warning>
+
+Erases resources from the ambient cache.
+
+### resetDatabase()
+
+```tsx
+resetDatabase(): Promise<void>
+```
+
+Deletes the existing database, which includes both the ambient cache and offline packs, then reinitializes it.
+
+**Example:**
+
+```tsx
+await offlineManager.resetDatabase();
+console.log('Database reset complete');
+```
+
+### migrateOfflineCache()
+
+```tsx
+migrateOfflineCache(): Promise<void>
+```
+
+Migrates the offline cache from pre-v10 SDKs to the new v10 cache location.
+
+**Example:**
+
+```tsx
+await offlineManager.migrateOfflineCache();
+console.log('Migration complete');
+```
+
+### mergeOfflineRegions()
+
+```tsx
+mergeOfflineRegions(path: string): Promise<void>
+```
+
+Sideloads an offline database from the file system.
+
+<ParamField path="path" type="string" required>
+  Path to offline tile database on the file system.
+</ParamField>
+
+**Example:**
+
+```tsx
+const dbPath = '/path/to/offline.db';
+await offlineManager.mergeOfflineRegions(dbPath);
+```
+
+## Types
+
+### OfflineProgressStatus
+
+```typescript
+type OfflineProgressStatus = {
+  name: string;
+  state: number;
+  percentage: number;
+  completedResourceSize: number;
+  completedTileCount: number;
+  completedResourceCount: number;
+  requiredResourceCount: number;
+  completedTileSize: number;
+};
+```
+
+### OfflinePackError
+
+```typescript
+type OfflinePackError = {
+  name: string;
+  message: string;
+};
+```
+
+## Examples
+
+<Tabs>
+  <Tab title="Download Region">
+    ```tsx
+    import { useState } from 'react';
+    import { View, Button, Text } from 'react-native';
+    import { offlineManager } from '@rnmapbox/maps';
+
+    function DownloadRegion() {
+      const [progress, setProgress] = useState(0);
+      const [downloading, setDownloading] = useState(false);
+
+      const downloadRegion = async () => {
+        setDownloading(true);
+        
+        try {
+          await offlineManager.createPack(
+            {
+              name: 'myRegion',
+              styleURL: 'mapbox://styles/mapbox/streets-v11',
+              minZoom: 10,
+              maxZoom: 16,
+              bounds: [[-122.5, 37.7], [-122.3, 37.9]],
+            },
+            (pack, status) => {
+              setProgress(status.percentage);
+            },
+            (pack, error) => {
+              console.error('Download error:', error);
+              setDownloading(false);
+            }
+          );
+          
+          setDownloading(false);
+          console.log('Download complete!');
+        } catch (error) {
+          console.error('Failed to create pack:', error);
+          setDownloading(false);
+        }
+      };
+
+      return (
+        <View>
+          <Button
+            title="Download Region"
+            onPress={downloadRegion}
+            disabled={downloading}
+          />
+          {downloading && <Text>Progress: {progress.toFixed(1)}%</Text>}
+        </View>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Manage Packs">
+    ```tsx
+    import { useEffect, useState } from 'react';
+    import { View, FlatList, Button, Text } from 'react-native';
+    import { offlineManager } from '@rnmapbox/maps';
+
+    function ManagePacks() {
+      const [packs, setPacks] = useState([]);
+
+      useEffect(() => {
+        loadPacks();
+      }, []);
+
+      const loadPacks = async () => {
+        const allPacks = await offlineManager.getPacks();
+        setPacks(allPacks);
+      };
+
+      const deletePack = async (packName: string) => {
+        await offlineManager.deletePack(packName);
+        loadPacks();
+      };
+
+      const invalidatePack = async (packName: string) => {
+        await offlineManager.invalidatePack(packName);
+        console.log(`${packName} invalidated`);
+      };
+
+      return (
+        <FlatList
+          data={packs}
+          keyExtractor={(item) => item.name}
+          renderItem={({ item }) => (
+            <View>
+              <Text>{item.name}</Text>
+              <Button
+                title="Delete"
+                onPress={() => deletePack(item.name)}
+              />
+              <Button
+                title="Update"
+                onPress={() => invalidatePack(item.name)}
+              />
+            </View>
+          )}
+        />
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Progress Tracking">
+    ```tsx
+    import { useEffect, useState } from 'react';
+    import { View, ProgressBar, Text } from 'react-native';
+    import { offlineManager } from '@rnmapbox/maps';
+
+    function ProgressTracking() {
+      const [status, setStatus] = useState(null);
+
+      useEffect(() => {
+        const progressListener = (pack, status) => {
+          setStatus({
+            percentage: status.percentage,
+            tiles: `${status.completedTileCount}/${status.requiredResourceCount}`,
+            size: `${(status.completedTileSize / 1024 / 1024).toFixed(2)} MB`,
+          });
+        };
+
+        offlineManager.subscribe('myRegion', progressListener);
+
+        return () => {
+          offlineManager.unsubscribe('myRegion');
+        };
+      }, []);
+
+      if (!status) return null;
+
+      return (
+        <View>
+          <ProgressBar progress={status.percentage / 100} />
+          <Text>Progress: {status.percentage.toFixed(1)}%</Text>
+          <Text>Tiles: {status.tiles}</Text>
+          <Text>Size: {status.size}</Text>
+        </View>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Related
+
+- [TileStore](/api/tile-store) - Advanced tile storage management
+- [MapView](/api/mapview) - Display offline maps

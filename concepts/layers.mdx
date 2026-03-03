@@ -1,0 +1,495 @@
+---
+title: Layers
+description: Visualize map data with different layer types and styling options
+---
+
+Layers define how data from sources is rendered on the map. Each layer type is optimized for specific geometry types and visual effects.
+
+## Layer Types
+
+The SDK provides these layer components:
+
+- **CircleLayer** - Render points as circles
+- **SymbolLayer** - Icons and text labels
+- **LineLayer** - Stroked polylines
+- **FillLayer** - Filled polygons
+- **FillExtrusionLayer** - 3D extruded polygons
+- **RasterLayer** - Raster images
+- **HillshadeLayer** - Elevation shading
+- **HeatmapLayer** - Point density visualization
+- **BackgroundLayer** - Map background
+- **SkyLayer** - Atmospheric sky
+- **ModelLayer** - 3D models (v11)
+
+## Circle Layer
+
+Render point features as circles.
+
+### Basic Usage
+
+```tsx
+import { ShapeSource, CircleLayer } from '@rnmapbox/maps';
+
+const pointsGeoJSON = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [-74.006, 40.7128] },
+      properties: { name: 'NYC' },
+    },
+  ],
+};
+
+<ShapeSource id="points" shape={pointsGeoJSON}>
+  <CircleLayer
+    id="point-circles"
+    style={{
+      circleRadius: 8,
+      circleColor: '#007cbf',
+      circleOpacity: 0.8,
+      circleStrokeWidth: 2,
+      circleStrokeColor: '#ffffff',
+    }}
+  />
+</ShapeSource>
+```
+
+### Style Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `circleRadius` | `number` | Circle radius in pixels |
+| `circleColor` | `string` | Fill color |
+| `circleOpacity` | `number` | Opacity (0-1) |
+| `circleStrokeWidth` | `number` | Stroke width in pixels |
+| `circleStrokeColor` | `string` | Stroke color |
+| `circleStrokeOpacity` | `number` | Stroke opacity (0-1) |
+| `circleBlur` | `number` | Blur effect |
+
+### Data-Driven Styling
+
+```tsx
+<CircleLayer
+  id="data-driven"
+  style={{
+    circleRadius: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      5, 2,    // At zoom 5, radius is 2
+      10, 10,  // At zoom 10, radius is 10
+    ],
+    circleColor: [
+      'match',
+      ['get', 'category'],
+      'restaurant', '#ff0000',
+      'hotel', '#0000ff',
+      '#cccccc',  // default
+    ],
+  }}
+/>
+```
+
+## Symbol Layer
+
+Display icons and text labels.
+
+### Text Labels
+
+```tsx
+import { ShapeSource, SymbolLayer } from '@rnmapbox/maps';
+
+<ShapeSource id="cities" shape={citiesGeoJSON}>
+  <SymbolLayer
+    id="city-labels"
+    style={{
+      textField: ['get', 'name'],  // Use 'name' property
+      textSize: 14,
+      textColor: '#000000',
+      textHaloColor: '#ffffff',
+      textHaloWidth: 2,
+      textAnchor: 'top',
+      textOffset: [0, 1],
+    }}
+  />
+</ShapeSource>
+```
+
+### Icons
+
+```tsx
+import { Images } from '@rnmapbox/maps';
+
+<Images
+  images={{
+    'custom-marker': require('./marker.png'),
+  }}
+/>
+
+<ShapeSource id="markers" shape={markersGeoJSON}>
+  <SymbolLayer
+    id="marker-icons"
+    style={{
+      iconImage: 'custom-marker',
+      iconSize: 1.5,
+      iconAnchor: 'bottom',
+      iconAllowOverlap: false,  // Prevent icon collisions
+    }}
+  />
+</ShapeSource>
+```
+
+### Icons and Text
+
+```tsx
+<SymbolLayer
+  id="poi"
+  style={{
+    iconImage: ['get', 'icon'],  // Property-based icon
+    iconSize: 0.8,
+    textField: ['get', 'name'],
+    textSize: 12,
+    textAnchor: 'top',
+    textOffset: [0, 1.5],
+    textColor: '#000000',
+  }}
+/>
+```
+
+## Line Layer
+
+Render polylines with various styles.
+
+### Basic Lines
+
+```tsx
+import { ShapeSource, LineLayer } from '@rnmapbox/maps';
+
+const routeGeoJSON = {
+  type: 'Feature',
+  geometry: {
+    type: 'LineString',
+    coordinates: [
+      [-74.006, 40.7128],
+      [-118.2437, 34.0522],
+    ],
+  },
+};
+
+<ShapeSource id="route" shape={routeGeoJSON}>
+  <LineLayer
+    id="route-line"
+    style={{
+      lineColor: '#007cbf',
+      lineWidth: 3,
+      lineOpacity: 0.8,
+    }}
+  />
+</ShapeSource>
+```
+
+### Line Patterns
+
+```tsx
+<LineLayer
+  id="dashed"
+  style={{
+    lineColor: '#ff0000',
+    lineWidth: 2,
+    lineDasharray: [2, 1],  // 2px dash, 1px gap
+    lineCap: 'round',
+    lineJoin: 'round',
+  }}
+/>
+```
+
+### Gradient Lines
+
+<Info>
+Gradient lines require `lineMetrics: true` on the ShapeSource.
+</Info>
+
+```tsx
+<ShapeSource id="route" shape={routeGeoJSON} lineMetrics={true}>
+  <LineLayer
+    id="gradient"
+    style={{
+      lineWidth: 5,
+      lineGradient: [
+        'interpolate',
+        ['linear'],
+        ['line-progress'],
+        0, 'blue',
+        0.5, 'green',
+        1, 'red',
+      ],
+    }}
+  />
+</ShapeSource>
+```
+
+## Fill Layer
+
+Render filled polygons.
+
+```tsx
+import { ShapeSource, FillLayer } from '@rnmapbox/maps';
+
+const polygonGeoJSON = {
+  type: 'Feature',
+  geometry: {
+    type: 'Polygon',
+    coordinates: [[
+      [-74.006, 40.7128],
+      [-74.0, 40.7128],
+      [-74.0, 40.7],
+      [-74.006, 40.7],
+      [-74.006, 40.7128],
+    ]],
+  },
+};
+
+<ShapeSource id="area" shape={polygonGeoJSON}>
+  <FillLayer
+    id="area-fill"
+    style={{
+      fillColor: '#088',
+      fillOpacity: 0.5,
+      fillOutlineColor: '#000000',
+    }}
+  />
+</ShapeSource>
+```
+
+### Patterned Fills
+
+```tsx
+<Images
+  images={{
+    'stripe-pattern': require('./stripe.png'),
+  }}
+/>
+
+<FillLayer
+  id="patterned"
+  style={{
+    fillPattern: 'stripe-pattern',
+    fillOpacity: 0.7,
+  }}
+/>
+```
+
+## Fill Extrusion Layer
+
+Create 3D extruded polygons.
+
+```tsx
+import { FillExtrusionLayer } from '@rnmapbox/maps';
+
+<VectorSource
+  id="buildings"
+  url="mapbox://mapbox.mapbox-streets-v8"
+>
+  <FillExtrusionLayer
+    id="building-3d"
+    sourceLayerID="building"
+    style={{
+      fillExtrusionColor: '#aaa',
+      fillExtrusionHeight: [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        15, 0,
+        15.05, ['get', 'height'],
+      ],
+      fillExtrusionBase: ['get', 'min_height'],
+      fillExtrusionOpacity: 0.6,
+    }}
+  />
+</VectorSource>
+```
+
+## Heatmap Layer
+
+Visualize point density.
+
+```tsx
+import { HeatmapLayer } from '@rnmapbox/maps';
+
+<ShapeSource id="earthquakes" shape={earthquakesGeoJSON}>
+  <HeatmapLayer
+    id="heatmap"
+    style={{
+      heatmapWeight: [
+        'interpolate',
+        ['linear'],
+        ['get', 'magnitude'],
+        0, 0,
+        6, 1,
+      ],
+      heatmapIntensity: [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        0, 1,
+        9, 3,
+      ],
+      heatmapColor: [
+        'interpolate',
+        ['linear'],
+        ['heatmap-density'],
+        0, 'rgba(33,102,172,0)',
+        0.2, 'rgb(103,169,207)',
+        0.4, 'rgb(209,229,240)',
+        0.6, 'rgb(253,219,199)',
+        0.8, 'rgb(239,138,98)',
+        1, 'rgb(178,24,43)',
+      ],
+      heatmapRadius: 20,
+      heatmapOpacity: 0.8,
+    }}
+  />
+</ShapeSource>
+```
+
+## Layer Ordering
+
+Control layer stacking with positioning props:
+
+```tsx
+// Place above another layer
+<CircleLayer
+  id="points"
+  aboveLayerID="water"
+  style={{ circleRadius: 5 }}
+/>
+
+// Place below another layer
+<FillLayer
+  id="parks"
+  belowLayerID="road-label"
+  style={{ fillColor: '#00ff00' }}
+/>
+
+// Insert at specific index
+<LineLayer
+  id="routes"
+  layerIndex={5}
+  style={{ lineColor: '#ff0000' }}
+/>
+```
+
+## Layer Visibility
+
+Control visibility with filters or zoom levels:
+
+```tsx
+<CircleLayer
+  id="points"
+  minZoomLevel={10}    // Only visible at zoom >= 10
+  maxZoomLevel={16}    // Only visible at zoom <= 16
+  filter={['==', ['get', 'type'], 'restaurant']}  // Only restaurants
+  style={{ circleRadius: 6 }}
+/>
+```
+
+## Common Layer Props
+
+All layers support these props:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `id` | `string` | Unique layer identifier |
+| `sourceID` | `string` | ID of the source (auto-inferred from parent) |
+| `sourceLayerID` | `string` | Source layer for vector tiles |
+| `aboveLayerID` | `string` | Insert above this layer |
+| `belowLayerID` | `string` | Insert below this layer |
+| `layerIndex` | `number` | Insert at specific index |
+| `filter` | `Expression` | Filter features |
+| `minZoomLevel` | `number` | Minimum zoom to show layer |
+| `maxZoomLevel` | `number` | Maximum zoom to show layer |
+| `slot` | `'bottom' | 'middle' | 'top'` | Layer slot (v11) |
+
+## Complete Example
+
+```tsx
+import { useState } from 'react';
+import { MapView, Camera, ShapeSource, CircleLayer, LineLayer, SymbolLayer, Images } from '@rnmapbox/maps';
+
+const App = () => {
+  const [features, setFeatures] = useState<GeoJSON.Feature[]>([]);
+
+  const pointsGeoJSON: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: features.filter((f) => f.geometry.type === 'Point'),
+  };
+
+  const routeGeoJSON: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: features.filter((f) => f.geometry.type === 'LineString'),
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera centerCoordinate={[-74.006, 40.7128]} zoomLevel={12} />
+
+      <Images
+        images={{
+          'marker-icon': require('./marker.png'),
+        }}
+      />
+
+      {/* Route line */}
+      <ShapeSource id="routes" shape={routeGeoJSON}>
+        <LineLayer
+          id="route-line"
+          style={{
+            lineColor: '#007cbf',
+            lineWidth: 3,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }}
+        />
+      </ShapeSource>
+
+      {/* Points with icons and labels */}
+      <ShapeSource id="points" shape={pointsGeoJSON}>
+        <SymbolLayer
+          id="point-icons"
+          style={{
+            iconImage: 'marker-icon',
+            iconSize: 1.2,
+            iconAnchor: 'bottom',
+            textField: ['get', 'name'],
+            textSize: 12,
+            textAnchor: 'top',
+            textOffset: [0, 1],
+            textColor: '#000000',
+            textHaloColor: '#ffffff',
+            textHaloWidth: 2,
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+
+export default App;
+```
+
+## Best Practices
+
+<Note>
+1. **Use appropriate layer types**: CircleLayer for points, LineLayer for routes, FillLayer for areas
+2. **Order layers correctly**: Background first, symbols last for proper rendering
+3. **Set zoom constraints**: Use `minZoomLevel` and `maxZoomLevel` to optimize performance
+4. **Filter features**: Use filters to show only relevant data at each zoom level
+5. **Reuse sources**: Multiple layers can share the same source
+</Note>
+
+## Related
+
+- [Sources](/concepts/sources) - Add data to the map
+- [Styling](/concepts/styling) - Style specification reference
+- [Expressions](/concepts/expressions) - Data-driven styling

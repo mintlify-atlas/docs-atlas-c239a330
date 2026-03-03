@@ -1,0 +1,236 @@
+---
+title: 'ShapeSource'
+description: 'A map content source that supplies vector shapes in GeoJSON format'
+---
+
+## Overview
+
+ShapeSource is a map content source that supplies vector shapes to be shown on the map. The shape may be a URL or a GeoJSON object. This is the most commonly used source for displaying custom GeoJSON data.
+
+## Import
+
+```tsx
+import { ShapeSource } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, ShapeSource, CircleLayer } from '@rnmapbox/maps';
+import { featureCollection, point } from '@turf/helpers';
+
+function MyMap() {
+  const geojson = featureCollection([
+    point([-122.4, 37.8]),
+    point([-122.5, 37.9]),
+  ]);
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <ShapeSource id="my-source" shape={geojson}>
+        <CircleLayer
+          id="circle-layer"
+          style={{
+            circleColor: '#3887be',
+            circleRadius: 8,
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```
+
+## Using External GeoJSON URL
+
+```tsx
+<ShapeSource
+  id="remote-source"
+  url="https://example.com/data.geojson"
+>
+  <FillLayer id="fill-layer" style={{ fillColor: 'blue' }} />
+</ShapeSource>
+```
+
+## Clustering Points
+
+```tsx
+<ShapeSource
+  id="clustered-source"
+  shape={pointsGeoJSON}
+  cluster
+  clusterRadius={50}
+  clusterMaxZoomLevel={14}
+>
+  <CircleLayer
+    id="clusters"
+    filter={['has', 'point_count']}
+    style={{
+      circleColor: '#51bbd6',
+      circleRadius: 20,
+    }}
+  />
+  <SymbolLayer
+    id="cluster-count"
+    filter={['has', 'point_count']}
+    style={{
+      textField: ['get', 'point_count_abbreviated'],
+      textSize: 12,
+    }}
+  />
+</ShapeSource>
+```
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A string that uniquely identifies the source.
+  
+  **Default:** `Mapbox.StyleSource.DefaultSourceID`
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  The id refers to an existing source in the style. Does not create a new source.
+</ParamField>
+
+<ParamField path="url" type="string">
+  An HTTP(S) URL, absolute file URL, or local file URL relative to the current application's resource bundle.
+</ParamField>
+
+<ParamField path="shape" type="GeoJSON.GeometryCollection | GeoJSON.Feature | GeoJSON.FeatureCollection | GeoJSON.Geometry | ShapeAnimatorInterface">
+  The contents of the source. A shape can represent a GeoJSON geometry, a feature, or a feature collection.
+</ParamField>
+
+<ParamField path="cluster" type="boolean">
+  Enables clustering on the source for point shapes.
+</ParamField>
+
+<ParamField path="clusterRadius" type="number">
+  Specifies the radius of each cluster if clustering is enabled. A value of 512 produces a radius equal to the width of a tile.
+  
+  **Default:** `50`
+</ParamField>
+
+<ParamField path="clusterMaxZoomLevel" type="number">
+  Specifies the maximum zoom level at which to cluster points if clustering is enabled. Defaults to one zoom level less than the value of `maxZoomLevel` so that, at the maximum zoom level, the shapes are not clustered.
+</ParamField>
+
+<ParamField path="clusterProperties" type="object">
+  Specifies custom properties on the generated clusters if clustering is enabled, aggregating values from clustered points.
+  
+  Has the form `{ "property_name": [operator, map_expression]}`, where:
+  - `operator` is a custom reduce expression that references a special `["accumulated"]` value
+  - `map_expression` produces the value of a single point
+  
+  Example: `{ "sum": [["+", ["accumulated"], ["get", "sum"]], ["get", "scalerank"]] }`
+  
+  **Note:** Mapbox GL v8 implementation only
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  Specifies the maximum zoom level at which to create vector tiles. A greater value produces greater detail at high zoom levels.
+  
+  **Default:** `18`
+</ParamField>
+
+<ParamField path="buffer" type="number">
+  Specifies the size of the tile buffer on each side. A value of 0 produces no buffer. A value of 512 produces a buffer as wide as the tile itself. Larger values produce fewer rendering artifacts near tile edges and slower performance.
+  
+  **Default:** `128`
+</ParamField>
+
+<ParamField path="tolerance" type="number">
+  Specifies the Douglas-Peucker simplification tolerance. A greater value produces simpler geometries and improves performance.
+  
+  **Default:** `0.375`
+</ParamField>
+
+<ParamField path="lineMetrics" type="boolean">
+  Whether to calculate line distance metrics. This is required for line layers that specify `lineGradient` values.
+  
+  **Default:** `false`
+</ParamField>
+
+<ParamField path="onPress" type="(event: OnPressEvent) => void">
+  Source press listener, gets called when a user presses one of the children layers only if that layer has a higher z-index than another source layers.
+  
+  The event object contains:
+  - `features` - Array of GeoJSON features that were pressed
+  - `coordinates` - The geographic coordinates of the press
+  - `point` - The screen point of the press
+</ParamField>
+
+<ParamField path="hitbox" type="{ width: number; height: number }">
+  Overrides the default touch hitbox (44x44 pixels) for the source layers.
+  
+  - `width` - Width of hitbox in pixels
+  - `height` - Height of hitbox in pixels
+</ParamField>
+
+<ParamField path="children" type="React.ReactElement | React.ReactElement[]">
+  Child layer components that will use this source.
+</ParamField>
+
+## Methods
+
+Access these methods using a ref:
+
+```tsx
+const shapeSourceRef = useRef<ShapeSource>(null);
+
+<ShapeSource ref={shapeSourceRef} id="source" shape={geojson}>
+  {/* layers */}
+</ShapeSource>
+```
+
+### getClusterExpansionZoom
+
+Returns the zoom level needed to expand the cluster.
+
+```tsx
+const zoom = await shapeSourceRef.current?.getClusterExpansionZoom(feature);
+```
+
+**Parameters:**
+- `feature` (string | GeoJSON.Feature) - The feature cluster to expand
+
+**Returns:** `Promise<number>` - The zoom level needed to expand the cluster
+
+### getClusterLeaves
+
+Returns the FeatureCollection from the cluster.
+
+```tsx
+const collection = await shapeSourceRef.current?.getClusterLeaves(
+  feature,
+  limit,
+  offset
+);
+```
+
+**Parameters:**
+- `feature` (number | GeoJSON.Feature) - The feature cluster to expand
+- `limit` (number) - The number of points to return
+- `offset` (number) - The amount of points to skip (for pagination)
+
+**Returns:** `Promise<GeoJSON.FeatureCollection>` - The feature collection
+
+### getClusterChildren
+
+Returns the FeatureCollection from the cluster (on the next zoom level).
+
+```tsx
+const collection = await shapeSourceRef.current?.getClusterChildren(feature);
+```
+
+**Parameters:**
+- `feature` (number | GeoJSON.Feature) - The feature cluster to expand
+
+**Returns:** `Promise<GeoJSON.FeatureCollection>` - The feature collection
+
+## Related Components
+
+- [VectorSource](/api/vector-source) - For tiled vector data
+- [CircleLayer](/api/circle-layer) - Common layer for point data
+- [LineLayer](/api/line-layer) - Common layer for line data
+- [FillLayer](/api/fill-layer) - Common layer for polygon data

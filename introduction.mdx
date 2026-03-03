@@ -1,0 +1,132 @@
+---
+title: Mapbox Maps SDK for React Native
+description: Build powerful, interactive maps for iOS and Android with React Native
+---
+
+# Mapbox Maps SDK for React Native
+
+A community-supported, open-source React Native library for building maps with the [Mapbox Maps SDK for iOS](https://www.mapbox.com/ios-sdk/) and [Mapbox Maps SDK for Android](https://www.mapbox.com/android-sdk/).
+
+<CardGroup cols={2}>
+  <Card
+    title="Get Started"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Create your first map in under 5 minutes
+  </Card>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Install and configure for iOS, Android, and Expo
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api/mapview"
+  >
+    Explore all components and their properties
+  </Card>
+  <Card
+    title="Examples"
+    icon="code"
+    href="/examples"
+  >
+    Browse interactive examples and code samples
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<CardGroup cols={3}>
+  <Card title="Native Performance" icon="gauge-high">
+    Built on Mapbox's native SDKs for smooth 60fps rendering and gesture handling
+  </Card>
+  <Card title="Rich Components" icon="layer-group">
+    Full access to sources, layers, annotations, camera controls, and more
+  </Card>
+  <Card title="Data Visualization" icon="chart-line">
+    Display GeoJSON, vector tiles, raster sources with customizable styles
+  </Card>
+  <Card title="3D Terrain" icon="mountain">
+    Render elevation data with 3D terrain and building extrusions
+  </Card>
+  <Card title="Offline Maps" icon="download">
+    Download map regions for offline use with full caching support
+  </Card>
+  <Card title="Location Tracking" icon="location-dot">
+    Built-in user location with customizable pucks and tracking modes
+  </Card>
+</CardGroup>
+
+## Supported Platforms
+
+- **React Native**: 0.79+
+- **iOS**: Mapbox Maps SDK v11.18.2
+- **Android**: Mapbox Maps SDK v11.18.2
+- **Expo**: Full support with config plugin
+- **Architecture**: Built on React Native's New Architecture (Fabric/TurboModules)
+
+<Note>
+This package requires custom native code and is **not** available in the Expo Go app. Learn how to use it with [custom dev clients](/installation#expo).
+</Note>
+
+## Prerequisites
+
+Before you begin, you'll need:
+
+1. A [Mapbox account](https://account.mapbox.com/auth/signup/) (free tier available)
+2. A Mapbox access token from your [account page](https://console.mapbox.com/account/access-tokens/)
+3. Node.js and npm/yarn installed
+4. React Native development environment set up
+
+## What You Can Build
+
+With @rnmapbox/maps, you can create:
+
+- **Location-based apps** with real-time tracking and routing
+- **Data visualizations** with heatmaps, clusters, and custom markers
+- **Interactive maps** with tap handlers, gestures, and animations
+- **Offline experiences** with downloadable map packs
+- **3D environments** with terrain, extrusions, and custom models
+
+## Quick Example
+
+Here's a simple map to get you started:
+
+```jsx
+import Mapbox from '@rnmapbox/maps';
+import { View, StyleSheet } from 'react-native';
+
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
+
+const App = () => {
+  return (
+    <View style={styles.page}>
+      <Mapbox.MapView style={styles.map} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  page: { flex: 1 },
+  map: { flex: 1 }
+});
+```
+
+<Card title="Ready to get started?" icon="arrow-right" href="/installation">
+  Follow the installation guide to set up your project
+</Card>
+
+## Community & Support
+
+- **GitHub**: [rnmapbox/maps](https://github.com/rnmapbox/maps)
+- **Discussions**: [GitHub Discussions](https://github.com/rnmapbox/maps/discussions)
+- **Discord**: [#react-native channel](https://discord.com/channels/1004826913229000704/1092426983696248893) in Mapbox Discord
+- **Issues**: [Bug Reports](https://github.com/rnmapbox/maps/issues)
+
+## License
+
+@rnmapbox/maps is MIT licensed. See the [LICENSE](https://github.com/rnmapbox/maps/blob/main/LICENSE.md) file for details.

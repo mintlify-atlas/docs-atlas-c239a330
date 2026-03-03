@@ -1,0 +1,194 @@
+---
+title: MarkerView
+description: API reference for the MarkerView component
+---
+
+MarkerView represents an interactive React Native marker on the map.
+
+If you have static views, consider using PointAnnotation or SymbolLayer to display an image, as they'll offer much better performance. Mapbox suggests using this component for a maximum of around 100 views displayed at one time.
+
+This is implemented with view annotations on [Android](https://docs.mapbox.com/android/maps/guides/annotations/view-annotations/) and [iOS](https://docs.mapbox.com/ios/maps/guides/annotations/view-annotations).
+
+This component has no dedicated `onPress` method. Instead, you should handle gestures with the React views passed in as `children`.
+
+## Props
+
+<ParamField path="coordinate" type="Position" required>
+  The center point (specified as a map coordinate) of the marker.
+  
+  Position is a tuple of `[longitude, latitude]`.
+</ParamField>
+
+<ParamField path="anchor" type="object" default="{ x: 0.5, y: 0.5 }">
+  Any coordinate between (0, 0) and (1, 1), where (0, 0) is the top-left corner of the view, and (1, 1) is the bottom-right corner. Defaults to the center at (0.5, 0.5).
+  
+  <ParamField path="anchor.x" type="number">
+    X coordinate of the anchor point
+  </ParamField>
+  
+  <ParamField path="anchor.y" type="number">
+    Y coordinate of the anchor point
+  </ParamField>
+</ParamField>
+
+<ParamField path="allowOverlap" type="boolean" default="false">
+  Whether or not nearby markers on the map should all be displayed. If false, adjacent markers will 'collapse' and only one will be shown. Defaults to false.
+</ParamField>
+
+<ParamField path="allowOverlapWithPuck" type="boolean" default="false">
+  Whether or not nearby markers on the map should be hidden if close to a UserLocation puck. Defaults to false.
+</ParamField>
+
+<ParamField path="isSelected" type="boolean" default="false">
+  Whether the marker is selected
+</ParamField>
+
+<ParamField path="children" type="React.ReactElement" required>
+  One or more valid React Native views.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, Camera, MarkerView } from '@rnmapbox/maps';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState } from 'react';
+
+const styles = StyleSheet.create({
+  touchableContainer: {
+    borderColor: 'black',
+    borderWidth: 1.0,
+    width: 60
+  },
+  touchable: {
+    backgroundColor: 'blue',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  touchableText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+});
+
+const AnnotationContent = ({ title }) => (
+  <View style={styles.touchableContainer} collapsable={false}>
+    <Text>{title}</Text>
+    <TouchableOpacity style={styles.touchable}>
+      <Text style={styles.touchableText}>Btn</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const App = () => {
+  const [allowOverlapWithPuck, setAllowOverlapWithPuck] = useState(false);
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          zoomLevel: 16,
+          centerCoordinate: [-73.99155, 40.73581],
+        }}
+      />
+      <MarkerView
+        coordinate={[-73.99155, 40.73581]}
+        allowOverlapWithPuck={allowOverlapWithPuck}
+      >
+        <AnnotationContent title={'This is a marker view'} />
+      </MarkerView>
+    </MapView>
+  );
+};
+```
+
+## Custom Callout Example
+
+You can use MarkerView to create custom callouts:
+
+```tsx
+import { MapView, Camera, MarkerView, ShapeSource, SymbolLayer, Images } from '@rnmapbox/maps';
+import { View, Text, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import exampleIcon from './assets/pin.png';
+
+const featureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      id: '9d10456e-bdda-4aa9-9269-04c1667d4552',
+      properties: {
+        icon: 'example',
+        message: 'Hello!',
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [12.338, 45.4385],
+      },
+    },
+  ],
+};
+
+const CustomCalloutView = ({ message }) => {
+  return (
+    <View style={{
+      backgroundColor: 'white',
+      width: 60,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Text style={{ color: 'black', fontSize: 16 }}>{message}</Text>
+    </View>
+  );
+};
+
+const CustomCallout = () => {
+  const [selectedFeature, setSelectedFeature] = useState();
+
+  const onPinPress = (e) => {
+    if (selectedFeature) {
+      setSelectedFeature(undefined);
+      return;
+    }
+    const feature = e?.features[0];
+    setSelectedFeature(feature);
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [12.338, 45.4385],
+          zoomLevel: 17.4,
+        }}
+      />
+      <Images images={{ exampleIcon }} />
+      <ShapeSource
+        id="mapPinsSource"
+        shape={featureCollection}
+        onPress={onPinPress}
+      >
+        <SymbolLayer
+          id="mapPinsLayer"
+          style={{
+            iconAllowOverlap: true,
+            iconAnchor: 'bottom',
+            iconSize: 1.0,
+            iconImage: 'exampleIcon',
+          }}
+        />
+      </ShapeSource>
+      {selectedFeature && (
+        <MarkerView coordinate={selectedFeature.geometry.coordinates}>
+          <CustomCalloutView message={selectedFeature?.properties?.message} />
+        </MarkerView>
+      )}
+    </MapView>
+  );
+};
+```

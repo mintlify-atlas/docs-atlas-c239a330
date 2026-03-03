@@ -1,0 +1,450 @@
+---
+title: locationManager
+description: Singleton module for managing device location services
+---
+
+The `locationManager` is a singleton module that provides low-level access to device location services. It manages location updates, listeners, and location permissions.
+
+## Import
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+```
+
+## Overview
+
+The `locationManager` provides direct access to location services without requiring a React component. This is useful when you need location data outside of the React component lifecycle or when building custom location features.
+
+**Note:** Most applications should use the `LocationPuck` or `UserLocation` components instead of directly managing the `locationManager`.
+
+## Methods
+
+### getLastKnownLocation
+
+```tsx
+getLastKnownLocation(): Promise<Location | null>
+```
+
+Retrieves the last known location from the device. Returns `null` if no location is available.
+
+```tsx
+const location = await locationManager.getLastKnownLocation();
+if (location) {
+  console.log('Lat:', location.coords.latitude);
+  console.log('Lng:', location.coords.longitude);
+}
+```
+
+### addListener
+
+```tsx
+addListener(listener: (location: Location) => void): void
+```
+
+Registers a callback function that will be called whenever the location updates. Automatically starts location services if not already running.
+
+<ParamField path="listener" type="(location: Location) => void" required>
+  Callback function that receives location updates.
+</ParamField>
+
+```tsx
+const handleLocationUpdate = (location) => {
+  console.log('New location:', location.coords);
+};
+
+locationManager.addListener(handleLocationUpdate);
+```
+
+### removeListener
+
+```tsx
+removeListener(listener: (location: Location) => void): void
+```
+
+Unregisters a previously registered location listener. If no listeners remain, location services are automatically stopped.
+
+<ParamField path="listener" type="(location: Location) => void" required>
+  The callback function to remove (must be the same reference used in `addListener`).
+</ParamField>
+
+```tsx
+locationManager.removeListener(handleLocationUpdate);
+```
+
+### removeAllListeners
+
+```tsx
+removeAllListeners(): void
+```
+
+Removes all registered location listeners and stops location services.
+
+```tsx
+locationManager.removeAllListeners();
+```
+
+### start
+
+```tsx
+start(displacement?: number): void
+```
+
+Manually starts location services. This is automatically called when the first listener is added.
+
+<ParamField path="displacement" type="number" default="-1">
+  Minimum distance (in meters) the device must move before a location update is triggered. Use `-1` to use the value set by `setMinDisplacement()`, or the default behavior.
+</ParamField>
+
+```tsx
+locationManager.start(10); // Update every 10 meters
+```
+
+### stop
+
+```tsx
+stop(): void
+```
+
+Manually stops location services and removes event listeners. This is automatically called when the last listener is removed.
+
+```tsx
+locationManager.stop();
+```
+
+### setMinDisplacement
+
+```tsx
+setMinDisplacement(minDisplacement: number): void
+```
+
+Sets the minimum distance (in meters) the device must move before a location update is triggered.
+
+<ParamField path="minDisplacement" type="number" required>
+  Minimum displacement in meters. Use `0` for maximum update frequency.
+</ParamField>
+
+```tsx
+locationManager.setMinDisplacement(5); // Update every 5 meters
+```
+
+### setRequestsAlwaysUse
+
+```tsx
+setRequestsAlwaysUse(requestsAlwaysUse: boolean): void
+```
+
+Sets whether to request "always" location permission (iOS) to receive location updates even when the app is in the background.
+
+**Platform:** iOS only
+
+<ParamField path="requestsAlwaysUse" type="boolean" required>
+  `true` to request always-on location access, `false` for "when in use" only.
+</ParamField>
+
+```tsx
+locationManager.setRequestsAlwaysUse(true);
+```
+
+### setLocationEventThrottle
+
+```tsx
+setLocationEventThrottle(throttleValue: number): void
+```
+
+Sets the period at which location events will be sent over the React Native bridge. The default is `0` (no limit).
+
+**Platform:** iOS only (V10)
+
+<ParamField path="throttleValue" type="number" required>
+  Event throttle value in milliseconds.
+</ParamField>
+
+```tsx
+locationManager.setLocationEventThrottle(500); // Max 2 updates per second
+```
+
+## Types
+
+### Location
+
+<ResponseField name="coords" type="Coordinates" required>
+  Object containing the location coordinates and related data.
+</ResponseField>
+
+<ResponseField name="timestamp" type="number">
+  Unix timestamp (in milliseconds) when the location was determined.
+</ResponseField>
+
+### Coordinates
+
+<ResponseField name="latitude" type="number" required>
+  The latitude in degrees.
+</ResponseField>
+
+<ResponseField name="longitude" type="number" required>
+  The longitude in degrees.
+</ResponseField>
+
+<ResponseField name="heading" type="number">
+  The heading (measured in degrees) relative to true north. This indicates the direction the device is pointing to (compass value).
+  
+  **Note:** On Android, this may incorrectly report the course value. See issue [#1213](https://github.com/rnmapbox/maps/issues/1213).
+</ResponseField>
+
+<ResponseField name="course" type="number">
+  The direction in which the device is traveling, measured in degrees relative to due north. This represents the actual direction of movement, which may differ from heading.
+</ResponseField>
+
+<ResponseField name="speed" type="number">
+  The instantaneous speed of the device, measured in meters per second.
+</ResponseField>
+
+<ResponseField name="accuracy" type="number">
+  The radius of uncertainty for the location, measured in meters. Lower values indicate higher accuracy.
+</ResponseField>
+
+<ResponseField name="altitude" type="number">
+  The altitude, measured in meters above sea level.
+</ResponseField>
+
+## Examples
+
+### Basic Location Tracking
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+import { useEffect, useState } from 'react';
+
+function useLocation() {
+  const [location, setLocation] = useState(null);
+  
+  useEffect(() => {
+    const handleUpdate = (location) => {
+      setLocation(location);
+    };
+    
+    locationManager.addListener(handleUpdate);
+    
+    return () => {
+      locationManager.removeListener(handleUpdate);
+    };
+  }, []);
+  
+  return location;
+}
+
+function MyComponent() {
+  const location = useLocation();
+  
+  return (
+    <Text>
+      {location 
+        ? `${location.coords.latitude}, ${location.coords.longitude}`
+        : 'Loading...'}
+    </Text>
+  );
+}
+```
+
+### Get Last Known Location
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+import { useEffect, useState } from 'react';
+
+function MyComponent() {
+  const [location, setLocation] = useState(null);
+  
+  useEffect(() => {
+    async function fetchLocation() {
+      const lastLocation = await locationManager.getLastKnownLocation();
+      setLocation(lastLocation);
+    }
+    
+    fetchLocation();
+  }, []);
+  
+  return (
+    <Text>
+      Last known: {location?.coords.latitude}, {location?.coords.longitude}
+    </Text>
+  );
+}
+```
+
+### With Minimum Displacement
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+import { useEffect } from 'react';
+
+function MyComponent() {
+  useEffect(() => {
+    // Only update when device moves 10 meters
+    locationManager.setMinDisplacement(10);
+    
+    const handleUpdate = (location) => {
+      console.log('Moved at least 10 meters:', location.coords);
+    };
+    
+    locationManager.addListener(handleUpdate);
+    
+    return () => {
+      locationManager.removeListener(handleUpdate);
+    };
+  }, []);
+  
+  return null;
+}
+```
+
+### Background Location (iOS)
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+import { useEffect } from 'react';
+
+function BackgroundLocationTracking() {
+  useEffect(() => {
+    // Request "always" permission for background tracking
+    locationManager.setRequestsAlwaysUse(true);
+    
+    const handleUpdate = (location) => {
+      // This will be called even when app is in background
+      console.log('Location update:', location.coords);
+    };
+    
+    locationManager.addListener(handleUpdate);
+    
+    return () => {
+      locationManager.removeListener(handleUpdate);
+      locationManager.setRequestsAlwaysUse(false);
+    };
+  }, []);
+  
+  return null;
+}
+```
+
+### Throttled Location Updates (iOS)
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+import { useEffect } from 'react';
+
+function ThrottledLocation() {
+  useEffect(() => {
+    // Limit updates to maximum 2 per second
+    locationManager.setLocationEventThrottle(500);
+    
+    const handleUpdate = (location) => {
+      console.log('Throttled update:', location.coords);
+    };
+    
+    locationManager.addListener(handleUpdate);
+    
+    return () => {
+      locationManager.removeListener(handleUpdate);
+      locationManager.setLocationEventThrottle(0); // Reset
+    };
+  }, []);
+  
+  return null;
+}
+```
+
+### Manual Start/Stop Control
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+import { useState } from 'react';
+
+function LocationControl() {
+  const [isTracking, setIsTracking] = useState(false);
+  const [location, setLocation] = useState(null);
+  
+  const handleUpdate = (location) => {
+    setLocation(location);
+  };
+  
+  const startTracking = () => {
+    locationManager.addListener(handleUpdate);
+    locationManager.start();
+    setIsTracking(true);
+  };
+  
+  const stopTracking = () => {
+    locationManager.removeListener(handleUpdate);
+    locationManager.stop();
+    setIsTracking(false);
+  };
+  
+  return (
+    <View>
+      <Button 
+        title={isTracking ? 'Stop Tracking' : 'Start Tracking'}
+        onPress={isTracking ? stopTracking : startTracking}
+      />
+      {location && (
+        <Text>
+          {location.coords.latitude}, {location.coords.longitude}
+        </Text>
+      )}
+    </View>
+  );
+}
+```
+
+### Speed and Course Tracking
+
+```tsx
+import { locationManager } from '@rnmapbox/maps';
+import { useEffect, useState } from 'react';
+
+function SpeedTracker() {
+  const [speed, setSpeed] = useState(0);
+  const [course, setCourse] = useState(0);
+  
+  useEffect(() => {
+    const handleUpdate = (location) => {
+      setSpeed(location.coords.speed || 0);
+      setCourse(location.coords.course || 0);
+    };
+    
+    locationManager.addListener(handleUpdate);
+    
+    return () => {
+      locationManager.removeListener(handleUpdate);
+    };
+  }, []);
+  
+  return (
+    <View>
+      <Text>Speed: {(speed * 3.6).toFixed(1)} km/h</Text>
+      <Text>Course: {course.toFixed(0)}°</Text>
+    </View>
+  );
+}
+```
+
+## Best Practices
+
+1. **Clean up listeners**: Always remove listeners in cleanup functions to prevent memory leaks
+2. **Use components when possible**: Prefer `LocationPuck` or `UserLocation` components for most use cases
+3. **Handle permissions**: Ensure location permissions are granted before starting location services
+4. **Set appropriate displacement**: Use `setMinDisplacement()` to avoid excessive updates and save battery
+5. **Throttle on iOS**: Use `setLocationEventThrottle()` to limit update frequency when needed
+
+## Notes
+
+- The `locationManager` is a singleton instance - all parts of your app share the same instance
+- Location services start automatically when the first listener is added
+- Location services stop automatically when the last listener is removed
+- On iOS, background location requires appropriate capabilities and permissions
+- The heading/course issue on Android will be fixed in a future update (see issue [#1213](https://github.com/rnmapbox/maps/issues/1213))
+
+## See Also
+
+- [LocationPuck](/api/location-puck) - Modern native location puck component
+- [UserLocation](/api/user-location) - Legacy user location component
+- [CustomLocationProvider](/api/custom-location-provider) - Override native location with custom data

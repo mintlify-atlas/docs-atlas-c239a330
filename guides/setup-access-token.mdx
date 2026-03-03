@@ -1,0 +1,177 @@
+---
+title: "Set Up Mapbox Access Token"
+description: "Learn how to obtain and configure your Mapbox access token for React Native"
+---
+
+## Overview
+
+Mapbox requires an access token to authenticate API requests. This guide walks you through obtaining a Mapbox access token and setting it up in your React Native application.
+
+## Prerequisites
+
+- A Mapbox account (free to create)
+- Installed `@rnmapbox/maps` package
+
+## Obtaining Your Access Token
+
+<Steps>
+  <Step title="Create a Mapbox account">
+    If you don't have a Mapbox account yet, [sign up for free](https://account.mapbox.com/auth/signup/).
+  </Step>
+
+  <Step title="Access your tokens page">
+    Navigate to your [Mapbox account page](https://console.mapbox.com/account/access-tokens/) to view and manage your access tokens.
+  </Step>
+
+  <Step title="Copy your default token">
+    Mapbox automatically creates a default public token for you. Copy this token - you'll need it to configure your app.
+
+    <Note>
+      You can also create new tokens with specific scopes if needed. For most React Native applications, the default public token is sufficient.
+    </Note>
+  </Step>
+</Steps>
+
+## Setting the Access Token in Your App
+
+Once you have your access token, you need to set it in your React Native application. Add this code early in your app's lifecycle, typically in your main `App.js` or `App.tsx` file:
+
+```js
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setAccessToken('<YOUR_ACCESSTOKEN>');
+```
+
+### Complete Example
+
+Here's a complete example showing where to place the access token configuration:
+
+<CodeGroup>
+
+```jsx App.js
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox, { MapView } from '@rnmapbox/maps';
+
+// Set your Mapbox access token
+Mapbox.setAccessToken('<YOUR_ACCESSTOKEN>');
+
+const App = () => {
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <MapView style={styles.map} />
+      </View>
+    </View>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    flex: 1,
+  },
+});
+```
+
+```tsx App.tsx
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox, { MapView } from '@rnmapbox/maps';
+
+// Set your Mapbox access token
+Mapbox.setAccessToken('<YOUR_ACCESSTOKEN>');
+
+const App: React.FC = () => {
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <MapView style={styles.map} />
+      </View>
+    </View>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    flex: 1,
+  },
+});
+```
+
+</CodeGroup>
+
+## Best Practices
+
+<Warning>
+  Never commit your access token directly to version control. Use environment variables or a configuration file that's excluded from your repository.
+</Warning>
+
+### Using Environment Variables
+
+For better security, store your access token in an environment variable:
+
+```js
+import Mapbox from '@rnmapbox/maps';
+import Config from 'react-native-config';
+
+Mapbox.setAccessToken(Config.MAPBOX_ACCESS_TOKEN);
+```
+
+## Additional Configuration
+
+### Disabling Telemetry
+
+By default, Mapbox collects telemetry data. If you want to disable this:
+
+```js
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setAccessToken('<YOUR_ACCESSTOKEN>');
+Mapbox.setTelemetryEnabled(false);
+```
+
+<Note>
+  For more information about Mapbox telemetry, visit [mapbox.com/telemetry](https://www.mapbox.com/telemetry).
+</Note>
+
+### Android: Setting Connection Status
+
+If you're hosting styles and sources on localhost during development, you may need to manually set the connection status:
+
+```js
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setConnected(true);
+```
+
+This bypasses Android's ConnectivityManager checks. Set to `true` for connected, `false` for disconnected, or `null` to let ConnectivityManager determine the state.
+
+## Next Steps
+
+Now that you've set up your access token, you're ready to:
+
+- Complete platform-specific setup for [iOS](/guides/ios-setup) or [Android](/guides/android-setup)
+- Learn about [Expo setup](/guides/expo-setup) if using Expo
+- Explore the example code and start building your map application

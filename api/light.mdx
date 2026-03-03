@@ -1,0 +1,383 @@
+---
+title: Light
+description: Light component API reference for Mapbox Maps SDK for React Native
+---
+
+# Light
+
+Light represents the light source for extruded geometries (3D buildings and terrain). It controls how these 3D features are lit and shaded.
+
+## Import
+
+```tsx
+import { Light } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Light, Camera } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Light
+        style={{
+          intensity: 0.8,
+          color: '#ffffff',
+          position: [1.5, 90, 60],
+        }}
+      />
+      <Camera
+        centerCoordinate={[-74.006, 40.7128]}
+        zoomLevel={16}
+        pitch={60}
+      />
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### style
+
+<ParamField path="style" type="LightLayerStyleProps" required>
+  Customizable style attributes for the light source.
+</ParamField>
+
+## Style Properties
+
+The `style` prop accepts a `LightLayerStyleProps` object with the following properties:
+
+### anchor
+
+<ParamField path="style.anchor" type="'map' | 'viewport'" default="viewport">
+  Whether extruded geometries are lit relative to the map or viewport.
+  
+  - `map` - The light source rotates with the map
+  - `viewport` - The light source is fixed to the viewport (user's view)
+  
+  ```tsx
+  <Light
+    style={{
+      anchor: 'map',
+    }}
+  />
+  ```
+</ParamField>
+
+### position
+
+<ParamField path="style.position" type="[number, number, number]" default="[1.15, 210, 30]">
+  Position of the light source relative to lit geometries, in `[r, a, p]` format:
+  
+  - `r` (radial) - Distance from the center of the base of an object to its light
+  - `a` (azimuthal) - Position of the light in degrees (0° = top/north, clockwise)
+  - `p` (polar) - Height of the light (0° = directly above, 180° = directly below)
+  
+  ```tsx
+  <Light
+    style={{
+      position: [1.5, 90, 45],  // [radial, azimuth, polar]
+    }}
+  />
+  ```
+</ParamField>
+
+### positionTransition
+
+<ParamField path="style.positionTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the position property.
+  
+  ```tsx
+  <Light
+    style={{
+      position: [1.5, 90, 45],
+      positionTransition: {
+        duration: 1000,
+        delay: 0,
+      },
+    }}
+  />
+  ```
+</ParamField>
+
+### color
+
+<ParamField path="style.color" type="string" default="#ffffff">
+  Color tint for lighting extruded geometries. Accepts any valid CSS color.
+  
+  ```tsx
+  <Light
+    style={{
+      color: '#ffcc00',
+    }}
+  />
+  ```
+</ParamField>
+
+### colorTransition
+
+<ParamField path="style.colorTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the color property.
+  
+  ```tsx
+  <Light
+    style={{
+      color: '#ffcc00',
+      colorTransition: {
+        duration: 1000,
+        delay: 0,
+      },
+    }}
+  />
+  ```
+</ParamField>
+
+### intensity
+
+<ParamField path="style.intensity" type="number" default="0.5">
+  Intensity of lighting on a scale from 0 to 1. Higher numbers create more extreme contrast.
+  
+  - `0` - No lighting effect
+  - `1` - Maximum lighting effect
+  
+  ```tsx
+  <Light
+    style={{
+      intensity: 0.8,
+    }}
+  />
+  ```
+</ParamField>
+
+### intensityTransition
+
+<ParamField path="style.intensityTransition" type="{ duration: number, delay: number }" default="{ duration: 300, delay: 0 }">
+  The transition affecting any changes to the intensity property.
+  
+  ```tsx
+  <Light
+    style={{
+      intensity: 0.8,
+      intensityTransition: {
+        duration: 500,
+        delay: 0,
+      },
+    }}
+  />
+  ```
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Lighting">
+    ```tsx
+    import { MapView, Light, Camera } from '@rnmapbox/maps';
+
+    function BasicLighting() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Light
+            style={{
+              intensity: 0.7,
+              color: '#ffffff',
+            }}
+          />
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={16}
+            pitch={60}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Sunset Lighting">
+    ```tsx
+    import { MapView, Light, Camera } from '@rnmapbox/maps';
+
+    function SunsetLighting() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Light
+            style={{
+              intensity: 0.6,
+              color: '#ff8c42',  // Warm orange
+              position: [1.5, 270, 75],  // Low angle from west
+            }}
+          />
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={16}
+            pitch={60}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Noon Lighting">
+    ```tsx
+    import { MapView, Light, Camera } from '@rnmapbox/maps';
+
+    function NoonLighting() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Light
+            style={{
+              intensity: 0.9,
+              color: '#ffffff',
+              position: [1.15, 180, 30],  // High angle from south
+              anchor: 'map',
+            }}
+          />
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={16}
+            pitch={60}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Animated Lighting">
+    ```tsx
+    import { useState, useEffect } from 'react';
+    import { MapView, Light, Camera } from '@rnmapbox/maps';
+
+    function AnimatedLighting() {
+      const [azimuth, setAzimuth] = useState(0);
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setAzimuth((prev) => (prev + 1) % 360);
+        }, 50);
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Light
+            style={{
+              intensity: 0.8,
+              color: '#ffffff',
+              position: [1.5, azimuth, 45],
+              positionTransition: {
+                duration: 0,
+                delay: 0,
+              },
+            }}
+          />
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={16}
+            pitch={60}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Time of Day">
+    ```tsx
+    import { useState } from 'react';
+    import { MapView, Light, Camera } from '@rnmapbox/maps';
+    import { Button, View } from 'react-native';
+
+    function TimeOfDayLighting() {
+      const [timeOfDay, setTimeOfDay] = useState<'dawn' | 'noon' | 'dusk' | 'night'>('noon');
+
+      const lightConfigs = {
+        dawn: { color: '#ffa07a', position: [1.5, 90, 80], intensity: 0.5 },
+        noon: { color: '#ffffff', position: [1.5, 180, 30], intensity: 0.9 },
+        dusk: { color: '#ff6347', position: [1.5, 270, 80], intensity: 0.6 },
+        night: { color: '#4169e1', position: [1.5, 0, 45], intensity: 0.3 },
+      };
+
+      return (
+        <>
+          <MapView style={{ flex: 1 }}>
+            <Light
+              style={{
+                ...lightConfigs[timeOfDay],
+                colorTransition: { duration: 1000, delay: 0 },
+                positionTransition: { duration: 1000, delay: 0 },
+                intensityTransition: { duration: 1000, delay: 0 },
+              }}
+            />
+            <Camera
+              centerCoordinate={[-74.006, 40.7128]}
+              zoomLevel={16}
+              pitch={60}
+            />
+          </MapView>
+          <View style={{ position: 'absolute', bottom: 20, left: 20 }}>
+            <Button title="Dawn" onPress={() => setTimeOfDay('dawn')} />
+            <Button title="Noon" onPress={() => setTimeOfDay('noon')} />
+            <Button title="Dusk" onPress={() => setTimeOfDay('dusk')} />
+            <Button title="Night" onPress={() => setTimeOfDay('night')} />
+          </View>
+        </>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Usage with 3D Buildings
+
+```tsx
+import { MapView, Light, Camera, FillExtrusionLayer, VectorSource } from '@rnmapbox/maps';
+
+function BuildingsWithLighting() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Light
+        style={{
+          intensity: 0.8,
+          color: '#ffffff',
+          position: [1.5, 135, 60],
+        }}
+      />
+      <Camera
+        centerCoordinate={[-74.006, 40.7128]}
+        zoomLevel={16}
+        pitch={60}
+      />
+      <VectorSource id="composite" url="mapbox://mapbox.mapbox-streets-v8">
+        <FillExtrusionLayer
+          id="3d-buildings"
+          sourceLayer="building"
+          filter={['==', 'extrude', 'true']}
+          style={{
+            fillExtrusionColor: '#aaa',
+            fillExtrusionHeight: ['get', 'height'],
+            fillExtrusionBase: ['get', 'min_height'],
+            fillExtrusionOpacity: 0.6,
+          }}
+        />
+      </VectorSource>
+    </MapView>
+  );
+}
+```
+
+## Related Components
+
+- [MapView](/api/mapview) - The map container
+- [Atmosphere](/api/atmosphere) - Configure atmospheric effects
+- [FillExtrusionLayer](/api/fill-extrusion-layer) - 3D building layer
+- [Terrain](/api/terrain) - 3D terrain
+
+## Additional Resources
+
+- [Mapbox Light Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/light/)

@@ -1,0 +1,147 @@
+---
+title: ModelLayer
+description: Renders 3D models on the map
+---
+
+ModelLayer is a style layer that renders 3D models on the map.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#model)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain data.
+</ParamField>
+
+<ParamField path="sourceLayerID" type="string">
+  Identifier of the layer within the source.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="slot" type="'bottom' | 'middle' | 'top'">
+  The slot this layer is assigned to. v11 only
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  Minimum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  Maximum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="ModelLayerStyleProps">
+  Customizable style attributes.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.modelId" type="string" default="">
+  Model to render. It can be either a string referencing an element in the models root property or an internal or external URL.
+</ParamField>
+
+<ParamField path="style.modelType" type="'common3d' | 'location-indicator'" default="common3d">
+  Defines rendering behavior of the model in respect to other 3D scene objects.
+</ParamField>
+
+<ParamField path="style.modelOpacity" type="number" default="1">
+  The opacity of the model layer. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.modelRotation" type="number[]" default="[0,0,0]">
+  The rotation of the model in euler angles [x, y, z] in degrees.
+</ParamField>
+
+<ParamField path="style.modelScale" type="number[]" default="[1,1,1]">
+  The scale of the model along the [x, y, z] axis.
+</ParamField>
+
+<ParamField path="style.modelTranslation" type="number[]" default="[0,0,0]">
+  The translation of the model in meters along [x, y, z] axis.
+</ParamField>
+
+<ParamField path="style.modelColor" type="string" default="#ffffff">
+  The tint color of the model layer. Acts as a multiplier for the model's color.
+</ParamField>
+
+<ParamField path="style.modelColorMixIntensity" type="number" default="0">
+  Intensity of the model-color. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.modelCastShadows" type="boolean" default="true">
+  Enable/Disable shadow casting for this layer.
+</ParamField>
+
+<ParamField path="style.modelReceiveShadows" type="boolean" default="true">
+  Enable/Disable shadow receiving for this layer.
+</ParamField>
+
+<ParamField path="style.modelEmissiveStrength" type="number" default="0">
+  Strength of the emission. Minimum: 0
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, ShapeSource, ModelLayer } from '@rnmapbox/maps';
+
+const modelLocations = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [-122.4, 37.8],
+      },
+      properties: {
+        modelId: 'building-model',
+      },
+    },
+  ],
+};
+
+function Map() {
+  return (
+    <MapView pitch={60}>
+      <ShapeSource id="models" shape={modelLocations}>
+        <ModelLayer
+          id="3d-models"
+          style={{
+            modelId: ['get', 'modelId'],
+            modelType: 'common3d',
+            modelScale: [1, 1, 1.5],
+            modelRotation: [0, 0, 90],
+            modelOpacity: 1,
+            modelCastShadows: true,
+            modelReceiveShadows: true,
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```

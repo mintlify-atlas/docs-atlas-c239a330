@@ -1,0 +1,422 @@
+---
+title: Viewport
+description: Viewport component API reference for Mapbox Maps SDK for React Native
+---
+
+# Viewport
+
+The Viewport component provides a structured approach to organizing camera management logic into states and transitions between them. At any given time, the viewport is either idle, in a state (camera is being managed by a ViewportState), or transitioning between states.
+
+## Import
+
+```tsx
+import { Viewport } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { useRef } from 'react';
+import { MapView, Viewport } from '@rnmapbox/maps';
+import { Button } from 'react-native';
+
+function MapWithViewport() {
+  const viewportRef = useRef<Viewport>(null);
+
+  const followUser = () => {
+    viewportRef.current?.transitionTo({
+      kind: 'followPuck',
+      options: { zoom: 16, pitch: 45 },
+    });
+  };
+
+  return (
+    <>
+      <MapView style={{ flex: 1 }}>
+        <Viewport ref={viewportRef} />
+      </MapView>
+      <Button title="Follow User" onPress={followUser} />
+    </>
+  );
+}
+```
+
+## Props
+
+### transitionsToIdleUponUserInteraction
+
+<ParamField path="transitionsToIdleUponUserInteraction" type="boolean" default="true">
+  Indicates whether the Viewport should idle when the MapView receives touch input.
+  
+  Set this property to `false` to enable building custom ViewportStates that can work simultaneously with certain types of gestures.
+
+  ```tsx
+  <Viewport transitionsToIdleUponUserInteraction={false} />
+  ```
+</ParamField>
+
+### onStatusChanged
+
+<ParamField path="onStatusChanged" type="(event: ViewportStatusChangedEvent) => void">
+  Subscribes to status changes. Called when the viewport status changes.
+  
+  Observers are notified of status changes asynchronously on the main queue. This means that by the time the notification is delivered, the status may have already changed again. This behavior is necessary to allow observers to trigger further transitions while avoiding out-of-order delivery of status changed notifications.
+
+  ```tsx
+  <Viewport
+    onStatusChanged={(event) => {
+      console.log('Viewport status changed:', event);
+      console.log('From:', event.from);
+      console.log('To:', event.to);
+      console.log('Reason:', event.reason);
+    }}
+  />
+  ```
+  
+  **ViewportStatusChangedEvent:**
+  - `from`: ViewportStatus - The previous status
+  - `to`: ViewportStatus - The new status
+  - `reason`: ViewportStatusChangeReason - Why the status changed
+  
+  **ViewportStatusChangeReason:**
+  - `TransitionStarted` - A transition has begun
+  - `TransitionSucceeded` - A transition completed successfully
+  - `IdleRequested` - Idle state was requested
+  - `UserInteraction` - User interacted with the map
+</ParamField>
+
+## Methods
+
+### getState()
+
+```tsx
+getState(): Promise<string>
+```
+
+Returns the current state of the viewport.
+
+```tsx
+const state = await viewportRef.current?.getState();
+console.log('Current state:', state);
+```
+
+### idle()
+
+```tsx
+idle(): Promise<void>
+```
+
+Transitions the viewport to an idle state, stopping any active state management.
+
+```tsx
+await viewportRef.current?.idle();
+```
+
+### transitionTo()
+
+```tsx
+transitionTo(
+  state: ViewportState,
+  transition?: ViewportTransition
+): Promise<boolean>
+```
+
+Transitions the viewport to a new state with an optional transition animation.
+
+**Parameters:**
+
+<ParamField path="state" type="ViewportState" required>
+  The target viewport state. Can be either:
+  
+  **FollowPuck State:**
+  ```typescript
+  {
+    kind: 'followPuck',
+    options?: {
+      zoom?: number | 'keep',
+      pitch?: number | 'keep',
+      bearing?: 'heading' | 'course' | number | 'keep',
+      padding?: { top?: number, left?: number, bottom?: number, right?: number } | 'keep',
+    }
+  }
+  ```
+  
+  **Overview State:**
+  ```typescript
+  {
+    kind: 'overview',
+    options?: {
+      geometry: GeoJSON.Geometry,
+      padding?: { top?: number, left?: number, bottom?: number, right?: number },
+      bearing?: number,
+      pitch?: number,
+      animationDuration?: number,
+    }
+  }
+  ```
+</ParamField>
+
+<ParamField path="transition" type="ViewportTransition">
+  Optional transition animation. Can be:
+  
+  **Immediate Transition:**
+  ```typescript
+  { kind: 'immediate' }
+  ```
+  
+  **Default Transition:**
+  ```typescript
+  { kind: 'default', maxDurationMs?: number }
+  ```
+</ParamField>
+
+**Returns:** Promise that resolves to `true` if the transition was successful.
+
+**Examples:**
+
+```tsx
+// Follow user location
+await viewportRef.current?.transitionTo({
+  kind: 'followPuck',
+  options: {
+    zoom: 16,
+    pitch: 45,
+    bearing: 'heading',
+  },
+});
+
+// Overview of geometry
+await viewportRef.current?.transitionTo(
+  {
+    kind: 'overview',
+    options: {
+      geometry: {
+        type: 'LineString',
+        coordinates: [[-122.4, 37.8], [-122.5, 37.7]],
+      },
+      padding: { top: 50, bottom: 50, left: 50, right: 50 },
+    },
+  },
+  { kind: 'default', maxDurationMs: 2000 }
+);
+```
+
+## Viewport States
+
+### FollowPuck State
+
+Follows the user's location ("puck") with configurable camera settings.
+
+<ParamField path="options.zoom" type="number | 'keep'">
+  The zoom level to use. If `'keep'`, zoom will not be modified.
+  
+  Default: `DEFAULT_FOLLOW_PUCK_VIEWPORT_STATE_ZOOM`
+</ParamField>
+
+<ParamField path="options.pitch" type="number | 'keep'">
+  The pitch (tilt) to use in degrees. If `'keep'`, pitch will not be modified.
+  
+  Default: `DEFAULT_FOLLOW_PUCK_VIEWPORT_STATE_PITCH` degrees
+</ParamField>
+
+<ParamField path="options.bearing" type="'heading' | 'course' | number | 'keep'" default="'heading'">
+  Indicates how to obtain the bearing value:
+  - `'heading'` - Sets bearing to the heading of the device
+  - `'course'` - Sets bearing based on the direction of travel
+  - `number` - Sets the camera bearing to a constant value
+  - `'keep'` - Bearing will not be modified
+  
+  Note: On Android, `'heading'` and `'course'` both sync with the location puck's bearing.
+</ParamField>
+
+<ParamField path="options.padding" type="object | 'keep'" default="0 padding">
+  The viewport padding. If `'keep'`, padding will not be modified.
+  
+  Object shape: `{ top?: number, left?: number, bottom?: number, right?: number }`
+</ParamField>
+
+### Overview State
+
+Positions the camera to view a specific geometry.
+
+<ParamField path="options.geometry" type="GeoJSON.Geometry" required>
+  The geometry that the viewport should frame in the camera view.
+</ParamField>
+
+<ParamField path="options.padding" type="object" default="0 padding">
+  The padding to use when calculating the camera.
+  
+  Object shape: `{ top?: number, left?: number, bottom?: number, right?: number }`
+</ParamField>
+
+<ParamField path="options.bearing" type="number">
+  The bearing to use when calculating the camera.
+</ParamField>
+
+<ParamField path="options.pitch" type="number">
+  The pitch to use when calculating the camera.
+</ParamField>
+
+<ParamField path="options.animationDuration" type="number">
+  The length of the animation in seconds when the viewport starts updating the camera.
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Follow User">
+    ```tsx
+    import { useRef } from 'react';
+    import { MapView, Viewport } from '@rnmapbox/maps';
+    import { Button, View } from 'react-native';
+
+    function FollowUserExample() {
+      const viewportRef = useRef<Viewport>(null);
+
+      const followUser = () => {
+        viewportRef.current?.transitionTo({
+          kind: 'followPuck',
+          options: {
+            zoom: 16,
+            pitch: 45,
+            bearing: 'heading',
+          },
+        });
+      };
+
+      const stopFollowing = () => {
+        viewportRef.current?.idle();
+      };
+
+      return (
+        <>
+          <MapView style={{ flex: 1 }}>
+            <Viewport ref={viewportRef} />
+          </MapView>
+          
+          <View style={{ position: 'absolute', bottom: 20, left: 20 }}>
+            <Button title="Follow User" onPress={followUser} />
+            <Button title="Stop Following" onPress={stopFollowing} />
+          </View>
+        </>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Overview Route">
+    ```tsx
+    import { useRef } from 'react';
+    import { MapView, Viewport } from '@rnmapbox/maps';
+    import { Button } from 'react-native';
+
+    function OverviewRouteExample() {
+      const viewportRef = useRef<Viewport>(null);
+
+      const route = {
+        type: 'LineString' as const,
+        coordinates: [
+          [-122.4194, 37.7749],
+          [-122.4084, 37.7849],
+          [-122.4194, 37.7949],
+        ],
+      };
+
+      const showRoute = () => {
+        viewportRef.current?.transitionTo(
+          {
+            kind: 'overview',
+            options: {
+              geometry: route,
+              padding: {
+                top: 100,
+                bottom: 100,
+                left: 50,
+                right: 50,
+              },
+            },
+          },
+          { kind: 'default', maxDurationMs: 2000 }
+        );
+      };
+
+      return (
+        <>
+          <MapView style={{ flex: 1 }}>
+            <Viewport ref={viewportRef} />
+          </MapView>
+          <Button title="Show Route" onPress={showRoute} />
+        </>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Status Monitoring">
+    ```tsx
+    import { useRef, useState } from 'react';
+    import { MapView, Viewport } from '@rnmapbox/maps';
+    import { Text, View } from 'react-native';
+
+    function StatusMonitoringExample() {
+      const viewportRef = useRef<Viewport>(null);
+      const [status, setStatus] = useState('idle');
+
+      return (
+        <>
+          <MapView style={{ flex: 1 }}>
+            <Viewport
+              ref={viewportRef}
+              onStatusChanged={(event) => {
+                console.log('Status changed:', event);
+                setStatus(`${event.to.kind} (${event.reason})`);
+              }}
+            />
+          </MapView>
+          
+          <View style={{ position: 'absolute', top: 50, left: 20 }}>
+            <Text>Viewport Status: {status}</Text>
+          </View>
+        </>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Custom Interactions">
+    ```tsx
+    import { useRef } from 'react';
+    import { MapView, Viewport } from '@rnmapbox/maps';
+
+    function CustomInteractionsExample() {
+      const viewportRef = useRef<Viewport>(null);
+
+      return (
+        <MapView style={{ flex: 1 }}>
+          {/* Allow gestures while in viewport state */}
+          <Viewport
+            ref={viewportRef}
+            transitionsToIdleUponUserInteraction={false}
+            onStatusChanged={(event) => {
+              if (event.reason === 'UserInteraction') {
+                console.log('User interacted, but viewport state maintained');
+              }
+            }}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Platform Documentation
+
+- [Android Viewport API](https://docs.mapbox.com/android/maps/api/11.0.0/mapbox-maps-android/com.mapbox.maps.plugin.viewport/viewport.html)
+- [iOS Viewport API](https://docs.mapbox.com/ios/maps/api/11.0.0/Viewport.html)
+
+## Related Components
+
+- [Camera](/api/camera) - Alternative camera control component
+- [MapView](/api/mapview) - The map container
+- [UserLocation](/api/user-location) - Display user location

@@ -1,0 +1,459 @@
+---
+title: Data Sources
+description: Add vector, raster, and GeoJSON data sources to your map
+---
+
+Sources provide the data that powers map visualizations. The SDK supports multiple source types for different data formats and use cases.
+
+## Source Types
+
+Mapbox Maps SDK supports these source types:
+
+- **VectorSource** - Mapbox Vector Tiles (.pbf)
+- **RasterSource** - Raster tile images (.png, .jpg)
+- **ShapeSource** - GeoJSON data (points, lines, polygons)
+- **RasterDemSource** - Digital elevation model tiles
+- **ImageSource** - Single georeferenced image
+
+## Vector Sources
+
+Vector sources provide tiled vector data in Mapbox Vector Tile (MVT) format, typically from a TileJSON URL or tile templates.
+
+### Basic Usage
+
+```tsx
+import { VectorSource, FillLayer } from '@rnmapbox/maps';
+
+<VectorSource
+  id="buildings"
+  url="mapbox://mapbox.mapbox-streets-v8"
+>
+  <FillLayer
+    id="building-fill"
+    sourceLayerID="building"  // Layer within the vector tile
+    style={{
+      fillColor: '#088',
+      fillOpacity: 0.5,
+    }}
+  />
+</VectorSource>
+```
+
+### Tile URL Templates
+
+Provide direct tile URLs instead of a TileJSON URL:
+
+```tsx
+<VectorSource
+  id="custom-tiles"
+  tileUrlTemplates={[
+    'https://example.com/tiles/{z}/{x}/{y}.pbf',
+    'https://backup.example.com/tiles/{z}/{x}/{y}.pbf',  // Fallback
+  ]}
+  minZoomLevel={0}
+  maxZoomLevel={14}
+/>
+```
+
+### Source Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `id` | `string` | Unique identifier for the source |
+| `url` | `string` | TileJSON URL |
+| `tileUrlTemplates` | `string[]` | Array of tile URL templates |
+| `minZoomLevel` | `number` | Minimum zoom to load tiles (0-22) |
+| `maxZoomLevel` | `number` | Maximum zoom to load tiles (0-22) |
+| `attribution` | `string` | Attribution text |
+| `tms` | `boolean` | Whether tiles use TMS coordinate scheme |
+
+### Press Events
+
+```tsx
+const handlePress = (event) => {
+  console.log('Features:', event.features);
+  console.log('Coordinates:', event.coordinates);
+};
+
+<VectorSource
+  id="interactive"
+  url="mapbox://mapbox.mapbox-streets-v8"
+  onPress={handlePress}
+  hitbox={{ width: 20, height: 20 }}  // Expand touch target
+>
+  <CircleLayer id="poi" sourceLayerID="poi_label" />
+</VectorSource>
+```
+
+## Raster Sources
+
+Raster sources provide tiled raster images (PNG, JPG) for background imagery or overlays.
+
+### Basic Usage
+
+```tsx
+import { RasterSource, RasterLayer } from '@rnmapbox/maps';
+
+<RasterSource
+  id="satellite"
+  url="mapbox://mapbox.satellite"
+  tileSize={256}
+>
+  <RasterLayer id="satellite-layer" />
+</RasterSource>
+```
+
+### Custom Tile Server
+
+```tsx
+<RasterSource
+  id="custom-tiles"
+  tileUrlTemplates={[
+    'https://tiles.example.com/{z}/{x}/{y}.png',
+  ]}
+  tileSize={256}
+  minZoomLevel={0}
+  maxZoomLevel={18}
+  attribution="© Custom Tiles Provider"
+>
+  <RasterLayer
+    id="custom-layer"
+    style={{
+      rasterOpacity: 0.8,
+    }}
+  />
+</RasterSource>
+```
+
+### Tile Size
+
+<Info>
+Mapbox tiles default to 256×256 pixels. Other providers may use 512×512. Set `tileSize` accordingly for proper rendering.
+</Info>
+
+```tsx
+<RasterSource
+  tileSize={512}  // For high-DPI tiles
+  // ...
+/>
+```
+
+## Shape Sources (GeoJSON)
+
+ShapeSource is the most flexible source type, accepting GeoJSON geometries, features, or feature collections.
+
+### Static GeoJSON
+
+```tsx
+import { ShapeSource, FillLayer } from '@rnmapbox/maps';
+
+const geoJSON = {
+  type: 'Feature',
+  geometry: {
+    type: 'Point',
+    coordinates: [-74.006, 40.7128],
+  },
+  properties: {
+    name: 'New York City',
+  },
+};
+
+<ShapeSource id="points" shape={geoJSON}>
+  <CircleLayer
+    id="point-circle"
+    style={{
+      circleRadius: 8,
+      circleColor: '#007cbf',
+    }}
+  />
+</ShapeSource>
+```
+
+### Dynamic GeoJSON
+
+```tsx
+import { useState } from 'react';
+
+const App = () => {
+  const [features, setFeatures] = useState<GeoJSON.FeatureCollection>({
+    type: 'FeatureCollection',
+    features: [],
+  });
+
+  const addPoint = (coordinate: [number, number]) => {
+    setFeatures((prev) => ({
+      ...prev,
+      features: [
+        ...prev.features,
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: coordinate,
+          },
+          properties: {},
+        },
+      ],
+    }));
+  };
+
+  return (
+    <MapView>
+      <ShapeSource id="dynamic-points" shape={features}>
+        <CircleLayer id="points" style={{ circleRadius: 6 }} />
+      </ShapeSource>
+    </MapView>
+  );
+};
+```
+
+### GeoJSON from URL
+
+```tsx
+<ShapeSource
+  id="remote-data"
+  url="https://example.com/data.geojson"
+>
+  <LineLayer
+    id="route"
+    style={{
+      lineColor: '#ff0000',
+      lineWidth: 3,
+    }}
+  />
+</ShapeSource>
+```
+
+### Clustering
+
+Enable point clustering for better performance with many points:
+
+```tsx
+<ShapeSource
+  id="points"
+  shape={pointsGeoJSON}
+  cluster={true}
+  clusterRadius={50}          // Cluster radius in pixels
+  clusterMaxZoomLevel={14}    // Stop clustering at this zoom
+>
+  {/* Clustered points */}
+  <CircleLayer
+    id="clusters"
+    filter={['has', 'point_count']}
+    style={{
+      circleColor: [
+        'step',
+        ['get', 'point_count'],
+        '#51bbd6',
+        100,
+        '#f1f075',
+        750,
+        '#f28cb1',
+      ],
+      circleRadius: [
+        'step',
+        ['get', 'point_count'],
+        20,
+        100,
+        30,
+        750,
+        40,
+      ],
+    }}
+  />
+
+  {/* Cluster count labels */}
+  <SymbolLayer
+    id="cluster-count"
+    filter={['has', 'point_count']}
+    style={{
+      textField: ['get', 'point_count_abbreviated'],
+      textSize: 12,
+      textColor: '#ffffff',
+    }}
+  />
+
+  {/* Unclustered points */}
+  <CircleLayer
+    id="unclustered-point"
+    filter={['!', ['has', 'point_count']]}
+    style={{
+      circleColor: '#11b4da',
+      circleRadius: 6,
+    }}
+  />
+</ShapeSource>
+```
+
+### Cluster Methods
+
+Query cluster information imperatively:
+
+```tsx
+import { useRef } from 'react';
+import { ShapeSource } from '@rnmapbox/maps';
+
+const App = () => {
+  const shapeSourceRef = useRef<ShapeSource>(null);
+
+  const handleClusterPress = async (feature: GeoJSON.Feature) => {
+    // Get zoom level needed to expand cluster
+    const zoom = await shapeSourceRef.current?.getClusterExpansionZoom(feature);
+    
+    // Get all points in cluster
+    const leaves = await shapeSourceRef.current?.getClusterLeaves(
+      feature,
+      1000,  // limit
+      0      // offset
+    );
+    
+    // Get clusters at next zoom level
+    const children = await shapeSourceRef.current?.getClusterChildren(feature);
+  };
+
+  return (
+    <ShapeSource
+      ref={shapeSourceRef}
+      id="clustered"
+      shape={pointsGeoJSON}
+      cluster={true}
+      onPress={handleClusterPress}
+    >
+      {/* layers */}
+    </ShapeSource>
+  );
+};
+```
+
+### Advanced Options
+
+```tsx
+<ShapeSource
+  id="route"
+  shape={routeGeoJSON}
+  lineMetrics={true}        // Enable for gradient lines
+  tolerance={0.375}         // Simplification tolerance
+  buffer={128}              // Tile buffer size
+  maxZoomLevel={14}         // Stop generating tiles at zoom 14
+/>
+```
+
+## Image Source
+
+Display a georeferenced image:
+
+```tsx
+import { ImageSource, RasterLayer } from '@rnmapbox/maps';
+
+<ImageSource
+  id="overlay"
+  url={require('./overlay.png')}
+  coordinates={[
+    [-80.425, 46.437],  // top-left
+    [-71.516, 46.437],  // top-right
+    [-71.516, 37.936],  // bottom-right
+    [-80.425, 37.936],  // bottom-left
+  ]}
+>
+  <RasterLayer id="overlay-layer" />
+</ImageSource>
+```
+
+## Raster DEM Source
+
+Provide elevation data for terrain:
+
+```tsx
+import { RasterDemSource, HillshadeLayer } from '@rnmapbox/maps';
+
+<RasterDemSource
+  id="terrain"
+  url="mapbox://mapbox.terrain-rgb"
+  tileSize={256}
+>
+  <HillshadeLayer
+    id="hillshade"
+    style={{
+      hillshadeExaggeration: 0.5,
+      hillshadeShadowColor: '#000000',
+    }}
+  />
+</RasterDemSource>
+```
+
+## Best Practices
+
+<Note>
+1. **Use appropriate source types**: VectorSource for interactive data, RasterSource for imagery, ShapeSource for dynamic data
+2. **Set zoom levels**: Use `minZoomLevel` and `maxZoomLevel` to control when tiles load
+3. **Enable clustering**: For ShapeSource with many points, enable clustering for better performance
+4. **Reuse source IDs**: Don't create multiple sources with the same data - reuse sources across layers
+5. **Use tile templates**: Provide multiple tile URLs for redundancy and load balancing
+</Note>
+
+## Complete Example
+
+```tsx
+import { useState } from 'react';
+import { MapView, Camera, ShapeSource, VectorSource, CircleLayer, FillLayer } from '@rnmapbox/maps';
+
+const App = () => {
+  const [userPoints, setUserPoints] = useState<GeoJSON.FeatureCollection>({
+    type: 'FeatureCollection',
+    features: [],
+  });
+
+  const handleMapPress = (feature: GeoJSON.Feature) => {
+    setUserPoints((prev) => ({
+      ...prev,
+      features: [
+        ...prev.features,
+        {
+          type: 'Feature',
+          geometry: feature.geometry,
+          properties: { timestamp: Date.now() },
+        },
+      ],
+    }));
+  };
+
+  return (
+    <MapView style={{ flex: 1 }} onPress={handleMapPress}>
+      <Camera centerCoordinate={[-74.006, 40.7128]} zoomLevel={12} />
+
+      {/* Vector source from Mapbox */}
+      <VectorSource
+        id="buildings"
+        url="mapbox://mapbox.mapbox-streets-v8"
+      >
+        <FillLayer
+          id="building-fill"
+          sourceLayerID="building"
+          style={{
+            fillColor: '#088',
+            fillOpacity: 0.3,
+          }}
+        />
+      </VectorSource>
+
+      {/* Dynamic GeoJSON source */}
+      <ShapeSource id="user-points" shape={userPoints} cluster={true}>
+        <CircleLayer
+          id="point-circles"
+          style={{
+            circleRadius: 8,
+            circleColor: '#007cbf',
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+
+export default App;
+```
+
+## Related
+
+- [Layers](/concepts/layers) - Visualize source data with layers
+- [Expressions](/concepts/expressions) - Data-driven styling

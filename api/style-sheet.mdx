@@ -1,0 +1,236 @@
+---
+title: StyleSheet
+description: Styling utilities for Mapbox layers
+---
+
+StyleSheet provides a way to define styles for Mapbox layers using JavaScript objects. Styles follow the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/) and support expressions for dynamic styling.
+
+## Overview
+
+The `Style` component automatically converts Mapbox GL Style Spec JSON into React Native components. It supports sources and layers from the style specification.
+
+```typescript
+import { Style } from '@rnmapbox/maps';
+
+<Style json={styleJSON} />
+```
+
+## Props
+
+<ParamField path="json" type="MapboxJSON | URL" required>
+  A JSON object conforming to the [Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/), or a URL to such JSON.
+  
+  Only `sources` and `layers` fields are supported. Other fields like `sprites` and `glyphs` will be ignored.
+</ParamField>
+
+## Style Objects
+
+Styles are written as JavaScript objects with camelCase property names (e.g., `fillColor` instead of `fill-color`).
+
+### Basic Style Example
+
+```typescript
+const styles = {
+  buildings: {
+    fillColor: 'blue',
+  },
+  street: {
+    lineColor: 'green',
+  },
+};
+
+<FillLayer style={styles.buildings} />
+<LineLayer style={styles.street} />
+```
+
+## Style Expressions
+
+Mapbox expressions allow for dynamic, data-driven styling. See the [Mapbox expression specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions) for complete details.
+
+### Zoom-Based Expressions
+
+Create styles that change based on the map's zoom level.
+
+```typescript
+const style = {
+  fillColor: [
+    'interpolate',
+    ['exponential', 1.5],
+    ['zoom'],
+    0, 'blue',
+    10, 'green',
+    20, 'yellow',
+  ],
+};
+```
+
+**Step function example:**
+
+```typescript
+const style = {
+  fillColor: ['step', ['zoom'], 'blue', 20, 'green'],
+};
+```
+
+### Attribute-Based Expressions
+
+Create styles that change based on feature properties.
+
+```typescript
+const style = {
+  circleColor: [
+    'step',
+    ['get', 'rating'],
+    'red',
+    2, 'orange',
+    3, 'yellow',
+    4, 'yellowgreen',
+    5, 'green',
+  ],
+};
+```
+
+### Nested Expressions
+
+Combine zoom and attribute expressions for composite styling.
+
+```typescript
+const style = {
+  circleRadius: [
+    'step',
+    ['zoom'],
+    ['step', ['get', 'rating'], 0, 5, 5],
+    20,
+    ['step', ['get', 'rating'], 0, 5, 20],
+  ],
+};
+```
+
+## Complete Examples
+
+### Clustered Points
+
+```typescript
+const layerStyles = {
+  singlePoint: {
+    circleColor: 'green',
+    circleOpacity: 0.84,
+    circleStrokeWidth: 2,
+    circleStrokeColor: 'white',
+    circleRadius: 5,
+  },
+
+  clusteredPoints: {
+    circleColor: [
+      'interpolate',
+      ['exponential', 1.5],
+      ['get', 'point_count'],
+      25, 'yellow',
+      50, 'red',
+      75, 'blue',
+      100, 'orange',
+      300, 'pink',
+      750, 'white',
+    ],
+    circleRadius: [
+      'interpolate',
+      ['exponential', 1.5],
+      ['get', 'point_count'],
+      0, 15,
+      100, 20,
+      750, 30,
+    ],
+    circleOpacity: 0.84,
+    circleStrokeWidth: 2,
+    circleStrokeColor: 'white',
+  },
+
+  clusterCount: {
+    textField: ['get', 'point_count'],
+    textSize: 12,
+  },
+};
+
+<SymbolLayer id="pointCount" style={layerStyles.clusterCount} />
+<CircleLayer
+  id="clusteredPoints"
+  belowLayerID="pointCount"
+  filter={['has', 'point_count']}
+  style={layerStyles.clusteredPoints}
+/>
+<CircleLayer
+  id="singlePoint"
+  filter={['!has', 'point_count']}
+  style={layerStyles.singlePoint}
+/>
+```
+
+### 3D Buildings
+
+```typescript
+import { LineJoin } from '@rnmapbox/maps';
+
+const layerStyles = {
+  building: {
+    fillExtrusionOpacity: 1,
+    fillExtrusionHeight: ['get', 'height'],
+    fillExtrusionBase: ['get', 'min_height'],
+    fillExtrusionColor: [
+      'interpolate',
+      ['exponential', 1.5],
+      ['get', 'height'],
+      0, 'white',
+      50, 'blue',
+      100, 'red',
+    ],
+    fillExtrusionColorTransition: { duration: 2000, delay: 0 },
+  },
+  streets: {
+    lineColor: 'blue',
+    lineWidth: 2,
+    lineOpacity: 0.5,
+    lineJoin: LineJoin.Round,
+    lineCap: LineJoin.Round,
+    lineDasharray: [2, 2],
+  },
+};
+
+<FillExtrusionLayer
+  id="building3d"
+  sourceLayerID="building"
+  style={layerStyles.building}
+/>
+<LineLayer
+  id="streetLineColor"
+  sourceLayerID="road"
+  minZoomLevel={14}
+  belowLayerID="building3d"
+  style={layerStyles.streets}
+/>
+```
+
+## Supported Properties
+
+The `Style` component supports most layer and source types from the Mapbox Style Specification:
+
+### Layer Types
+- `fill` - FillLayer
+- `line` - LineLayer
+- `symbol` - SymbolLayer
+- `circle` - CircleLayer
+- `heatmap` - HeatmapLayer
+- `fill-extrusion` - FillExtrusionLayer
+- `raster` - RasterLayer
+- `background` - BackgroundLayer
+
+### Source Types
+- `vector` - VectorSource
+- `raster` - RasterSource
+- `geojson` - ShapeSource
+- `image` - ImageSource
+
+## Notes
+
+- Property names are automatically converted from kebab-case (style spec) to camelCase (React Native)
+- Not all style spec attributes are supported - check the documentation for specific layer types
+- The `Style` component can fetch remote style JSON by passing a URL

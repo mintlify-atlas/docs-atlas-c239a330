@@ -1,0 +1,121 @@
+---
+title: FillLayer
+description: Renders filled polygons on the map
+---
+
+FillLayer is a style layer that renders one or more filled (and optionally stroked) polygons on the map.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#fill)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style instead of creating a new one.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain the data to style.
+</ParamField>
+
+<ParamField path="sourceLayerID" type="string">
+  Identifier of the layer within the source identified by sourceID.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="layerIndex" type="number">
+  Inserts the layer at a specified index.
+</ParamField>
+
+<ParamField path="slot" type="'bottom' | 'middle' | 'top'">
+  The slot this layer is assigned to. v11 only
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  Minimum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  Maximum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="FillLayerStyleProps">
+  Customizable style attributes.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.fillAntialias" type="boolean" default="true">
+  Whether or not the fill should be antialiased.
+</ParamField>
+
+<ParamField path="style.fillOpacity" type="number" default="1">
+  The opacity of the entire fill layer. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.fillColor" type="string" default="#000000">
+  The color of the filled part of this layer. Disabled by: fillPattern
+</ParamField>
+
+<ParamField path="style.fillOutlineColor" type="string">
+  The outline color of the fill. Matches fillColor if unspecified. Disabled by: fillPattern
+</ParamField>
+
+<ParamField path="style.fillPattern" type="string">
+  Name of image in sprite to use for drawing image fills.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, ShapeSource, FillLayer } from '@rnmapbox/maps';
+
+const polygon = {
+  type: 'Feature',
+  geometry: {
+    type: 'Polygon',
+    coordinates: [[
+      [-122.4, 37.8],
+      [-122.4, 37.7],
+      [-122.5, 37.7],
+      [-122.5, 37.8],
+      [-122.4, 37.8],
+    ]],
+  },
+};
+
+function Map() {
+  return (
+    <MapView>
+      <ShapeSource id="polygon" shape={polygon}>
+        <FillLayer
+          id="polygon-fill"
+          style={{
+            fillColor: '#3bb2d0',
+            fillOpacity: 0.5,
+            fillOutlineColor: '#088',
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```

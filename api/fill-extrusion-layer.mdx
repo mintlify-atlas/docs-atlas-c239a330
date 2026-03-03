@@ -1,0 +1,116 @@
+---
+title: FillExtrusionLayer
+description: Renders 3D extruded polygons on the map
+---
+
+FillExtrusionLayer is a style layer that renders one or more 3D extruded polygons on the map.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#fill-extrusion)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain data.
+</ParamField>
+
+<ParamField path="sourceLayerID" type="string">
+  Identifier of the layer within the source.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number" required>
+  Minimum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number" required>
+  Maximum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="FillExtrusionLayerStyleProps">
+  Customizable style attributes.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.fillExtrusionOpacity" type="number" default="1">
+  The opacity of the entire fill extrusion layer. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.fillExtrusionColor" type="string" default="#000000">
+  The base color of the extruded fill. Disabled by: fillExtrusionPattern
+</ParamField>
+
+<ParamField path="style.fillExtrusionHeight" type="number" default="0">
+  The height with which to extrude this layer in meters. Minimum: 0
+</ParamField>
+
+<ParamField path="style.fillExtrusionBase" type="number" default="0">
+  The height with which to extrude the base of this layer. Must be less than or equal to fillExtrusionHeight. Minimum: 0
+</ParamField>
+
+<ParamField path="style.fillExtrusionPattern" type="string">
+  Name of image in sprite to use for drawing images on extruded fills.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, ShapeSource, FillExtrusionLayer } from '@rnmapbox/maps';
+
+const buildings = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[...]],
+      },
+      properties: { height: 100 },
+    },
+  ],
+};
+
+function Map() {
+  return (
+    <MapView pitch={45}>
+      <ShapeSource id="buildings" shape={buildings}>
+        <FillExtrusionLayer
+          id="building-extrusion"
+          minZoomLevel={15}
+          maxZoomLevel={22}
+          style={{
+            fillExtrusionColor: '#aaa',
+            fillExtrusionHeight: ['get', 'height'],
+            fillExtrusionBase: 0,
+            fillExtrusionOpacity: 0.8,
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```

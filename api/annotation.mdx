@@ -1,0 +1,161 @@
+---
+title: Annotation
+description: API reference for the Annotation component
+---
+
+Annotation is a higher-level component that combines ShapeSource and SymbolLayer to create animated or static point annotations on the map.
+
+This component is useful when you need programmatic control over annotation positioning with optional animation support.
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the annotation
+</ParamField>
+
+<ParamField path="coordinates" type="number[]" required>
+  The coordinates of the annotation as an array of `[longitude, latitude]`
+</ParamField>
+
+<ParamField path="animated" type="boolean" default="false">
+  Whether the annotation should animate when its coordinates change
+</ParamField>
+
+<ParamField path="animationDuration" type="number" default="1000">
+  The duration of the animation in milliseconds when coordinates change
+</ParamField>
+
+<ParamField path="animationEasingFunction" type="(x: number) => number" default="Easing.linear">
+  The easing function to use for animations. Accepts any React Native Easing function.
+</ParamField>
+
+<ParamField path="onPress" type="(event: OnPressEvent) => void">
+  Callback fired when the annotation is pressed
+</ParamField>
+
+<ParamField path="style" type="object">
+  Style object for the symbol layer. This extends SymbolLayerStyle properties.
+</ParamField>
+
+<ParamField path="icon" type="string | number | object">
+  The icon to display for the annotation. Can be:
+  - A string referencing an image added via Images component
+  - A number from require('./image.png')
+  - An object with additional icon configuration
+</ParamField>
+
+<ParamField path="children" type="ReactElement | ReactElement[]" required>
+  Child components, typically SymbolLayer or other layer components
+</ParamField>
+
+## Example
+
+### Basic Annotation
+
+```tsx
+import { MapView, Camera, Annotation, Images } from '@rnmapbox/maps';
+import { View } from 'react-native';
+import markerIcon from './assets/marker.png';
+
+const App = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-73.99155, 40.73581],
+          zoomLevel: 16
+        }}
+      />
+      <Images images={{ markerIcon }} />
+      <Annotation
+        id="annotation1"
+        coordinates={[-73.99155, 40.73581]}
+        icon="markerIcon"
+        onPress={(event) => console.log('Annotation pressed', event)}
+      />
+    </MapView>
+  );
+};
+```
+
+### Animated Annotation
+
+```tsx
+import { MapView, Camera, Annotation, Images } from '@rnmapbox/maps';
+import { useState } from 'react';
+import { Button, Easing } from 'react-native';
+import markerIcon from './assets/marker.png';
+
+const App = () => {
+  const [coordinates, setCoordinates] = useState([-73.99155, 40.73581]);
+
+  const moveAnnotation = () => {
+    setCoordinates([
+      coordinates[0] + 0.001,
+      coordinates[1] + 0.001,
+    ]);
+  };
+
+  return (
+    <>
+      <MapView style={{ flex: 1 }}>
+        <Camera
+          defaultSettings={{
+            centerCoordinate: [-73.99155, 40.73581],
+            zoomLevel: 16
+          }}
+        />
+        <Images images={{ markerIcon }} />
+        <Annotation
+          id="animatedAnnotation"
+          coordinates={coordinates}
+          icon="markerIcon"
+          animated={true}
+          animationDuration={2000}
+          animationEasingFunction={Easing.bezier(0.25, 0.1, 0.25, 1)}
+        />
+      </MapView>
+      <Button title="Move Annotation" onPress={moveAnnotation} />
+    </>
+  );
+};
+```
+
+### Annotation with Custom Symbol Layer
+
+```tsx
+import { MapView, Camera, Annotation, SymbolLayer, Images } from '@rnmapbox/maps';
+import markerIcon from './assets/marker.png';
+
+const App = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-73.99155, 40.73581],
+          zoomLevel: 16
+        }}
+      />
+      <Images images={{ markerIcon }} />
+      <Annotation
+        id="customAnnotation"
+        coordinates={[-73.99155, 40.73581]}
+        icon="markerIcon"
+        style={{
+          iconSize: 1.5,
+          iconOpacity: 0.8,
+          iconRotate: 45,
+        }}
+        onPress={(event) => console.log('Custom annotation pressed')}
+      />
+    </MapView>
+  );
+};
+```
+
+## Notes
+
+- Annotation is built on top of ShapeSource and SymbolLayer, providing a simpler API for common use cases
+- For performance-critical applications with many annotations, consider using ShapeSource directly with a FeatureCollection
+- Animation support uses React Native's Animated API under the hood
+- The `icon` prop requires the image to be registered with the Images component first

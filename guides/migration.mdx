@@ -1,0 +1,329 @@
+---
+title: "Migration Guide"
+description: "Guide for upgrading between major versions of @rnmapbox/maps"
+---
+
+## Overview
+
+This guide helps you migrate between major versions of `@rnmapbox/maps`. Each section covers breaking changes and required updates for specific version upgrades.
+
+## Migrating to v11 (Current)
+
+The library now exclusively supports Mapbox Maps SDK v11 and React Native's New Architecture (Fabric/TurboModules).
+
+### Prerequisites
+
+- React Native 0.79 or higher
+- New Architecture enabled (Fabric/TurboModules)
+- Node.js v22.16.0 or higher
+
+### Breaking Changes
+
+<Steps>
+  <Step title="React Native version requirement">
+    Update to React Native 0.79 or higher, which includes the New Architecture by default.
+
+    ```bash
+    npm install react-native@latest
+    # or
+    yarn upgrade react-native@latest
+    ```
+  </Step>
+
+  <Step title="Mapbox SDK v11">
+    The library now uses Mapbox Maps SDK v11. Review the [Mapbox v11 migration guide](https://docs.mapbox.com/ios/maps/guides/migrate-to-v11/) for platform-specific changes.
+
+    Key updates:
+    - New style configuration API
+    - Slot-based layer positioning
+    - Model layers support
+    - Updated terrain and 3D features
+  </Step>
+
+  <Step title="LocationPuck replaces UserLocation renderMode">
+    The `UserLocation` component's `renderMode` prop is deprecated. Use the new `LocationPuck` component for native user location rendering:
+
+    **Before (v10):**
+    ```jsx
+    <UserLocation renderMode="native" />
+    ```
+
+    **After (v11):**
+    ```jsx
+    <LocationPuck puckBearingEnabled puckBearing="heading" />
+    ```
+  </Step>
+
+  <Step title="Viewport replaces Camera tracking modes">
+    `Camera#onUserTrackingModeChange` is deprecated. Use `Viewport#onStatusChanged` instead:
+
+    **Before (v10):**
+    ```jsx
+    <Camera
+      followUserLocation
+      followUserMode="normal"
+      onUserTrackingModeChange={handleChange}
+    />
+    ```
+
+    **After (v11):**
+    ```jsx
+    <Viewport
+      onStatusChanged={handleStatusChange}
+    >
+      {/* viewport configuration */}
+    </Viewport>
+    ```
+  </Step>
+</Steps>
+
+## Migrating to v10 from v8/v9
+
+### Package Name Change
+
+The package name changed from `@react-native-mapbox-gl/maps` to `@rnmapbox/maps`.
+
+<Steps>
+  <Step title="Update package name">
+    Uninstall the old package and install the new one:
+
+    ```bash
+    npm uninstall @react-native-mapbox-gl/maps
+    npm install @rnmapbox/maps
+    ```
+  </Step>
+
+  <Step title="Update imports">
+    Update all imports in your code:
+
+    **Before:**
+    ```js
+    import MapboxGL from '@react-native-mapbox-gl/maps';
+    ```
+
+    **After:**
+    ```js
+    import Mapbox from '@rnmapbox/maps';
+    ```
+
+    <Note>
+      You can use tools like [babel-plugin-transform-rename-import](https://www.npmjs.com/package/babel-plugin-transform-rename-import) to maintain old imports during migration.
+    </Note>
+  </Step>
+</Steps>
+
+### Setup Changes
+
+<Tabs>
+  <Tab title="iOS">
+    Update your `Podfile` hooks:
+
+    **Before:**
+    ```ruby
+    pre_install do |installer|
+      $RNMBGL.pre_install(installer)
+    end
+
+    post_install do |installer|
+      $RNMBGL.post_install(installer)
+    end
+    ```
+
+    **After:**
+    ```ruby
+    pre_install do |installer|
+      $RNMapboxMaps.pre_install(installer)
+    end
+
+    post_install do |installer|
+      $RNMapboxMaps.post_install(installer)
+    end
+    ```
+  </Tab>
+
+  <Tab title="Android">
+    Implementation selection changed. Use the `RNMapboxMapsImpl` variable:
+
+    ```groovy android/build.gradle
+    buildscript {
+        ext {
+            RNMapboxMapsImpl = 'mapbox' // Options: 'mapbox', 'maplibre', 'mapbox-gl'
+        }
+    }
+    ```
+
+    <Note>
+      Default implementation is `maplibre` if not specified. For Mapbox styles, use `mapbox` implementation.
+    </Note>
+  </Tab>
+</Tabs>
+
+### MapLibre Support
+
+Version 10 introduced MapLibre as an option. To use MapLibre:
+
+**iOS:**
+```ruby
+$RNMapboxMapsImpl = 'maplibre'
+```
+
+**Android:**
+```groovy
+buildscript {
+    ext {
+        RNMapboxMapsImpl = 'maplibre'
+    }
+}
+```
+
+When using MapLibre, you must set the tile server:
+
+```js
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
+Mapbox.setWellKnownTileServer('Mapbox'); // or 'MapLibre'
+```
+
+## Migrating to v8 from v7
+
+### StyleSheet Changes
+
+`StyleSheet.create` and `StyleSheet.identity` were removed in favor of expressions:
+
+**Before (v7):**
+```jsx
+const styles = MapboxGL.StyleSheet.create({
+  fillLayer: {
+    fillColor: MapboxGL.StyleSheet.identity('color'),
+  },
+});
+```
+
+**After (v8):**
+```jsx
+const styles = {
+  fillLayer: {
+    fillColor: ['get', 'color'],
+  },
+};
+```
+
+### Camera Component
+
+Camera-related properties moved from `MapView` to the `Camera` component:
+
+**Before (v7):**
+```jsx
+<MapView
+  zoomLevel={8}
+  centerCoordinate={[-111.8678, 40.2866]}
+  userTrackingMode={UserTrackingModes.Follow}
+>
+  {/* content */}
+</MapView>
+```
+
+**After (v8):**
+```jsx
+<MapView>
+  <Camera
+    zoomLevel={8}
+    centerCoordinate={[-111.8678, 40.2866]}
+    followUserLocation
+    followUserMode="normal"
+  />
+  {/* content */}
+</MapView>
+```
+
+### User Tracking Mode
+
+- `MapView#userTrackingMode` → `Camera#followUserMode` and `Camera#followUserLocation`
+- `followUserMode` uses strings: `'normal'`, `'compass'`, `'course'`
+- `UserTrackingModes` enum is deprecated
+
+### ShapeSource Images
+
+`ShapeSource#images` was deprecated. Use the `Images` component:
+
+**Before (v7):**
+```jsx
+<ShapeSource images={{ pin, dot }} />
+```
+
+**After (v8):**
+```jsx
+<Images images={{ pin, dot }} />
+<ShapeSource>
+  <SymbolLayer />
+</ShapeSource>
+```
+
+### Event Payload Changes
+
+`VectorSource` and `SymbolSource` `onPress` events changed:
+
+**Before (v7):**
+```js
+onPress={(event) => {
+  const feature = event.nativeEvent.payload;
+}}
+```
+
+**After (v8):**
+```js
+onPress={(event) => {
+  const { features, point, coordinates } = event.nativeEvent.payload;
+}}
+```
+
+### Removed APIs
+
+- `isTelemetryEnabled` removed (Android compatibility)
+- `geoUtils` made private - use [Turf.js](https://turfjs.org/) instead
+- `MapView#flyTo`, `MapView#fitBounds`, `MapView#moveTo`, `MapView#zoomTo` moved to `Camera`
+
+## General Migration Tips
+
+<Steps>
+  <Step title="Review release notes">
+    Check the [GitHub releases page](https://github.com/rnmapbox/maps/releases) for detailed release notes and additional changes.
+  </Step>
+
+  <Step title="Update native dependencies">
+    After upgrading, always update native dependencies:
+
+    **iOS:**
+    ```bash
+    cd ios && pod install
+    ```
+
+    **Android:**
+    ```bash
+    cd android && ./gradlew clean
+    ```
+  </Step>
+
+  <Step title="Test thoroughly">
+    Test all map-related features in your app:
+    - Map rendering and styles
+    - User location and tracking
+    - Annotations and markers
+    - Camera movements
+    - Custom sources and layers
+  </Step>
+
+  <Step title="Check for deprecation warnings">
+    Run your app in development mode and check the console for deprecation warnings. Address these before they become breaking changes in future versions.
+  </Step>
+</Steps>
+
+## Getting Help
+
+If you encounter issues during migration:
+
+- Check [GitHub Discussions](https://github.com/rnmapbox/maps/discussions)
+- Join the [Mapbox Discord](https://discord.com/channels/1004826913229000704/1092426983696248893) #react-native channel
+- Review closed issues on [GitHub](https://github.com/rnmapbox/maps/issues)
+- Consult the [example app](https://github.com/rnmapbox/maps/tree/main/example) for updated usage patterns

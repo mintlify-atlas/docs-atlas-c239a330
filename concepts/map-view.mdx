@@ -1,0 +1,385 @@
+---
+title: MapView
+description: Understanding the MapView component - the foundation of your map-based React Native application
+---
+
+The `MapView` component is the core of any Mapbox map in React Native. It renders the map surface and manages the native Mapbox GL implementation underneath.
+
+## Basic Usage
+
+At minimum, a MapView requires a style to fill its container:
+
+```tsx
+import { MapView } from '@rnmapbox/maps';
+import { StyleSheet } from 'react-native';
+
+const App = () => (
+  <MapView style={styles.map} />
+);
+
+const styles = StyleSheet.create({
+  map: {
+    flex: 1,
+  },
+});
+```
+
+## Map Styles
+
+MapView can display different map styles using either a style URL or inline StyleJSON.
+
+### Using Style URLs
+
+Mapbox provides several built-in styles:
+
+```tsx
+import { MapView, StyleURL } from '@rnmapbox/maps';
+
+<MapView
+  style={styles.map}
+  styleURL={StyleURL.Street}  // Default if not specified
+/>
+```
+
+Available built-in styles:
+- `StyleURL.Street` - Mapbox Streets (default)
+- `StyleURL.Dark` - Mapbox Dark
+- `StyleURL.Light` - Mapbox Light
+- `StyleURL.Outdoors` - Mapbox Outdoors
+- `StyleURL.Satellite` - Mapbox Satellite
+- `StyleURL.SatelliteStreet` - Satellite Streets hybrid
+
+### Custom Style URLs
+
+```tsx
+<MapView
+  styleURL="mapbox://styles/username/style-id"
+  style={styles.map}
+/>
+```
+
+### Using StyleJSON
+
+For complete control, provide an inline style object:
+
+```tsx
+const customStyle = {
+  version: 8,
+  sources: {
+    // Your sources
+  },
+  layers: [
+    // Your layers
+  ],
+};
+
+<MapView
+  styleJSON={JSON.stringify(customStyle)}
+  style={styles.map}
+/>
+```
+
+## Map Projection
+
+Control how the map is projected with the `projection` prop:
+
+```tsx
+<MapView
+  projection="globe"  // or "mercator" (default)
+  style={styles.map}
+/>
+```
+
+<Info>
+The globe projection provides a 3D spherical view of the Earth when zoomed out, transitioning to Mercator at higher zoom levels.
+</Info>
+
+## User Interaction
+
+### Gesture Controls
+
+Control which gestures are enabled:
+
+```tsx
+<MapView
+  style={styles.map}
+  zoomEnabled={true}
+  scrollEnabled={true}
+  pitchEnabled={true}
+  rotateEnabled={true}
+/>
+```
+
+### Fine-grained Gesture Settings
+
+For more control, use the `gestureSettings` prop:
+
+```tsx
+<MapView
+  style={styles.map}
+  gestureSettings={{
+    doubleTapToZoomInEnabled: true,
+    doubleTouchToZoomOutEnabled: true,
+    pinchZoomEnabled: true,
+    rotateEnabled: true,
+    pitchEnabled: true,
+    panEnabled: true,
+    quickZoomEnabled: true,
+  }}
+/>
+```
+
+## Event Handlers
+
+### User Interaction Events
+
+```tsx
+const handlePress = (feature: GeoJSON.Feature) => {
+  console.log('Tapped at:', feature.geometry.coordinates);
+};
+
+const handleLongPress = (feature: GeoJSON.Feature) => {
+  console.log('Long pressed at:', feature.geometry.coordinates);
+};
+
+<MapView
+  style={styles.map}
+  onPress={handlePress}
+  onLongPress={handleLongPress}
+/>
+```
+
+### Camera Events
+
+<Tabs>
+  <Tab title="v11 (Recommended)">
+    ```tsx
+    const handleCameraChanged = (state: MapState) => {
+      const { center, zoom, heading, pitch } = state.properties;
+      console.log('Camera moved:', { center, zoom, heading, pitch });
+    };
+
+    const handleMapIdle = (state: MapState) => {
+      console.log('Camera stopped moving');
+    };
+
+    <MapView
+      style={styles.map}
+      onCameraChanged={handleCameraChanged}
+      onMapIdle={handleMapIdle}
+    />
+    ```
+  </Tab>
+  <Tab title="Legacy (Deprecated)">
+    ```tsx
+    // These are deprecated - migrate to onCameraChanged and onMapIdle
+    <MapView
+      onRegionIsChanging={handleRegionChange}
+      onRegionDidChange={handleRegionChange}
+    />
+    ```
+  </Tab>
+</Tabs>
+
+### Map Lifecycle Events
+
+```tsx
+<MapView
+  style={styles.map}
+  onDidFinishLoadingMap={() => console.log('Map loaded')}
+  onDidFinishLoadingStyle={() => console.log('Style loaded')}
+  onMapLoadingError={() => console.error('Map failed to load')}
+/>
+```
+
+## Map Ornaments
+
+### Attribution and Logo
+
+```tsx
+<MapView
+  style={styles.map}
+  attributionEnabled={true}
+  attributionPosition={{ bottom: 8, left: 8 }}
+  logoEnabled={true}
+  logoPosition={{ bottom: 8, right: 8 }}
+/>
+```
+
+<Note>
+The Mapbox Terms of Service require attribution to be visible. Only disable if you implement attribution elsewhere in your app.
+</Note>
+
+### Compass and Scale Bar
+
+```tsx
+<MapView
+  style={styles.map}
+  compassEnabled={true}
+  compassFadeWhenNorth={true}
+  compassPosition={{ top: 100, right: 16 }}
+  scaleBarEnabled={true}
+  scaleBarPosition={{ top: 8, left: 8 }}
+/>
+```
+
+## Imperative Methods
+
+Access MapView methods using a ref:
+
+```tsx
+import { useRef } from 'react';
+import { MapView } from '@rnmapbox/maps';
+
+const App = () => {
+  const mapRef = useRef<MapView>(null);
+
+  const queryFeatures = async () => {
+    const point = [100, 100]; // Screen coordinates
+    const features = await mapRef.current?.queryRenderedFeaturesAtPoint(point);
+    console.log('Features at point:', features);
+  };
+
+  const getMapInfo = async () => {
+    const zoom = await mapRef.current?.getZoom();
+    const center = await mapRef.current?.getCenter();
+    const bounds = await mapRef.current?.getVisibleBounds();
+    console.log({ zoom, center, bounds });
+  };
+
+  return <MapView ref={mapRef} style={styles.map} />;
+};
+```
+
+### Common Methods
+
+| Method | Description |
+|--------|-------------|
+| `getZoom()` | Returns current zoom level |
+| `getCenter()` | Returns center coordinates |
+| `getVisibleBounds()` | Returns visible bounds [ne, sw] |
+| `queryRenderedFeaturesAtPoint(point)` | Get features at screen coordinate |
+| `queryRenderedFeaturesInRect(bbox)` | Get features in bounding box |
+| `querySourceFeatures(sourceId, filter)` | Query source directly |
+| `takeSnap(writeToDisk)` | Capture map snapshot |
+| `getPointInView(coordinate)` | Convert geo to screen coords |
+| `getCoordinateFromView(point)` | Convert screen to geo coords |
+
+## Performance Optimization
+
+### Frame Rate Control
+
+```tsx
+<MapView
+  preferredFramesPerSecond={60}  // iOS: preferred, Android: max
+  style={styles.map}
+/>
+```
+
+### Surface View (Android)
+
+```tsx
+<MapView
+  surfaceView={true}  // Better performance, default true
+  style={styles.map}
+/>
+```
+
+### Scroll View Integration (Android)
+
+```tsx
+<MapView
+  requestDisallowInterceptTouchEvent={true}
+  style={styles.map}
+/>
+```
+
+<Info>
+When embedding MapView inside a ScrollView on Android, enable `requestDisallowInterceptTouchEvent` for proper touch handling.
+</Info>
+
+## Localization
+
+Localize map labels to user's language:
+
+```tsx
+<MapView
+  style={styles.map}
+  localizeLabels={{ locale: 'current' }}  // Uses device locale
+/>
+
+// Or specify a locale
+<MapView
+  localizeLabels={{ 
+    locale: 'es',
+    layerIds: ['country-label', 'state-label']  // Optional: specific layers
+  }}
+/>
+```
+
+## Complete Example
+
+```tsx
+import { useRef, useEffect } from 'react';
+import { StyleSheet, Alert } from 'react-native';
+import { MapView, Camera, StyleURL } from '@rnmapbox/maps';
+
+const App = () => {
+  const mapRef = useRef<MapView>(null);
+
+  useEffect(() => {
+    // Query features after map loads
+    const queryMap = async () => {
+      const zoom = await mapRef.current?.getZoom();
+      console.log('Current zoom:', zoom);
+    };
+    
+    setTimeout(queryMap, 1000);
+  }, []);
+
+  const handlePress = (feature: GeoJSON.Feature) => {
+    Alert.alert(
+      'Map Tapped',
+      `Coordinates: ${feature.geometry.coordinates.join(', ')}`
+    );
+  };
+
+  const handleCameraChanged = (state: MapState) => {
+    console.log('Zoom:', state.properties.zoom);
+  };
+
+  return (
+    <MapView
+      ref={mapRef}
+      style={styles.map}
+      styleURL={StyleURL.Street}
+      projection="mercator"
+      onPress={handlePress}
+      onCameraChanged={handleCameraChanged}
+      onDidFinishLoadingStyle={() => console.log('Style loaded')}
+      compassEnabled={true}
+      scaleBarEnabled={true}
+      attributionEnabled={true}
+    >
+      <Camera
+        centerCoordinate={[-74.006, 40.7128]}
+        zoomLevel={12}
+      />
+    </MapView>
+  );
+};
+
+const styles = StyleSheet.create({
+  map: {
+    flex: 1,
+  },
+});
+
+export default App;
+```
+
+## Related
+
+- [Camera](/concepts/camera) - Control camera position and animation
+- [Sources](/concepts/sources) - Add data sources to the map
+- [Layers](/concepts/layers) - Visualize data with layers

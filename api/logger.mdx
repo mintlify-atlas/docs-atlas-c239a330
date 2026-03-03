@@ -1,0 +1,381 @@
+---
+title: Logger
+description: Logger utility API reference for Mapbox Maps SDK for React Native
+---
+
+# Logger
+
+The Logger utility provides control over logging output from the Mapbox Maps SDK. You can set the log level and customize log handling with a custom callback.
+
+## Import
+
+```tsx
+import { Logger } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { Logger } from '@rnmapbox/maps';
+
+// Set log level
+Logger.setLogLevel('warning');
+
+// Set custom log callback
+Logger.setLogCallback((log) => {
+  console.log(`[${log.level}] ${log.tag}: ${log.message}`);
+  return true; // Return true to suppress default logging
+});
+```
+
+## Methods
+
+### setLogLevel()
+
+```tsx
+static setLogLevel(level: LogLevel): void
+```
+
+Sets the minimum log level for Mapbox SDK messages.
+
+<ParamField path="level" type="LogLevel" required>
+  The minimum level of logging to display.
+  
+  Valid values:
+  - `'error'` - Only errors
+  - `'warning'` - Errors and warnings
+  - `'info'` - Errors, warnings, and info messages
+  - `'debug'` - Errors, warnings, info, and debug messages
+  - `'verbose'` - All log messages
+</ParamField>
+
+**Example:**
+
+```tsx
+import { Logger } from '@rnmapbox/maps';
+
+// Show only errors
+Logger.setLogLevel('error');
+
+// Show errors and warnings
+Logger.setLogLevel('warning');
+
+// Show all logs
+Logger.setLogLevel('verbose');
+```
+
+### setLogCallback()
+
+```tsx
+static setLogCallback(callback: LogCallback): void
+```
+
+Sets a custom callback function to handle log messages. This allows you to:
+- Redirect logs to your own logging system
+- Filter or modify log messages
+- Suppress default logging
+
+<ParamField path="callback" type="(log: LogObject) => boolean" required>
+  Callback function that receives log objects.
+  
+  **Parameters:**
+  - `log`: LogObject - The log message object
+  
+  **Returns:**
+  - `boolean` - Return `true` to suppress default logging, `false` to allow it
+  
+  **LogObject:**
+  ```typescript
+  {
+    level: LogLevel;    // 'error' | 'warning' | 'info' | 'debug' | 'verbose'
+    tag: string;        // Log tag (Android) or category
+    message: string;    // The log message
+  }
+  ```
+</ParamField>
+
+**Example:**
+
+```tsx
+import { Logger } from '@rnmapbox/maps';
+
+// Custom logging
+Logger.setLogCallback((log) => {
+  // Send to custom analytics
+  if (log.level === 'error') {
+    analytics.logError(log.message);
+  }
+  
+  // Format and log
+  console.log(`[Mapbox ${log.level.toUpperCase()}] ${log.message}`);
+  
+  // Return true to suppress default Mapbox logging
+  return true;
+});
+
+// Filter specific messages
+Logger.setLogCallback((log) => {
+  // Suppress specific warnings
+  if (log.level === 'warning' && log.message.includes('Canceled')) {
+    return true; // Suppress this log
+  }
+  
+  // Allow default logging for everything else
+  return false;
+});
+```
+
+## Types
+
+### LogLevel
+
+```typescript
+type LogLevel = 'error' | 'warning' | 'info' | 'debug' | 'verbose';
+```
+
+Log severity levels, from most to least severe.
+
+### LogObject
+
+```typescript
+interface LogObject {
+  level: LogLevel;
+  tag: string;
+  message: string;
+}
+```
+
+Represents a single log message from the Mapbox SDK.
+
+### LogCallback
+
+```typescript
+type LogCallback = (log: LogObject) => boolean;
+```
+
+Callback function type for custom log handling. Return `true` to suppress default logging.
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Log Level">
+    ```tsx
+    import { useEffect } from 'react';
+    import { Logger } from '@rnmapbox/maps';
+
+    function App() {
+      useEffect(() => {
+        // Set log level based on environment
+        if (__DEV__) {
+          Logger.setLogLevel('verbose');
+        } else {
+          Logger.setLogLevel('error');
+        }
+      }, []);
+
+      return <YourApp />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Custom Logger">
+    ```tsx
+    import { useEffect } from 'react';
+    import { Logger } from '@rnmapbox/maps';
+
+    function App() {
+      useEffect(() => {
+        Logger.setLogCallback((log) => {
+          const timestamp = new Date().toISOString();
+          const logLine = `${timestamp} [${log.level}] ${log.tag}: ${log.message}`;
+          
+          // Custom formatting
+          switch (log.level) {
+            case 'error':
+              console.error('🔴', logLine);
+              break;
+            case 'warning':
+              console.warn('⚠️', logLine);
+              break;
+            case 'info':
+              console.info('ℹ️', logLine);
+              break;
+            default:
+              console.log('💬', logLine);
+          }
+          
+          return true; // Suppress default logging
+        });
+      }, []);
+
+      return <YourApp />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Filter Messages">
+    ```tsx
+    import { useEffect } from 'react';
+    import { Logger } from '@rnmapbox/maps';
+
+    function App() {
+      useEffect(() => {
+        Logger.setLogCallback((log) => {
+          // Suppress specific warnings
+          const suppressedPatterns = [
+            'Request failed due to a permanent error: Canceled',
+            'Mbgl-HttpRequest',
+          ];
+          
+          const shouldSuppress = suppressedPatterns.some(pattern =>
+            log.message.includes(pattern) || log.tag.includes(pattern)
+          );
+          
+          if (shouldSuppress) {
+            return true; // Suppress
+          }
+          
+          // Allow default logging
+          return false;
+        });
+      }, []);
+
+      return <YourApp />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Analytics Integration">
+    ```tsx
+    import { useEffect } from 'react';
+    import { Logger } from '@rnmapbox/maps';
+    import analytics from '@segment/analytics-react-native';
+
+    function App() {
+      useEffect(() => {
+        Logger.setLogCallback((log) => {
+          // Send errors to analytics
+          if (log.level === 'error') {
+            analytics.track('Mapbox Error', {
+              message: log.message,
+              tag: log.tag,
+            });
+          }
+          
+          // Send warnings to analytics in production
+          if (!__DEV__ && log.level === 'warning') {
+            analytics.track('Mapbox Warning', {
+              message: log.message,
+              tag: log.tag,
+            });
+          }
+          
+          // Still log to console in dev
+          if (__DEV__) {
+            return false;
+          }
+          
+          // Suppress in production
+          return true;
+        });
+      }, []);
+
+      return <YourApp />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Debug Mode">
+    ```tsx
+    import { useState, useEffect } from 'react';
+    import { View, Button } from 'react-native';
+    import { Logger } from '@rnmapbox/maps';
+
+    function DebugControls() {
+      const [debugMode, setDebugMode] = useState(false);
+
+      useEffect(() => {
+        if (debugMode) {
+          Logger.setLogLevel('verbose');
+          Logger.setLogCallback((log) => {
+            console.log(`[${log.level}] ${log.tag}: ${log.message}`);
+            return false; // Show default logs too
+          });
+        } else {
+          Logger.setLogLevel('warning');
+          Logger.setLogCallback(() => true); // Suppress all logs
+        }
+      }, [debugMode]);
+
+      return (
+        <View>
+          <Button
+            title={debugMode ? 'Disable Debug' : 'Enable Debug'}
+            onPress={() => setDebugMode(!debugMode)}
+          />
+        </View>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Default Behavior
+
+The Logger automatically:
+- Starts listening for log events on initialization
+- Filters HTTP request cancellation warnings (common and usually not actionable)
+- Formats logs with `[Mapbox level]` prefix
+- Routes logs to appropriate console methods (`console.error`, `console.warn`, `console.log`)
+
+## Best Practices
+
+1. **Set Log Level Early:** Configure logging as early as possible in your app's lifecycle
+2. **Environment-Based Levels:** Use verbose logging in development, error-only in production
+3. **Custom Callback for Production:** Implement custom logging to send errors to monitoring services
+4. **Filter Noise:** Use the callback to suppress known non-critical warnings
+5. **Performance:** Avoid expensive operations in the log callback
+
+## Common Patterns
+
+### Production Error Tracking
+
+```tsx
+if (!__DEV__) {
+  Logger.setLogLevel('error');
+  Logger.setLogCallback((log) => {
+    if (log.level === 'error') {
+      Sentry.captureMessage(`Mapbox: ${log.message}`, 'error');
+    }
+    return true;
+  });
+}
+```
+
+### Development Debugging
+
+```tsx
+if (__DEV__) {
+  Logger.setLogLevel('verbose');
+  Logger.setLogCallback((log) => {
+    console.log(`[${log.level}] ${log.tag || 'Mapbox'}: ${log.message}`);
+    return true;
+  });
+}
+```
+
+### Mute Specific Warnings
+
+```tsx
+Logger.setLogCallback((log) => {
+  if (log.message.includes('Canceled') && log.tag === 'Mbgl-HttpRequest') {
+    return true; // Suppress canceled request warnings
+  }
+  return false;
+});
+```
+
+## Related
+
+- [MapView](/api/mapview) - The main map component
+- [Mapbox Module](/api/mapbox-module) - Core module configuration

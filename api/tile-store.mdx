@@ -1,0 +1,276 @@
+---
+title: TileStore
+description: TileStore module API reference for Mapbox Maps SDK for React Native
+---
+
+# TileStore
+
+TileStore manages downloads and storage for requests to tile-related API endpoints, enforcing a disk usage quota. Tiles available on disk may be deleted to make room for new downloads. This interface can be used by app developers to set the disk quota and configure tile storage options.
+
+## Import
+
+```tsx
+import { TileStore } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { TileStore } from '@rnmapbox/maps';
+
+// Get the default tile store
+const tileStore = await TileStore.shared();
+
+// Or create/get a tile store at a specific path
+const customTileStore = await TileStore.shared('/path/to/tiles');
+
+// Configure tile store options
+await tileStore.setOption('disk-quota', 'Maps', 500 * 1024 * 1024); // 500MB
+```
+
+## Static Methods
+
+### shared()
+
+```tsx
+static shared(path?: string): Promise<TileStore>
+```
+
+Creates or retrieves a TileStore instance for the given storage path. The returned instance exists as long as it is retained by the client.
+
+If a tile store instance already exists for the given path, this method will return it without creating a new instance, ensuring there is only one tile store instance for a path at a time.
+
+If the given path is empty, the tile store at the default location is returned.
+
+<ParamField path="path" type="string">
+  The path on disk where tiles and metadata will be stored. If not provided, uses the default location.
+  
+  **Platform Notes:**
+  - **iOS:** This storage path is automatically excluded from cloud backup
+  - **Android:** You should exclude the storage path in your Manifest. See [Android Auto Backup documentation](https://developer.android.com/guide/topics/data/autobackup.html#IncludingFiles)
+</ParamField>
+
+**Returns:** Promise that resolves to a TileStore instance.
+
+**Example:**
+
+```tsx
+// Default tile store
+const defaultStore = await TileStore.shared();
+
+// Custom path tile store
+const customStore = await TileStore.shared('/custom/tile/path');
+```
+
+## Instance Methods
+
+### setOption()
+
+```tsx
+setOption(
+  key: string,
+  domain: TileDataDomain,
+  value: string | number
+): Promise<void>
+```
+
+Sets additional options for this instance that are specific to a data type.
+
+<ParamField path="key" type="string" required>
+  The configuration option that should be changed. Valid keys are listed in TileStoreOptions.
+  
+  Common options:
+  - `'disk-quota'` - Maximum disk space for tiles (in bytes)
+</ParamField>
+
+<ParamField path="domain" type="TileDataDomain" required>
+  The data type this setting should be applied for.
+  
+  Valid values:
+  - `'Maps'`
+  - `'Navigation'`
+  - `'Search'`
+  - `'ADAS'`
+</ParamField>
+
+<ParamField path="value" type="string | number" required>
+  The value for the configuration option, or `null` if it should be reset.
+</ParamField>
+
+**Example:**
+
+```tsx
+const tileStore = await TileStore.shared();
+
+// Set disk quota to 500MB for Maps
+await tileStore.setOption('disk-quota', 'Maps', 500 * 1024 * 1024);
+
+// Set disk quota for Navigation
+await tileStore.setOption('disk-quota', 'Navigation', 1024 * 1024 * 1024); // 1GB
+```
+
+## Types
+
+### TileDataDomain
+
+```typescript
+type TileDataDomain = 'Maps' | 'Navigation' | 'Search' | 'ADAS';
+```
+
+Represents the type of data the tile store manages.
+
+### TileDataValue
+
+```typescript
+type TileDataValue = string | number;
+```
+
+The value type for tile store options.
+
+## Examples
+
+<Tabs>
+  <Tab title="Set Disk Quota">
+    ```tsx
+    import { TileStore } from '@rnmapbox/maps';
+
+    async function setDiskQuota() {
+      const tileStore = await TileStore.shared();
+      
+      // Set 500MB quota for Maps
+      await tileStore.setOption(
+        'disk-quota',
+        'Maps',
+        500 * 1024 * 1024
+      );
+      
+      console.log('Disk quota set to 500MB');
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Custom Path">
+    ```tsx
+    import { TileStore } from '@rnmapbox/maps';
+    import RNFS from 'react-native-fs';
+
+    async function setupCustomTileStore() {
+      // Create a custom directory for tiles
+      const customPath = `${RNFS.DocumentDirectoryPath}/custom-tiles`;
+      
+      try {
+        await RNFS.mkdir(customPath);
+      } catch (e) {
+        // Directory might already exist
+      }
+      
+      // Get tile store for custom path
+      const tileStore = await TileStore.shared(customPath);
+      
+      // Configure the tile store
+      await tileStore.setOption(
+        'disk-quota',
+        'Maps',
+        1024 * 1024 * 1024 // 1GB
+      );
+      
+      return tileStore;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Multiple Domains">
+    ```tsx
+    import { TileStore } from '@rnmapbox/maps';
+
+    async function configureAllDomains() {
+      const tileStore = await TileStore.shared();
+      
+      const quotas = {
+        Maps: 500 * 1024 * 1024,        // 500MB
+        Navigation: 1024 * 1024 * 1024, // 1GB
+        Search: 100 * 1024 * 1024,      // 100MB
+        ADAS: 200 * 1024 * 1024,        // 200MB
+      };
+      
+      for (const [domain, quota] of Object.entries(quotas)) {
+        await tileStore.setOption(
+          'disk-quota',
+          domain as 'Maps' | 'Navigation' | 'Search' | 'ADAS',
+          quota
+        );
+        console.log(`${domain} quota set to ${quota / 1024 / 1024}MB`);
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Manage Storage">
+    ```tsx
+    import { useEffect, useState } from 'react';
+    import { View, Button, Text } from 'react-native';
+    import { TileStore } from '@rnmapbox/maps';
+
+    function TileStorageManager() {
+      const [tileStore, setTileStore] = useState(null);
+      const [quota, setQuota] = useState(500); // MB
+
+      useEffect(() => {
+        TileStore.shared().then(setTileStore);
+      }, []);
+
+      const updateQuota = async (newQuota: number) => {
+        if (tileStore) {
+          await tileStore.setOption(
+            'disk-quota',
+            'Maps',
+            newQuota * 1024 * 1024
+          );
+          setQuota(newQuota);
+        }
+      };
+
+      return (
+        <View>
+          <Text>Current Quota: {quota}MB</Text>
+          <Button
+            title="Set 250MB"
+            onPress={() => updateQuota(250)}
+          />
+          <Button
+            title="Set 500MB"
+            onPress={() => updateQuota(500)}
+          />
+          <Button
+            title="Set 1GB"
+            onPress={() => updateQuota(1024)}
+          />
+        </View>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+1. **Set Appropriate Quotas:** Consider your app's needs and device storage when setting disk quotas
+2. **Use Default Store:** Unless you have specific requirements, use the default tile store
+3. **Platform Considerations:** Remember to configure Android Manifest for backup exclusion
+4. **Monitor Usage:** Regularly check and adjust quotas based on actual usage patterns
+
+## Platform-Specific Notes
+
+### iOS
+- The tile store path is automatically excluded from iCloud backup
+- No additional configuration needed
+
+### Android
+- You should exclude the tile store path in your `AndroidManifest.xml`
+- Add the path to your backup rules to prevent automatic cloud backup
+- See [Android Auto Backup documentation](https://developer.android.com/guide/topics/data/autobackup.html#IncludingFiles)
+
+## Related
+
+- [offlineManager](/api/offline-manager) - Higher-level offline pack management
+- [MapView](/api/mapview) - Display maps with cached tiles

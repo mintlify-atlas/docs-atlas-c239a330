@@ -1,80 +1,398 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Create your first map with @rnmapbox/maps in minutes
 ---
 
-## Get started in three steps
+# Quickstart
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through creating your first map with @rnmapbox/maps. Make sure you've completed the [installation](/installation) before proceeding.
 
-### Step 1: Set up your local environment
+## Prerequisites
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Complete Installation">
+    Follow the [installation guide](/installation) to install and configure the package for your platform.
+  </Step>
+  
+  <Step title="Get a Mapbox Access Token">
+    Sign up for a free account at [mapbox.com](https://account.mapbox.com/auth/signup/) and create an access token from your [account page](https://console.mapbox.com/account/access-tokens/).
+  </Step>
+</Steps>
 
-### Step 2: Deploy your changes
+## Set Your Access Token
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+Before using any Mapbox components, you need to set your access token. Add this to your app's entry point (e.g., `App.tsx` or `index.js`):
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+```tsx
+import Mapbox from '@rnmapbox/maps';
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
+```
 
-### Step 3: Go live
+<Warning>
+Replace `<YOUR_ACCESS_TOKEN>` with your actual Mapbox access token. Never commit tokens to version control.
+</Warning>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+## Create Your First Map
 
-## Next steps
+Here's a complete example that displays a basic map:
 
-Now that you have your docs running, explore these key features:
+```tsx
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
 
-<CardGroup cols={2}>
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+const App = () => {
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <Mapbox.MapView style={styles.map} />
+      </View>
+    </View>
+  );
+};
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+export default App;
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    flex: 1
+  }
+});
+```
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+This creates a simple map view with default settings. The map will be centered on the world view with standard zoom level.
 </Note>
+
+## Add Camera Controls
+
+Enhance your map with camera controls to set the initial position:
+
+```tsx
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
+
+const App = () => {
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <Mapbox.MapView style={styles.map}>
+          <Mapbox.Camera
+            zoomLevel={14}
+            centerCoordinate={[-74.006, 40.7128]}
+          />
+        </Mapbox.MapView>
+      </View>
+    </View>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    flex: 1
+  }
+});
+```
+
+<Note>
+The camera is centered on New York City at zoom level 14. Coordinates are in [longitude, latitude] format.
+</Note>
+
+## Show User Location
+
+Display the user's current location on the map:
+
+```tsx
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
+
+const App = () => {
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <Mapbox.MapView style={styles.map}>
+          <Mapbox.Camera 
+            followZoomLevel={12} 
+            followUserLocation 
+          />
+          <Mapbox.UserLocation />
+        </Mapbox.MapView>
+      </View>
+    </View>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    flex: 1
+  }
+});
+```
+
+<Warning>
+Make sure you've added location permissions to your `Info.plist` (iOS) or `AndroidManifest.xml` (Android). See the [installation guide](/installation) for details.
+</Warning>
+
+## Use Different Map Styles
+
+Mapbox provides several built-in map styles:
+
+```tsx
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
+
+const App = () => {
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <Mapbox.MapView 
+          style={styles.map}
+          styleURL={Mapbox.StyleURL.Satellite}
+        >
+          <Mapbox.Camera
+            zoomLevel={14}
+            centerCoordinate={[-74.006, 40.7128]}
+          />
+        </Mapbox.MapView>
+      </View>
+    </View>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    flex: 1
+  }
+});
+```
+
+### Available Style URLs
+
+<CodeGroup>
+
+```tsx Street
+Mapbox.StyleURL.Street
+```
+
+```tsx Satellite
+Mapbox.StyleURL.Satellite
+```
+
+```tsx Dark
+Mapbox.StyleURL.Dark
+```
+
+```tsx Light
+Mapbox.StyleURL.Light
+```
+
+```tsx Outdoors
+Mapbox.StyleURL.Outdoors
+```
+
+```tsx SatelliteStreet
+Mapbox.StyleURL.SatelliteStreet
+```
+
+</CodeGroup>
+
+## Optional Configuration
+
+### Disable Telemetry
+
+By default, Mapbox collects anonymous telemetry data. You can disable this:
+
+```tsx
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setTelemetryEnabled(false);
+```
+
+### Android Connection Status
+
+If you're hosting styles on localhost (Android only), you may need to manually set the connection status:
+
+```tsx
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setConnected(true);
+```
+
+<Note>
+This bypasses the ConnectivityManager and is only needed for local development with custom styles.
+</Note>
+
+## Full Working Example
+
+Here's a complete, production-ready example with user location and custom styling:
+
+```tsx
+import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Mapbox from '@rnmapbox/maps';
+
+Mapbox.setAccessToken('<YOUR_ACCESS_TOKEN>');
+
+const App = () => {
+  useEffect(() => {
+    // Start location manager
+    Mapbox.locationManager.start();
+
+    return () => {
+      // Cleanup on unmount
+      Mapbox.locationManager.stop();
+    };
+  }, []);
+
+  return (
+    <View style={styles.page}>
+      <View style={styles.container}>
+        <Mapbox.MapView 
+          style={styles.map}
+          styleURL={Mapbox.StyleURL.Street}
+        >
+          <Mapbox.Camera 
+            followZoomLevel={12} 
+            followUserLocation 
+          />
+          <Mapbox.UserLocation 
+            onPress={() => alert('You pressed the user location!')}
+          />
+        </Mapbox.MapView>
+      </View>
+    </View>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF'
+  },
+  container: {
+    height: 300,
+    width: 300,
+    backgroundColor: 'tomato'
+  },
+  map: {
+    flex: 1
+  }
+});
+```
+
+## Next Steps
+
+Now that you have a working map, explore more features:
+
+<CardGroup cols={2}>
+  <Card
+    title="MapView Component"
+    icon="map"
+    href="/api/mapview"
+  >
+    Learn about all MapView properties and events
+  </Card>
+  <Card
+    title="Camera Component"
+    icon="video"
+    href="/api/camera"
+  >
+    Control camera position, zoom, and animations
+  </Card>
+  <Card
+    title="Add Markers"
+    icon="location-pin"
+    href="/guides/annotations"
+  >
+    Display point annotations and markers
+  </Card>
+  <Card
+    title="Style Layers"
+    icon="layer-group"
+    href="/guides/styling"
+  >
+    Customize map appearance with layers
+  </Card>
+</CardGroup>
+
+## Common Issues
+
+### Map Not Displaying
+
+- Verify your access token is set correctly
+- Check that you've completed platform-specific setup
+- Ensure the map container has a valid height and width
+
+### Location Not Showing
+
+- Add location permissions to `Info.plist` (iOS) or `AndroidManifest.xml` (Android)
+- Call `Mapbox.locationManager.start()` before showing user location
+- Test on a physical device (simulators may not have location data)
+
+### Build Errors
+
+- Run `pod install` after installing (iOS)
+- Clean build folder and rebuild
+- Check that you're using React Native 0.79+
+
+<Card title="Need help?" icon="question" href="https://github.com/rnmapbox/maps/discussions">
+  Join the discussion on GitHub or the Mapbox Discord
+</Card>

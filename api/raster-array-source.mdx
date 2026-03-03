@@ -1,0 +1,136 @@
+---
+title: 'RasterArraySource'
+description: 'A map content source for raster array image tiles used in particle animations'
+---
+
+<Warning>
+  This component is experimental and requires Mapbox Maps SDK v11.4.0 or later.
+</Warning>
+
+## Overview
+
+RasterArraySource is a map content source that supplies raster array image tiles to be shown on the map. This source type is typically used for particle animations like wind or precipitation patterns with RasterParticleLayer.
+
+## Import
+
+```tsx
+import { RasterArraySource } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, RasterArraySource, RasterParticleLayer } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <RasterArraySource
+        id="wind-source"
+        url="https://example.com/wind-data/tiles.json"
+      >
+        <RasterParticleLayer
+          id="wind-layer"
+          style={{
+            rasterParticleSpeed: 0.5,
+            rasterParticleColor: '#00ff00',
+            rasterParticleCount: 1000,
+          }}
+        />
+      </RasterArraySource>
+    </MapView>
+  );
+}
+```
+
+## Using Tile URL Templates
+
+```tsx
+<RasterArraySource
+  id="precipitation-source"
+  tileUrlTemplates={[
+    'https://example.com/precipitation/{z}/{x}/{y}.png'
+  ]}
+  tileSize={512}
+  minZoomLevel={0}
+  maxZoomLevel={12}
+>
+  <RasterParticleLayer id="precipitation-layer" />
+</RasterArraySource>
+```
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A string that uniquely identifies the source.
+  
+  **Default:** `Mapbox.StyleSource.DefaultSourceID`
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  The id refers to an existing source in the style. Does not create a new source.
+</ParamField>
+
+<ParamField path="url" type="string">
+  A URL to a TileJSON configuration file describing the source's contents and other metadata.
+</ParamField>
+
+<ParamField path="tileUrlTemplates" type="string[]">
+  An array of tile URL templates. If multiple endpoints are specified, clients may use any combination of endpoints.
+  
+  Example: `["https://example.com/raster-tiles/{z}/{x}/{y}.png"]`
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  An unsigned integer that specifies the minimum zoom level at which to display tiles from the source. The value should be between 0 and 22, inclusive, and less than `maxZoomLevel`, if specified.
+  
+  **Default:** `0`
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  An unsigned integer that specifies the maximum zoom level at which to display tiles from the source. The value should be between 0 and 22, inclusive, and greater than `minZoomLevel`, if specified.
+  
+  **Default:** `22`
+</ParamField>
+
+<ParamField path="tileSize" type="number">
+  Size of the map tiles. Defaults to 512.
+  
+  <Info>
+    **Platform Note:** This property is not supported on iOS due to SDK limitations. On iOS, `tileSize` will be derived from the TileJSON when using `url`, or use the default value. If you need custom tile size on iOS, include it in your TileJSON response.
+  </Info>
+</ParamField>
+
+<ParamField path="sourceBounds" type="number[]">
+  An array containing the longitude and latitude of the southwest and northeast corners of the source's bounding box in the following order: `[sw.lng, sw.lat, ne.lng, ne.lat]`.
+  
+  When this property is included in a source, no tiles outside of the given bounds are requested by Mapbox GL.
+  
+  <Info>
+    **Platform Note:** This property is not supported on iOS due to SDK limitations. On iOS, bounds will be derived from the TileJSON when using `url`. If you need custom bounds on iOS, include them in your TileJSON response.
+  </Info>
+</ParamField>
+
+<ParamField path="children" type="React.ReactElement | React.ReactElement[]">
+  Child layer components (typically RasterParticleLayer) that will use this source.
+</ParamField>
+
+## Platform Limitations
+
+<Note>
+  Due to iOS SDK limitations, the following properties are only supported on Android:
+  - `tileSize` - On iOS, this is derived from TileJSON or uses the default
+  - `sourceBounds` - On iOS, this is derived from TileJSON
+  
+  For cross-platform compatibility, include these values in your TileJSON response when using the `url` property.
+</Note>
+
+## Methods
+
+RasterArraySource inherits methods from AbstractSource. Use a ref to access these methods.
+
+## Related Components
+
+- [RasterSource](/api/raster-source) - For raster image tiles
+- [RasterDemSource](/api/raster-dem-source) - For elevation data
+- [RasterParticleLayer](/api/raster-particle-layer) - Used to render particle animations

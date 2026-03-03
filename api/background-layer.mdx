@@ -1,0 +1,90 @@
+---
+title: BackgroundLayer
+description: Style layer for rendering a background color or pattern
+---
+
+BackgroundLayer renders a solid color or pattern across the entire map. It is typically used as the base layer.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#background)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style instead of creating a new one.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain the data to style. Inferred from parent source only if the layer is a direct child to it.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="layerIndex" type="number">
+  Inserts the layer at a specified index in the layer stack.
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  The minimum zoom level at which the layer is visible.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  The maximum zoom level at which the layer is visible.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features from the source layer based on a condition.
+</ParamField>
+
+<ParamField path="style" type="BackgroundLayerStyleProps">
+  Customizable style attributes for the background layer.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls whether the layer is displayed.
+</ParamField>
+
+<ParamField path="style.backgroundColor" type="string" default="#000000">
+  The color with which the background will be drawn.
+  
+  Disabled by: `backgroundPattern`
+</ParamField>
+
+<ParamField path="style.backgroundPattern" type="string">
+  Name of image in sprite to use for drawing an image background. For seamless patterns, image width and height must be a factor of two (2, 4, 8, ..., 512).
+</ParamField>
+
+<ParamField path="style.backgroundOpacity" type="number" default="1">
+  The opacity at which the background will be drawn. Range: 0-1.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, BackgroundLayer } from '@rnmapbox/maps';
+
+function Map() {
+  return (
+    <MapView>
+      <BackgroundLayer
+        id="background"
+        style={{
+          backgroundColor: '#f0f0f0',
+          backgroundOpacity: 1,
+        }}
+      />
+    </MapView>
+  );
+}
+```

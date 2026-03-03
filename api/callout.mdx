@@ -1,0 +1,176 @@
+---
+title: Callout
+description: API reference for the Callout component
+---
+
+Callout that displays information about a selected annotation near the annotation.
+
+Callouts are typically used as children of PointAnnotation to display additional information when an annotation is selected.
+
+## Props
+
+<ParamField path="title" type="string" required>
+  String that gets displayed in the default callout.
+</ParamField>
+
+<ParamField path="style" type="ViewStyle">
+  Style property for the Animated.View wrapper, apply animations to this
+</ParamField>
+
+<ParamField path="containerStyle" type="ViewStyle">
+  Style property for the native RNMBXCallout container, set at your own risk.
+</ParamField>
+
+<ParamField path="contentStyle" type="ViewStyle">
+  Style property for the content bubble.
+</ParamField>
+
+<ParamField path="tipStyle" type="ViewStyle">
+  Style property for the triangle tip under the content.
+</ParamField>
+
+<ParamField path="textStyle" type="ViewStyle">
+  Style property for the title in the content bubble.
+</ParamField>
+
+## Example
+
+### Default Callout
+
+```tsx
+import { MapView, Camera, PointAnnotation, Callout } from '@rnmapbox/maps';
+import { View, StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  annotationContainer: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    borderRadius: 15,
+  },
+});
+
+const App = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-73.99155, 40.73581],
+          zoomLevel: 16
+        }}
+      />
+      <PointAnnotation
+        id="annotation1"
+        coordinate={[-73.99155, 40.73581]}
+        title="Annotation Title"
+      >
+        <View style={styles.annotationContainer} />
+        <Callout title="This is the callout content" />
+      </PointAnnotation>
+    </MapView>
+  );
+};
+```
+
+### Custom Styled Callout
+
+```tsx
+import { MapView, Camera, PointAnnotation, Callout } from '@rnmapbox/maps';
+import { View, StyleSheet } from 'react-native';
+
+const App = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-73.99155, 40.73581],
+          zoomLevel: 16
+        }}
+      />
+      <PointAnnotation
+        id="annotation1"
+        coordinate={[-73.99155, 40.73581]}
+        title="Styled Annotation"
+      >
+        <View style={{ width: 30, height: 30, backgroundColor: 'blue', borderRadius: 15 }} />
+        <Callout
+          title="Custom Styled Callout"
+          contentStyle={{
+            backgroundColor: '#f0f0f0',
+            borderRadius: 8,
+            padding: 12,
+          }}
+          textStyle={{
+            fontSize: 14,
+            fontWeight: 'bold',
+            color: '#333',
+          }}
+          tipStyle={{
+            borderTopColor: '#f0f0f0',
+          }}
+        />
+      </PointAnnotation>
+    </MapView>
+  );
+};
+```
+
+### Custom Callout Content
+
+You can also provide custom children to completely customize the callout:
+
+```tsx
+import { MapView, Camera, PointAnnotation, Callout } from '@rnmapbox/maps';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
+const CustomCalloutContent = () => (
+  <View style={{
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    minWidth: 200,
+  }}>
+    <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>
+      Custom Callout
+    </Text>
+    <Text style={{ marginBottom: 12 }}>
+      This is a fully customized callout with interactive elements.
+    </Text>
+    <TouchableOpacity
+      style={{
+        backgroundColor: '#007AFF',
+        padding: 8,
+        borderRadius: 4,
+        alignItems: 'center',
+      }}
+      onPress={() => console.log('Button pressed!')}
+    >
+      <Text style={{ color: 'white', fontWeight: 'bold' }}>Click Me</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const App = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-73.99155, 40.73581],
+          zoomLevel: 16
+        }}
+      />
+      <PointAnnotation
+        id="annotation1"
+        coordinate={[-73.99155, 40.73581]}
+      >
+        <View style={{ width: 30, height: 30, backgroundColor: 'red', borderRadius: 15 }} />
+        <Callout title="">
+          <CustomCalloutContent />
+        </Callout>
+      </PointAnnotation>
+    </MapView>
+  );
+};
+```

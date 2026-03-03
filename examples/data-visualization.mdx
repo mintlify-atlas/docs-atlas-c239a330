@@ -1,0 +1,581 @@
+---
+title: "Data Visualization Examples"
+description: "Visualize complex datasets with heatmaps, clustering, and data-driven styling"
+---
+
+## Heatmap Layer
+
+Visualize data density using heatmaps:
+
+```tsx
+import React from 'react';
+import Mapbox from '@rnmapbox/maps';
+
+const Heatmap = () => {
+  return (
+    <Mapbox.MapView style={{ flex: 1 }}>
+      <Mapbox.Camera
+        defaultSettings={{
+          zoomLevel: 10,
+          centerCoordinate: [-122.4194, 37.7749],
+        }}
+      />
+
+      <Mapbox.ShapeSource
+        id="earthquakes"
+        url="https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
+      >
+        <Mapbox.HeatmapLayer
+          id="earthquakes-heat"
+          sourceID="earthquakes"
+          style={{
+            heatmapColor: [
+              'interpolate',
+              ['linear'],
+              ['heatmap-density'],
+              0, 'rgba(33,102,172,0)',
+              0.2, 'rgb(103,169,207)',
+              0.4, 'rgb(209,229,240)',
+              0.6, 'rgb(253,219,199)',
+              0.8, 'rgb(239,138,98)',
+              1, 'rgb(178,24,43)',
+            ],
+            heatmapWeight: [
+              'interpolate',
+              ['linear'],
+              ['get', 'mag'],
+              0, 0,
+              6, 1,
+            ],
+            heatmapIntensity: [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              0, 1,
+              9, 3,
+            ],
+            heatmapRadius: [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              0, 2,
+              9, 20,
+            ],
+          }}
+        />
+      </Mapbox.ShapeSource>
+    </Mapbox.MapView>
+  );
+};
+
+export default Heatmap;
+```
+
+<Note>
+  Heatmap layers are ideal for visualizing point density. They're GPU-accelerated and can handle large datasets efficiently.
+</Note>
+
+## Clustering with Custom Properties
+
+Cluster points and aggregate custom properties:
+
+```tsx
+import {
+  Camera,
+  CircleLayer,
+  MapView,
+  ShapeSource,
+  SymbolLayer,
+  StyleURL,
+} from '@rnmapbox/maps';
+import React, { useRef, useState } from 'react';
+import { FeatureCollection } from 'geojson';
+import earthQuakesJSON from './assets/earthquakes.json';
+
+const layerStyles = {
+  singlePoint: {
+    circleColor: 'green',
+    circleOpacity: 0.84,
+    circleStrokeWidth: 2,
+    circleStrokeColor: 'white',
+    circleRadius: 5,
+    circlePitchAlignment: 'map',
+  },
+  clusteredPoints: {
+    circlePitchAlignment: 'map',
+    circleColor: [
+      'step',
+      ['get', 'point_count'],
+      '#51bbd6',
+      100, '#f1f075',
+      750, '#f28cb1',
+    ],
+    circleRadius: [
+      'step', 
+      ['get', 'point_count'], 
+      20, 
+      100, 30, 
+      750, 40
+    ],
+    circleOpacity: 0.84,
+    circleStrokeWidth: 2,
+    circleStrokeColor: 'white',
+  },
+  clusterCount: {
+    textField: [
+      'format',
+      ['concat', ['get', 'point_count'], '\n'],
+      {},
+      [
+        'concat',
+        '>1: ',
+        [
+          '+',
+          ['get', 'mag2'],
+          ['get', 'mag3'],
+          ['get', 'mag4'],
+          ['get', 'mag5'],
+        ],
+      ],
+      { 'font-scale': 0.8 },
+    ],
+    textSize: 12,
+    textPitchAlignment: 'map',
+  },
+};
+
+const mag1 = ['<', ['get', 'mag'], 2];
+const mag2 = ['all', ['>=', ['get', 'mag'], 2], ['<', ['get', 'mag'], 3]];
+const mag3 = ['all', ['>=', ['get', 'mag'], 3], ['<', ['get', 'mag'], 4]];
+const mag4 = ['all', ['>=', ['get', 'mag'], 4], ['<', ['get', 'mag'], 5]];
+const mag5 = ['>=', ['get', 'mag'], 5];
+
+const Earthquakes = () => {
+  const shapeSource = useRef<ShapeSource>(null);
+  const [selectedCluster, setSelectedCluster] = useState<FeatureCollection>();
+
+  return (
+    <MapView style={{ flex: 1 }} styleURL={StyleURL.Dark}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-122.4194, 37.7749],
+          zoomLevel: 6,
+        }}
+      />
+      <ShapeSource
+        id="earthquakes"
+        onPress={async (pressedShape) => {
+          if (shapeSource.current) {
+            try {
+              const cluster = pressedShape.features[0];
+              const collection = await shapeSource.current.getClusterLeaves(
+                cluster,
+                999,
+                0,
+              );
+              setSelectedCluster(collection);
+            } catch {
+              if (!pressedShape.features[0].properties?.cluster) {
+                setSelectedCluster({
+                  type: 'FeatureCollection',
+                  features: [pressedShape.features[0]],
+                });
+              }
+            }
+          }
+        }}
+        ref={shapeSource}
+        cluster
+        clusterRadius={50}
+        clusterMaxZoomLevel={14}
+        clusterProperties={{
+          mag1: [
+            ['+', ['accumulated'], ['get', 'mag1']],
+            ['case', mag1, 1, 0],
+          ],
+          mag2: [
+            ['+', ['accumulated'], ['get', 'mag2']],
+            ['case', mag2, 1, 0],
+          ],
+          mag3: [
+            ['+', ['accumulated'], ['get', 'mag3']],
+            ['case', mag3, 1, 0],
+          ],
+          mag4: [
+            ['+', ['accumulated'], ['get', 'mag4']],
+            ['case', mag4, 1, 0],
+          ],
+          mag5: [
+            ['+', ['accumulated'], ['get', 'mag5']],
+            ['case', mag5, 1, 0],
+          ],
+        }}
+        shape={earthQuakesJSON as unknown as FeatureCollection}
+      >
+        <SymbolLayer id="pointCount" style={layerStyles.clusterCount} />
+
+        <CircleLayer
+          id="clusteredPoints"
+          belowLayerID="pointCount"
+          filter={['has', 'point_count']}
+          style={layerStyles.clusteredPoints}
+        />
+
+        <CircleLayer
+          id="singlePoint"
+          filter={['!', ['has', 'point_count']]}
+          style={layerStyles.singlePoint}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+
+export default Earthquakes;
+```
+
+<Tip>
+  Use `clusterProperties` to aggregate custom data within clusters. This is powerful for showing statistics like "total magnitude" or "average value".
+</Tip>
+
+## Data-Driven Circle Colors
+
+Style circles based on feature properties:
+
+```tsx
+import React from 'react';
+import Mapbox from '@rnmapbox/maps';
+
+const styles = {
+  circles: {
+    circleRadius: [
+      'interpolate',
+      ['exponential', 1.75],
+      ['zoom'],
+      12, 2,
+      22, 180,
+    ],
+    circleColor: [
+      'match',
+      ['get', 'ethnicity'],
+      'White', '#fbb03b',
+      'Black', '#223b53',
+      'Hispanic', '#e55e5e',
+      'Asian', '#3bb2d0',
+      /* other */ '#ccc',
+    ],
+  },
+};
+
+const DataDrivenCircleColors = () => {
+  return (
+    <Mapbox.MapView
+      styleURL={Mapbox.StyleURL.Light}
+      style={{ flex: 1 }}
+    >
+      <Mapbox.Camera
+        defaultSettings={{
+          centerCoordinate: [-122.400021, 37.789085],
+          pitch: 45,
+          zoomLevel: 10,
+        }}
+      />
+
+      <Mapbox.VectorSource
+        id="population"
+        url="mapbox://examples.8fgz4egr"
+      >
+        <Mapbox.CircleLayer
+          id="sf2010CircleFill"
+          sourceLayerID="sf2010"
+          style={styles.circles}
+        />
+      </Mapbox.VectorSource>
+    </Mapbox.MapView>
+  );
+};
+
+export default DataDrivenCircleColors;
+```
+
+## Choropleth Map
+
+Create a choropleth map with data-driven fill colors:
+
+```tsx
+import React from 'react';
+import { MapView, Camera, ShapeSource, FillLayer } from '@rnmapbox/maps';
+import statesData from './assets/us-states.json';
+
+const ChoroplethMap = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-98.5795, 39.8283],
+          zoomLevel: 3,
+        }}
+      />
+      <ShapeSource id="states" shape={statesData}>
+        <FillLayer
+          id="state-fills"
+          style={{
+            fillColor: [
+              'interpolate',
+              ['linear'],
+              ['get', 'density'],
+              0, '#F2F12D',
+              50, '#EED322',
+              100, '#E6B71E',
+              150, '#DA9C20',
+              200, '#CA8323',
+              250, '#B86B25',
+              300, '#A25626',
+              350, '#8B4225',
+              400, '#723122',
+            ],
+            fillOpacity: 0.75,
+          }}
+        />
+        <FillLayer
+          id="state-borders"
+          style={{
+            fillOutlineColor: '#000000',
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+```
+
+## 3D Extrusion
+
+Create 3D buildings based on height data:
+
+```tsx
+import React from 'react';
+import Mapbox from '@rnmapbox/maps';
+
+const layerStyles = {
+  building: {
+    fillExtrusionColor: '#aaa',
+    fillExtrusionHeight: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      15, 0,
+      15.05, ['get', 'height'],
+    ],
+    fillExtrusionBase: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      15, 0,
+      15.05, ['get', 'min_height'],
+    ],
+    fillExtrusionOpacity: 0.6,
+  },
+};
+
+const Building3D = () => {
+  return (
+    <Mapbox.MapView style={{ flex: 1 }}>
+      <Mapbox.Camera
+        defaultSettings={{
+          centerCoordinate: [-74.0066, 40.7135],
+          zoomLevel: 16,
+          pitch: 60,
+        }}
+      />
+      <Mapbox.FillExtrusionLayer
+        id="building3d"
+        sourceLayerID="building"
+        style={layerStyles.building}
+      />
+    </Mapbox.MapView>
+  );
+};
+```
+
+## Filter Layers
+
+Filter features based on properties:
+
+<CodeGroup>
+
+```tsx Comparison Filter
+<CircleLayer
+  id="large-earthquakes"
+  filter={['>', ['get', 'mag'], 5.0]}
+  style={{
+    circleColor: '#ff0000',
+    circleRadius: 10,
+  }}
+/>
+```
+
+```tsx Match Filter
+<CircleLayer
+  id="specific-types"
+  filter={[
+    'match',
+    ['get', 'type'],
+    ['park', 'recreation'],
+    true,
+    false,
+  ]}
+  style={{ circleColor: '#00ff00' }}
+/>
+```
+
+```tsx Combined Filter
+<CircleLayer
+  id="filtered"
+  filter={[
+    'all',
+    ['>', ['get', 'value'], 100],
+    ['<', ['get', 'value'], 1000],
+    ['==', ['get', 'type'], 'residential'],
+  ]}
+  style={{ circleColor: '#0000ff' }}
+/>
+```
+
+</CodeGroup>
+
+## Performance Tips
+
+<Tabs>
+  <Tab title="Large Datasets">
+    For datasets with thousands of points:
+    
+    ```tsx
+    <ShapeSource
+      id="large-dataset"
+      shape={geoJSON}
+      cluster={true}
+      clusterRadius={50}
+      clusterMaxZoomLevel={14}
+      maxZoomLevel={22}
+    >
+      <CircleLayer id="clusters" />
+    </ShapeSource>
+    ```
+    
+    - Enable clustering to reduce render load
+    - Set appropriate `clusterRadius` and `clusterMaxZoomLevel`
+    - Use GPU-powered expressions for styling
+  </Tab>
+  <Tab title="Vector Tiles">
+    For very large datasets, use vector tiles:
+    
+    ```tsx
+    <Mapbox.VectorSource
+      id="large-data"
+      url="mapbox://your-tileset-id"
+    >
+      <Mapbox.CircleLayer
+        id="data-points"
+        sourceLayerID="your-layer"
+        style={styles}
+      />
+    </Mapbox.VectorSource>
+    ```
+    
+    - Only loads visible tiles
+    - Extremely scalable
+    - Best for production use with large data
+  </Tab>
+  <Tab title="Expressions">
+    Use expressions for dynamic styling:
+    
+    ```tsx
+    // Good - GPU accelerated
+    circleColor: [
+      'case',
+      ['<', ['get', 'value'], 100], '#00ff00',
+      ['<', ['get', 'value'], 500], '#ffff00',
+      '#ff0000'
+    ]
+    
+    // Avoid - requires re-render
+    circleColor: feature.properties.value < 100 ? 
+      '#00ff00' : '#ff0000'
+    ```
+  </Tab>
+</Tabs>
+
+## Interaction
+
+Make your visualizations interactive:
+
+```tsx
+const [selectedFeature, setSelectedFeature] = useState(null);
+
+<ShapeSource
+  id="interactive-data"
+  shape={geoJSON}
+  onPress={(event) => {
+    const feature = event.features[0];
+    setSelectedFeature(feature);
+    console.log('Feature properties:', feature.properties);
+  }}
+>
+  <CircleLayer
+    id="data-points"
+    style={{
+      circleColor: [
+        'case',
+        ['==', ['id'], selectedFeature?.id ?? ''],
+        '#ff0000',
+        '#0000ff',
+      ],
+      circleRadius: 8,
+    }}
+  />
+</ShapeSource>
+```
+
+## Heatmap Properties
+
+| Property | Description | Example |
+|----------|-------------|----------|
+| `heatmapColor` | Color gradient | `['interpolate', ['linear'], ['heatmap-density'], 0, 'blue', 1, 'red']` |
+| `heatmapWeight` | Weight of each point | `['interpolate', ['linear'], ['get', 'value'], 0, 0, 100, 1]` |
+| `heatmapIntensity` | Overall intensity | `['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3]` |
+| `heatmapRadius` | Radius of influence | `['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20]` |
+| `heatmapOpacity` | Layer opacity | `0.8` |
+
+## Best Practices
+
+<Warning>
+  Avoid using too many layers. Combine data when possible and use expressions for conditional styling instead of creating multiple layers.
+</Warning>
+
+<Tip>
+  Use `minzoom` and `maxzoom` properties on layers to control visibility at different zoom levels, improving performance.
+</Tip>
+
+<Note>
+  For real-time data updates, prefer updating the `shape` prop on `ShapeSource` rather than unmounting and remounting the entire layer structure.
+</Note>
+
+## Source Code
+
+View the complete examples on GitHub:
+
+- [Heatmap.js](https://github.com/rnmapbox/maps/blob/main/example/src/examples/Annotations/Heatmap.js)
+- [Earthquakes.tsx](https://github.com/rnmapbox/maps/blob/main/example/src/examples/SymbolCircleLayer/Earthquakes.tsx)
+- [DataDrivenCircleColors.js](https://github.com/rnmapbox/maps/blob/main/example/src/examples/SymbolCircleLayer/DataDrivenCircleColors.js)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Styles" icon="palette" href="/examples/custom-styles">
+    Learn advanced styling techniques
+  </Card>
+  <Card title="Overview" icon="book" href="/examples/overview">
+    Explore all available examples
+  </Card>
+</CardGroup>

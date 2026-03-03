@@ -1,0 +1,138 @@
+---
+title: 'ImageSource'
+description: 'A content source for georeferenced raster images'
+---
+
+## Overview
+
+ImageSource is a content source that is used for a georeferenced raster image to be shown on the map. The georeferenced image scales and rotates as the user zooms and rotates the map. This is useful for overlaying historical maps, floor plans, or other georeferenced imagery.
+
+## Import
+
+```tsx
+import { ImageSource } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, ImageSource, RasterLayer } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <ImageSource
+        id="image-source"
+        url="https://example.com/overlay.png"
+        coordinates={[
+          [-122.51596391201019, 37.56238816766053], // top left
+          [-122.51467645168304, 37.56410183312965], // top right
+          [-122.51309394836426, 37.563391708549425], // bottom right
+          [-122.51423120498657, 37.56161849366671], // bottom left
+        ]}
+      >
+        <RasterLayer id="image-layer" style={{ rasterOpacity: 0.85 }} />
+      </ImageSource>
+    </MapView>
+  );
+}
+```
+
+## Using Local Images
+
+```tsx
+import floorPlan from './assets/floor-plan.png';
+
+<ImageSource
+  id="floor-plan"
+  url={floorPlan}
+  coordinates={[
+    [-122.4, 37.8],
+    [-122.3, 37.8],
+    [-122.3, 37.7],
+    [-122.4, 37.7],
+  ]}
+>
+  <RasterLayer id="floor-plan-layer" />
+</ImageSource>
+```
+
+## Animating Image Position
+
+```tsx
+import { useState } from 'react';
+
+function AnimatedImageSource() {
+  const [coordinates, setCoordinates] = useState([
+    [-122.4, 37.8],
+    [-122.3, 37.8],
+    [-122.3, 37.7],
+    [-122.4, 37.7],
+  ]);
+
+  return (
+    <ImageSource
+      id="animated-image"
+      url="https://example.com/overlay.png"
+      coordinates={coordinates}
+    >
+      <RasterLayer id="layer" />
+    </ImageSource>
+  );
+}
+```
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A string that uniquely identifies the source.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  The id refers to an existing source in the style. Does not create a new source.
+</ParamField>
+
+<ParamField path="url" type="string | number" required>
+  An HTTP(S) URL, absolute file URL, or local file URL to the source image. Can also be a `require()` statement for local images.
+  
+  **Note:** GIFs are currently not supported.
+</ParamField>
+
+<ParamField path="coordinates" type="[[number, number], [number, number], [number, number], [number, number]]" required>
+  The top left, top right, bottom right, and bottom left coordinates for the image in [longitude, latitude] format.
+  
+  The coordinates define the corners of the image and determine how it's positioned, scaled, and rotated on the map.
+  
+  **Format:** `[[topLeft], [topRight], [bottomRight], [bottomLeft]]`
+  
+  **Example:**
+  ```tsx
+  coordinates={[
+    [-122.51596391201019, 37.56238816766053], // top left
+    [-122.51467645168304, 37.56410183312965], // top right
+    [-122.51309394836426, 37.563391708549425], // bottom right
+    [-122.51423120498657, 37.56161849366671], // bottom left
+  ]}
+  ```
+</ParamField>
+
+<ParamField path="children" type="React.ReactElement | React.ReactElement[]">
+  Child layer components (typically RasterLayer) that will use this source.
+</ParamField>
+
+## Methods
+
+ImageSource inherits methods from AbstractSource. Use a ref to access these methods.
+
+## Notes
+
+- The image will scale and rotate as the user zooms and rotates the map
+- Coordinates must form a valid quadrilateral
+- The image source will not render if `url` or `coordinates` are not provided
+- GIF images are not currently supported
+- For local images, use `require()` or import the image
+
+## Related Components
+
+- [RasterSource](/api/raster-source) - For tiled raster images
+- [RasterLayer](/api/raster-layer) - Used to render the image

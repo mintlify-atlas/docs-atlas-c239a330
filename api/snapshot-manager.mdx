@@ -1,0 +1,315 @@
+---
+title: snapshotManager
+description: Snapshot manager module API reference for Mapbox Maps SDK for React Native
+---
+
+# snapshotManager
+
+The snapshotManager generates static raster images of the map. Each snapshot image depicts a portion of a map defined by a SnapshotOptions object. The snapshotter generates snapshots asynchronously.
+
+## Import
+
+```tsx
+import { snapshotManager } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { snapshotManager } from '@rnmapbox/maps';
+
+const uri = await snapshotManager.takeSnap({
+  centerCoordinate: [-74.126410, 40.797968],
+  width: 300,
+  height: 200,
+  zoomLevel: 12,
+  styleURL: 'mapbox://styles/mapbox/streets-v11',
+});
+
+console.log('Snapshot URI:', uri);
+```
+
+## Methods
+
+### takeSnap()
+
+```tsx
+takeSnap(options: SnapshotOptions): Promise<string>
+```
+
+Takes a snapshot of the base map using the provided snapshot options.
+
+<Note>
+  The `pitch`, `heading`, and `zoomLevel` options only work when `centerCoordinate` is set!
+</Note>
+
+<ParamField path="options" type="SnapshotOptions" required>
+  Configuration for the snapshot.
+  
+  <ParamField path="options.centerCoordinate" type="[number, number]">
+    The center coordinate of the snapshot `[longitude, latitude]`. Either `centerCoordinate` or `bounds` must be provided.
+  </ParamField>
+  
+  <ParamField path="options.bounds" type="[[number, number], [number, number]]">
+    Geographic bounds for the snapshot `[[lng1, lat1], [lng2, lat2]]`. Either `centerCoordinate` or `bounds` must be provided.
+  </ParamField>
+  
+  <ParamField path="options.width" type="number" default="50">
+    Width of the snapshot in points/pixels.
+  </ParamField>
+  
+  <ParamField path="options.height" type="number" default="50">
+    Height of the snapshot in points/pixels.
+  </ParamField>
+  
+  <ParamField path="options.zoomLevel" type="number" default="16">
+    Zoom level for the snapshot. Only works with `centerCoordinate`.
+  </ParamField>
+  
+  <ParamField path="options.pitch" type="number" default="0">
+    Camera pitch (tilt) in degrees. Only works with `centerCoordinate`.
+  </ParamField>
+  
+  <ParamField path="options.heading" type="number" default="0">
+    Camera heading (bearing) in degrees. Only works with `centerCoordinate`.
+  </ParamField>
+  
+  <ParamField path="options.styleURL" type="string" default="StyleURL.Street">
+    The style URL to use for the snapshot.
+  </ParamField>
+  
+  <ParamField path="options.writeToDisk" type="boolean" default="false">
+    If `true`, writes the snapshot to a temporary file and returns the file path. If `false`, returns a base64-encoded data URI.
+  </ParamField>
+  
+  <ParamField path="options.withLogo" type="boolean" default="true">
+    Whether to include the Mapbox logo in the snapshot. Android only.
+  </ParamField>
+</ParamField>
+
+**Returns:** Promise that resolves to either:
+- File path (if `writeToDisk: true`)
+- Base64 data URI (if `writeToDisk: false`)
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Snapshot">
+    ```tsx
+    import { snapshotManager, StyleURL } from '@rnmapbox/maps';
+    import { Image } from 'react-native';
+
+    async function takeBasicSnapshot() {
+      const uri = await snapshotManager.takeSnap({
+        centerCoordinate: [-74.006, 40.7128],
+        width: 300,
+        height: 200,
+        zoomLevel: 14,
+        styleURL: StyleURL.Streets,
+      });
+      
+      // Display the snapshot
+      return <Image source={{ uri }} style={{ width: 300, height: 200 }} />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Save to Disk">
+    ```tsx
+    import { snapshotManager } from '@rnmapbox/maps';
+    import RNFS from 'react-native-fs';
+
+    async function saveSnapshotToDisk() {
+      // Create a temp file
+      const uri = await snapshotManager.takeSnap({
+        centerCoordinate: [-74.006, 40.7128],
+        width: 600,
+        height: 400,
+        zoomLevel: 12,
+        pitch: 30,
+        heading: 20,
+        styleURL: 'mapbox://styles/mapbox/dark-v10',
+        writeToDisk: true,
+      });
+      
+      console.log('Snapshot saved to:', uri);
+      
+      // Optionally move to a permanent location
+      const permanentPath = `${RNFS.DocumentDirectoryPath}/snapshot.png`;
+      await RNFS.moveFile(uri, permanentPath);
+      
+      return permanentPath;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Base64 Image">
+    ```tsx
+    import { snapshotManager } from '@rnmapbox/maps';
+    import { Image } from 'react-native';
+
+    async function getBase64Snapshot() {
+      const base64Uri = await snapshotManager.takeSnap({
+        centerCoordinate: [-74.006, 40.7128],
+        width: 300,
+        height: 200,
+        zoomLevel: 12,
+        styleURL: 'mapbox://styles/mapbox/satellite-v9',
+        writeToDisk: false, // Returns base64
+      });
+      
+      // base64Uri is a data URI like "data:image/png;base64,..."
+      return <Image source={{ uri: base64Uri }} />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="With Bounds">
+    ```tsx
+    import { snapshotManager } from '@rnmapbox/maps';
+
+    async function snapshotWithBounds() {
+      const uri = await snapshotManager.takeSnap({
+        bounds: [
+          [-74.126410, 40.797968],
+          [-74.143727, 40.772177],
+        ],
+        width: 400,
+        height: 300,
+        styleURL: 'mapbox://styles/mapbox/outdoors-v11',
+      });
+      
+      return uri;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Without Logo (Android)">
+    ```tsx
+    import { snapshotManager } from '@rnmapbox/maps';
+
+    async function snapshotWithoutLogo() {
+      const uri = await snapshotManager.takeSnap({
+        centerCoordinate: [-74.006, 40.7128],
+        width: 300,
+        height: 200,
+        zoomLevel: 12,
+        styleURL: 'mapbox://styles/mapbox/dark-v10',
+        withLogo: false, // Android only
+      });
+      
+      return uri;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Share Snapshot">
+    ```tsx
+    import { useState } from 'react';
+    import { View, Button, Image } from 'react-native';
+    import { snapshotManager } from '@rnmapbox/maps';
+    import Share from 'react-native-share';
+
+    function SnapshotSharer() {
+      const [snapshot, setSnapshot] = useState(null);
+
+      const takeAndShareSnapshot = async () => {
+        const uri = await snapshotManager.takeSnap({
+          centerCoordinate: [-74.006, 40.7128],
+          width: 800,
+          height: 600,
+          zoomLevel: 14,
+          pitch: 45,
+          styleURL: 'mapbox://styles/mapbox/streets-v11',
+          writeToDisk: true,
+        });
+        
+        setSnapshot(uri);
+        
+        // Share the snapshot
+        await Share.open({
+          url: `file://${uri}`,
+          type: 'image/png',
+        });
+      };
+
+      return (
+        <View>
+          <Button title="Take & Share Snapshot" onPress={takeAndShareSnapshot} />
+          {snapshot && (
+            <Image
+              source={{ uri: snapshot }}
+              style={{ width: 300, height: 225 }}
+            />
+          )}
+        </View>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Use Cases
+
+### Static Map Previews
+Generate preview images for locations before showing the full interactive map:
+
+```tsx
+const preview = await snapshotManager.takeSnap({
+  centerCoordinate: location,
+  width: 150,
+  height: 150,
+  zoomLevel: 13,
+  writeToDisk: false,
+});
+```
+
+### Sharing Locations
+Create shareable images of map locations:
+
+```tsx
+const shareImage = await snapshotManager.takeSnap({
+  centerCoordinate: [-74.006, 40.7128],
+  width: 800,
+  height: 600,
+  zoomLevel: 14,
+  pitch: 45,
+  heading: 90,
+  writeToDisk: true,
+});
+```
+
+### Thumbnails
+Generate thumbnails for saved locations or routes:
+
+```tsx
+const thumbnail = await snapshotManager.takeSnap({
+  bounds: routeBounds,
+  width: 200,
+  height: 150,
+  writeToDisk: false,
+});
+```
+
+## Performance Considerations
+
+- Larger snapshots (width × height) take longer to generate
+- Snapshots are generated asynchronously and don't block the UI
+- Consider caching snapshots if you need to display them multiple times
+- Use `writeToDisk: true` for large images to avoid memory issues with base64
+- Base64 encoding increases the data size by ~33%
+
+## Platform Differences
+
+### iOS
+- Snapshots include the Mapbox logo by default
+- `withLogo` option has no effect
+
+### Android
+- The `withLogo` option can hide the Mapbox logo
+- Ensure you comply with Mapbox Terms of Service when hiding the logo
+
+## Related
+
+- [MapView](/api/mapview) - Interactive map component
+- [Camera](/api/camera) - Control camera position (similar parameters)

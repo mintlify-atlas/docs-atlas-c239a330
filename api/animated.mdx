@@ -1,0 +1,399 @@
+---
+title: Animated
+description: Animated components and utilities for smooth map animations
+---
+
+The Animated module provides utilities for creating smooth animations with Mapbox components, including animated sources, layers, and coordinate classes.
+
+## Animated Components
+
+Animated versions of Mapbox components that work with React Native's Animated API.
+
+### Animated.ShapeSource
+
+Animated version of ShapeSource for animating GeoJSON shapes.
+
+```typescript
+import { Animated } from '@rnmapbox/maps';
+
+const animatedShape = new Animated.Value(/* GeoJSON */);
+
+<Animated.ShapeSource shape={animatedShape} />
+```
+
+### Animated.ImageSource
+
+Animated version of ImageSource.
+
+```typescript
+import { Animated } from '@rnmapbox/maps';
+
+<Animated.ImageSource />
+```
+
+### Layer Components
+
+All layer types are available as animated components:
+
+- `Animated.FillLayer`
+- `Animated.FillExtrusionLayer`
+- `Animated.LineLayer`
+- `Animated.CircleLayer`
+- `Animated.SymbolLayer`
+- `Animated.RasterLayer`
+- `Animated.BackgroundLayer`
+
+**Example:**
+
+```typescript
+import { Animated as RNAnimated } from 'react-native';
+import { Animated } from '@rnmapbox/maps';
+
+const opacity = new RNAnimated.Value(0.5);
+
+<Animated.FillLayer
+  style={{
+    fillOpacity: opacity,
+  }}
+/>
+```
+
+## Animated Classes
+
+### AnimatedPoint
+
+Animates a GeoJSON Point geometry between coordinates.
+
+```typescript
+import { AnimatedPoint } from '@rnmapbox/maps';
+```
+
+#### Constructor
+
+```typescript
+const animatedPoint = new AnimatedPoint(point?: Point);
+```
+
+<ParamField path="point" type="Point">
+  Initial GeoJSON Point. Defaults to `{ type: 'Point', coordinates: [0, 0] }`.
+</ParamField>
+
+#### Methods
+
+##### timing
+
+Creates a timing animation to move the point to new coordinates.
+
+```typescript
+timing(config: {
+  coordinates: number[];
+  easing?: (x: number) => number;
+  duration?: number;
+}): Animated.CompositeAnimation
+```
+
+<ParamField path="coordinates" type="number[]" required>
+  Target coordinates `[longitude, latitude]`.
+</ParamField>
+
+<ParamField path="easing" type="(x: number) => number">
+  Easing function. Defaults to linear.
+</ParamField>
+
+<ParamField path="duration" type="number">
+  Animation duration in milliseconds.
+</ParamField>
+
+##### spring
+
+Creates a spring animation to move the point to new coordinates.
+
+```typescript
+spring(config: {
+  coordinates: number[];
+  // ... other spring config options
+}): Animated.CompositeAnimation
+```
+
+##### setValue
+
+Directly sets the point's coordinates without animation.
+
+```typescript
+setValue(point: Point): void
+```
+
+##### stopAnimation
+
+Stops the current animation.
+
+```typescript
+stopAnimation(callback?: (value: Point) => void): void
+```
+
+#### Example
+
+```typescript
+import { AnimatedPoint } from '@rnmapbox/maps';
+import { Animated } from 'react-native';
+
+const animatedPoint = new AnimatedPoint({
+  type: 'Point',
+  coordinates: [-73.984638, 40.759211],
+});
+
+// Animate to new location
+animatedPoint.timing({
+  coordinates: [-73.990593, 40.756550],
+  duration: 1000,
+  easing: Animated.Easing.inOut(Animated.Easing.ease),
+}).start();
+
+// Use with ShapeSource
+<Animated.ShapeSource shape={animatedPoint} />
+```
+
+### AnimatedCoordinatesArray
+
+Animates an array of coordinates, useful for animating LineStrings or Polygons.
+
+```typescript
+import { AnimatedCoordinatesArray } from '@rnmapbox/maps';
+```
+
+#### Constructor
+
+```typescript
+const animatedCoords = new AnimatedCoordinatesArray(coordinatesArray);
+```
+
+<ParamField path="coordinatesArray" type="number[][]" required>
+  Initial array of coordinates `[[lon, lat], [lon, lat], ...]`.
+</ParamField>
+
+#### Methods
+
+##### timing
+
+```typescript
+timing(config: {
+  toValue: number[][];
+  duration?: number;
+  easing?: (x: number) => number;
+}): Animated.CompositeAnimation
+```
+
+<ParamField path="toValue" type="number[][]" required>
+  Target coordinates array.
+</ParamField>
+
+##### spring
+
+```typescript
+spring(config: {
+  toValue: number[][];
+  // ... other spring config options
+}): Animated.CompositeAnimation
+```
+
+#### Example
+
+```typescript
+import { AnimatedCoordinatesArray } from '@rnmapbox/maps';
+
+const animatedLine = new AnimatedCoordinatesArray([
+  [-73.984, 40.759],
+  [-73.990, 40.756],
+]);
+
+animatedLine.timing({
+  toValue: [
+    [-73.980, 40.760],
+    [-73.985, 40.755],
+  ],
+  duration: 1000,
+}).start();
+```
+
+### AnimatedRouteCoordinatesArray
+
+Animates along a route, progressively showing the path from start to a moving end point.
+
+```typescript
+import { AnimatedRouteCoordinatesArray } from '@rnmapbox/maps';
+```
+
+#### Constructor
+
+```typescript
+const animatedRoute = new AnimatedRouteCoordinatesArray(
+  coordinatesArray,
+  options?: { end?: { from?: number } }
+);
+```
+
+<ParamField path="coordinatesArray" type="number[][]" required>
+  Full route coordinates.
+</ParamField>
+
+<ParamField path="options" type="object">
+  <ParamField path="options.end" type="object">
+    <ParamField path="options.end.from" type="number">
+      Initial distance from end of route. Defaults to 0.
+    </ParamField>
+  </ParamField>
+</ParamField>
+
+#### Methods
+
+##### timing
+
+```typescript
+timing(config: {
+  toValue: {
+    end: {
+      along?: number;
+      point?: Point;
+    };
+    units?: string;
+  };
+  duration?: number;
+}): Animated.CompositeAnimation
+```
+
+<ParamField path="toValue.end.along" type="number">
+  Distance along the route to animate to.
+</ParamField>
+
+<ParamField path="toValue.end.point" type="Point">
+  Point on the route to animate to. Alternative to `along`.
+</ParamField>
+
+<ParamField path="toValue.units" type="string">
+  Units for distance ('kilometers', 'miles', etc.).
+</ParamField>
+
+#### Properties
+
+##### originalRoute
+
+```typescript
+get originalRoute(): number[][]
+```
+
+Returns the full original route coordinates.
+
+#### Example
+
+```typescript
+import { AnimatedRouteCoordinatesArray } from '@rnmapbox/maps';
+
+const route = [
+  [-73.984, 40.759],
+  [-73.990, 40.756],
+  [-73.995, 40.752],
+];
+
+const animatedRoute = new AnimatedRouteCoordinatesArray(route, {
+  end: { from: 0 },
+});
+
+// Animate to 500 meters along the route
+animatedRoute.timing({
+  toValue: {
+    end: { along: 500 },
+    units: 'meters',
+  },
+  duration: 2000,
+}).start();
+```
+
+### AnimatedShape
+
+Animates any GeoJSON shape with animated values embedded in the structure.
+
+```typescript
+import { AnimatedShape } from '@rnmapbox/maps';
+```
+
+#### Constructor
+
+```typescript
+const animatedShape = new AnimatedShape(shape);
+```
+
+<ParamField path="shape" type="object" required>
+  GeoJSON shape object that can contain `Animated.Value` instances in place of numeric values.
+</ParamField>
+
+#### Example
+
+```typescript
+import { Animated as RNAnimated } from 'react-native';
+import { AnimatedShape, Animated } from '@rnmapbox/maps';
+
+const animatedLon = useRef(new RNAnimated.Value(-73.984638)).current;
+const animatedLat = useRef(new RNAnimated.Value(40.759211)).current;
+
+const animatedShape = new AnimatedShape({
+  type: 'LineString',
+  coordinates: [
+    [animatedLon, animatedLat],
+    [-73.990593, 40.756550],
+  ],
+});
+
+// Animate the first coordinate
+RNAnimated.timing(animatedLon, {
+  toValue: -73.990593,
+  duration: 1000,
+  useNativeDriver: false,
+}).start();
+
+<Animated.ShapeSource shape={animatedShape} />
+```
+
+### AnimatedExtractCoordinateFromArray
+
+Extracts a single coordinate from an animated coordinates array.
+
+```typescript
+import { AnimatedExtractCoordinateFromArray } from '@rnmapbox/maps';
+```
+
+#### Constructor
+
+```typescript
+const extractedCoord = new AnimatedExtractCoordinateFromArray(array, index);
+```
+
+<ParamField path="array" type="AnimatedCoordinatesArray" required>
+  The animated coordinates array to extract from.
+</ParamField>
+
+<ParamField path="index" type="number" required>
+  Index of the coordinate to extract. Negative indices count from the end.
+</ParamField>
+
+#### Example
+
+```typescript
+import {
+  AnimatedCoordinatesArray,
+  AnimatedExtractCoordinateFromArray,
+} from '@rnmapbox/maps';
+
+const animatedCoords = new AnimatedCoordinatesArray([
+  [-73.984, 40.759],
+  [-73.990, 40.756],
+]);
+
+// Extract the last coordinate
+const lastCoord = new AnimatedExtractCoordinateFromArray(animatedCoords, -1);
+```
+
+## Notes
+
+- All animated components use `useNativeDriver: false` as Mapbox animations run on the JS thread
+- Animated classes extend React Native's `Animated.Value` infrastructure
+- Use `Animated.ShapeSource` with animated shapes for best performance

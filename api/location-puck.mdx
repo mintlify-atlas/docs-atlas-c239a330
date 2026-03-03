@@ -1,0 +1,307 @@
+---
+title: LocationPuck
+description: Native location puck component for displaying device location
+---
+
+The `LocationPuck` component renders a native puck on the map that shows the device's current location. This is the modern, recommended approach for displaying user location.
+
+## Basic Usage
+
+```tsx
+import { MapView, Camera, LocationPuck } from '@rnmapbox/maps';
+
+<MapView>
+  <Camera followUserLocation />
+  <LocationPuck visible={true} />
+</MapView>
+```
+
+## Props
+
+<ParamField path="androidRenderMode" type="'normal' | 'compass' | 'gps'">
+  **Deprecated:** Use `puckBearing` for bearing source and `bearingImage` for custom images.
+  
+  Android render mode:
+  - `normal`: Simple circle
+  - `compass`: Triangle with heading
+  - `gps`: Large arrow
+  
+  **Platform:** Android only
+</ParamField>
+
+<ParamField path="puckBearing" type="'heading' | 'course'">
+  Determines the bearing source for puck orientation:
+  
+  - `heading`: Orients the puck to match the direction the device is facing (compass direction)
+  - `course`: Orients the puck to match the direction the device is moving (movement direction)
+  
+  ```tsx
+  <LocationPuck 
+    puckBearing="heading"
+    puckBearingEnabled={true}
+  />
+  ```
+</ParamField>
+
+<ParamField path="puckBearingEnabled" type="boolean">
+  Whether the puck rotates to track the bearing source specified in `puckBearing`.
+  
+  ```tsx
+  <LocationPuck puckBearingEnabled={true} />
+  ```
+</ParamField>
+
+<ParamField path="iosShowsUserHeadingIndicator" type="boolean">
+  **Deprecated:** Use `puckBearingEnabled={true} puckBearing="heading"` instead.
+  
+  iOS only. A Boolean value indicating whether the user location annotation displays a permanent heading indicator.
+  
+  **Platform:** iOS only
+</ParamField>
+
+<ParamField path="topImage" type="string">
+  The name of the image to use as the top layer for the location indicator. The image must be defined in an `Images` component.
+  
+  ```tsx
+  <Images images={{ customTop: require('./assets/top.png') }}>
+    <LocationPuck topImage="customTop" />
+  </Images>
+  ```
+</ParamField>
+
+<ParamField path="bearingImage" type="string">
+  The name of the image to use as the middle layer for the location indicator. The image must be defined in an `Images` component.
+  
+  Used to display directional information (heading/course).
+  
+  ```tsx
+  <Images images={{ arrow: require('./assets/arrow.png') }}>
+    <LocationPuck bearingImage="arrow" />
+  </Images>
+  ```
+</ParamField>
+
+<ParamField path="shadowImage" type="string">
+  The name of the image to use as the background for the location indicator. The image must be defined in an `Images` component.
+  
+  ```tsx
+  <Images images={{ shadow: require('./assets/shadow.png') }}>
+    <LocationPuck shadowImage="shadow" />
+  </Images>
+  ```
+</ParamField>
+
+<ParamField path="scale" type="number | Expression">
+  The size of the images, as a scale factor applied to the size of the specified image. Supports Mapbox expressions based on zoom level.
+  
+  ```tsx
+  // Static scale
+  <LocationPuck scale={2.0} />
+  
+  // Dynamic scale based on zoom
+  <LocationPuck 
+    scale={[
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      10.0, 1.0,
+      20.0, 4.0
+    ]}
+  />
+  ```
+</ParamField>
+
+<ParamField path="pulsing" type="PulsingConfig | 'default'">
+  Configuration for the sonar-like pulsing circle animation shown around the 2D puck.
+  
+  Use `'default'` for default pulsing animation, or provide a configuration object:
+  
+  ```tsx
+  <LocationPuck 
+    pulsing={{
+      isEnabled: true,
+      color: '#007AFF',
+      radius: 'accuracy'
+    }}
+  />
+  ```
+</ParamField>
+
+<ParamField path="visible" type="boolean" default="true">
+  Whether the location icon is visible on the map.
+</ParamField>
+
+## Types
+
+### PulsingConfig
+
+<ResponseField name="isEnabled" type="boolean">
+  Flag determining whether the pulsing circle animation is enabled.
+</ResponseField>
+
+<ResponseField name="color" type="number | ColorValue">
+  The color of the pulsing circle. Can be a processed color number or React Native `ColorValue`.
+  
+  ```tsx
+  color: '#007AFF'
+  color: 'rgba(0, 122, 255, 0.3)'
+  ```
+</ResponseField>
+
+<ResponseField name="radius" type="'accuracy' | number">
+  Circle radius configuration for the pulsing circle animation:
+  
+  - `'accuracy'`: Pulsing circle animates with the `horizontalAccuracy` from the latest puck location
+  - `number`: Pulsing circle animates with a constant radius value
+  
+  ```tsx
+  radius: 'accuracy'  // Dynamic based on GPS accuracy
+  radius: 50          // Fixed 50 meter radius
+  ```
+</ResponseField>
+
+## Examples
+
+### Basic Location Puck
+
+```tsx
+import { MapView, Camera, LocationPuck } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView>
+      <Camera followUserLocation />
+      <LocationPuck visible={true} />
+    </MapView>
+  );
+}
+```
+
+### With Heading Indicator
+
+```tsx
+import { MapView, LocationPuck } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView>
+      <LocationPuck 
+        puckBearing="heading"
+        puckBearingEnabled={true}
+        visible={true}
+      />
+    </MapView>
+  );
+}
+```
+
+### With Course Tracking
+
+```tsx
+<LocationPuck 
+  puckBearing="course"
+  puckBearingEnabled={true}
+  visible={true}
+/>
+```
+
+### With Default Pulsing
+
+```tsx
+<LocationPuck 
+  pulsing="default"
+  visible={true}
+/>
+```
+
+### With Custom Pulsing
+
+```tsx
+<LocationPuck 
+  pulsing={{
+    isEnabled: true,
+    color: '#007AFF',
+    radius: 'accuracy'
+  }}
+  visible={true}
+/>
+```
+
+### With Custom Images
+
+```tsx
+import { MapView, LocationPuck, Images } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView>
+      <Images
+        images={{
+          customPuck: require('./assets/puck.png'),
+          customArrow: require('./assets/arrow.png'),
+          customShadow: require('./assets/shadow.png'),
+        }}
+      >
+        <LocationPuck 
+          topImage="customPuck"
+          bearingImage="customArrow"
+          shadowImage="customShadow"
+          scale={2.0}
+          puckBearing="heading"
+          puckBearingEnabled={true}
+        />
+      </Images>
+    </MapView>
+  );
+}
+```
+
+### With Zoom-based Scaling
+
+```tsx
+<LocationPuck 
+  scale={[
+    'interpolate',
+    ['linear'],
+    ['zoom'],
+    10.0, 1.0,   // At zoom 10, scale is 1x
+    20.0, 4.0    // At zoom 20, scale is 4x
+  ]}
+/>
+```
+
+### With Fixed Pulse Radius
+
+```tsx
+<LocationPuck 
+  pulsing={{
+    isEnabled: true,
+    color: 'rgba(51, 181, 229, 0.3)',
+    radius: 100  // Fixed 100 meter radius
+  }}
+/>
+```
+
+## Migration from UserLocation
+
+If you're using `UserLocation` with `renderMode={UserLocationRenderMode.Native}`, migrate to `LocationPuck`:
+
+```tsx
+// Old approach (deprecated)
+<UserLocation 
+  renderMode={UserLocationRenderMode.Native}
+  showsUserHeadingIndicator={true}
+/>
+
+// New approach
+<LocationPuck 
+  puckBearingEnabled={true}
+  puckBearing="heading"
+/>
+```
+
+## See Also
+
+- [UserLocation](/api/user-location) - Legacy user location component with custom rendering
+- [CustomLocationProvider](/api/custom-location-provider) - Provide custom location data
+- [Camera](/api/camera) - Camera control with `followUserLocation` prop

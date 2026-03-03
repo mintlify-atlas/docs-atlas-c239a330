@@ -1,0 +1,531 @@
+---
+title: Animating Map Elements
+description: Create smooth animations for camera movements, markers, and map features
+---
+
+The Mapbox Maps SDK provides powerful animation capabilities for creating smooth, fluid map experiences. You can animate camera movements, map features, and custom annotations.
+
+## Camera Animations
+
+Camera animations are the most common type of animation, allowing you to smoothly transition between different map views.
+
+### Animation Modes
+
+The SDK supports several animation modes:
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `easeTo` | Smooth easing animation | General purpose transitions |
+| `flyTo` | Arc-based flight animation | Long-distance movements |
+| `linearTo` | Linear interpolation | Constant speed animations |
+| `moveTo` | Immediate jump | No animation |
+| `none` | Disable animation | Instant updates |
+
+### Basic Camera Animation
+
+<Steps>
+  <Step title="Create a camera ref">
+    ```tsx
+    import { useRef } from 'react';
+    import { Camera } from '@rnmapbox/maps';
+
+    const cameraRef = useRef<Camera>(null);
+    ```
+  </Step>
+
+  <Step title="Animate to a new position">
+    ```tsx
+    cameraRef.current?.setCamera({
+      centerCoordinate: [-74.006, 40.7128],
+      zoomLevel: 14,
+      animationDuration: 2000,
+      animationMode: 'flyTo',
+    });
+    ```
+  </Step>
+</Steps>
+
+### Complete Camera Animation Example
+
+```tsx
+import React, { useRef } from 'react';
+import { View, Button } from 'react-native';
+import { MapView, Camera } from '@rnmapbox/maps';
+
+const CameraAnimationExample = () => {
+  const cameraRef = useRef<Camera>(null);
+
+  const locations = [
+    { name: 'New York', coordinate: [-74.006, 40.7128], zoom: 12 },
+    { name: 'London', coordinate: [-0.1276, 51.5074], zoom: 11 },
+    { name: 'Tokyo', coordinate: [139.6917, 35.6895], zoom: 10 },
+  ];
+
+  const flyTo = (location) => {
+    cameraRef.current?.setCamera({
+      centerCoordinate: location.coordinate,
+      zoomLevel: location.zoom,
+      pitch: 45,
+      heading: 0,
+      animationDuration: 3000,
+      animationMode: 'flyTo',
+    });
+  };
+
+  return (
+    <>
+      <MapView style={{ flex: 1 }}>
+        <Camera
+          ref={cameraRef}
+          centerCoordinate={[-74.006, 40.7128]}
+          zoomLevel={10}
+        />
+      </MapView>
+
+      <View style={{ position: 'absolute', bottom: 20, left: 20 }}>
+        {locations.map((location) => (
+          <Button
+            key={location.name}
+            title={`Fly to ${location.name}`}
+            onPress={() => flyTo(location)}
+          />
+        ))}
+      </View>
+    </>
+  );
+};
+```
+
+### Animation Modes Comparison
+
+<CodeGroup>
+```tsx Ease To (Smooth)
+cameraRef.current?.setCamera({
+  centerCoordinate: [-74.006, 40.7128],
+  zoomLevel: 14,
+  animationDuration: 2000,
+  animationMode: 'easeTo',
+});
+```
+
+```tsx Fly To (Arc)
+cameraRef.current?.setCamera({
+  centerCoordinate: [139.6917, 35.6895],
+  zoomLevel: 12,
+  animationDuration: 4000,
+  animationMode: 'flyTo', // Arcs over the earth
+});
+```
+
+```tsx Linear To (Constant Speed)
+cameraRef.current?.setCamera({
+  centerCoordinate: [-0.1276, 51.5074],
+  zoomLevel: 13,
+  animationDuration: 1500,
+  animationMode: 'linearTo',
+});
+```
+
+```tsx Move To (Instant)
+cameraRef.current?.setCamera({
+  centerCoordinate: [-122.4194, 37.7749],
+  zoomLevel: 11,
+  animationMode: 'moveTo', // No animation
+});
+```
+</CodeGroup>
+
+### Fit Bounds with Animation
+
+Animate the camera to fit specific bounds:
+
+```tsx
+import { Camera } from '@rnmapbox/maps';
+
+const cameraRef = useRef<Camera>(null);
+
+// Fit bounds with padding
+cameraRef.current?.fitBounds(
+  [-74.0479, 40.6829], // Southwest
+  [-73.9067, 40.8820], // Northeast
+  [50, 50, 50, 50],    // Padding: [top, right, bottom, left]
+  2000                  // Animation duration
+);
+```
+
+### Advanced Camera Animation
+
+```tsx
+const animateCamera = () => {
+  cameraRef.current?.setCamera({
+    centerCoordinate: [-122.4194, 37.7749],
+    zoomLevel: 14.5,
+    pitch: 60,           // Tilt angle
+    heading: 120,        // Rotation
+    animationDuration: 3000,
+    animationMode: 'flyTo',
+  });
+};
+```
+
+## Animating Point Features
+
+Smooth point animations using the experimental `MovePointShapeAnimator`:
+
+```tsx
+import { useRef, useMemo } from 'react';
+import {
+  MapView,
+  Camera,
+  ShapeSource,
+  CircleLayer,
+  __experimental,
+} from '@rnmapbox/maps';
+import { Position } from 'geojson';
+
+const AnimatedMarker = () => {
+  const basePosition: Position = [-83.538, 41.664];
+  
+  const animator = useMemo(() => {
+    return new __experimental.MovePointShapeAnimator(basePosition);
+  }, []);
+
+  const moveMarker = () => {
+    const newPosition: Position = [
+      basePosition[0] + (Math.random() - 0.5) * 0.01,
+      basePosition[1] + (Math.random() - 0.5) * 0.01,
+    ];
+
+    animator.moveTo({
+      coordinate: newPosition,
+      durationMs: 1000, // Animation duration
+    });
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        centerCoordinate={basePosition}
+        zoomLevel={15}
+      />
+      
+      <ShapeSource id="animated-point" shape={animator}>
+        <CircleLayer
+          id="point-layer"
+          style={{
+            circleColor: 'blue',
+            circleRadius: 10,
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+```
+
+## Animating Line Features
+
+Animate along a line path:
+
+```tsx
+import { useState, useEffect } from 'react';
+import { MapView, ShapeSource, LineLayer, CircleLayer } from '@rnmapbox/maps';
+
+const AnimatedLine = () => {
+  const route = [
+    [-122.4, 37.8],
+    [-122.5, 37.85],
+    [-122.6, 37.9],
+  ];
+
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prev) => (prev + 0.01) % 1);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate current position along the route
+  const getCurrentPosition = () => {
+    const segmentIndex = Math.floor(progress * (route.length - 1));
+    const segmentProgress = (progress * (route.length - 1)) % 1;
+    
+    if (segmentIndex >= route.length - 1) {
+      return route[route.length - 1];
+    }
+
+    const start = route[segmentIndex];
+    const end = route[segmentIndex + 1];
+    
+    return [
+      start[0] + (end[0] - start[0]) * segmentProgress,
+      start[1] + (end[1] - start[1]) * segmentProgress,
+    ];
+  };
+
+  const lineGeoJSON = {
+    type: 'Feature',
+    geometry: {
+      type: 'LineString',
+      coordinates: route,
+    },
+  };
+
+  const pointGeoJSON = {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: getCurrentPosition(),
+    },
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      {/* Route line */}
+      <ShapeSource id="route" shape={lineGeoJSON}>
+        <LineLayer
+          id="route-line"
+          style={{
+            lineColor: '#3b9ddd',
+            lineWidth: 4,
+          }}
+        />
+      </ShapeSource>
+
+      {/* Animated marker */}
+      <ShapeSource id="marker" shape={pointGeoJSON}>
+        <CircleLayer
+          id="marker-circle"
+          style={{
+            circleColor: '#ff0000',
+            circleRadius: 8,
+            circleStrokeWidth: 2,
+            circleStrokeColor: '#ffffff',
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+```
+
+## Layer Property Animations
+
+Animate layer style properties:
+
+```tsx
+import { useState, useEffect } from 'react';
+import { ShapeSource, CircleLayer } from '@rnmapbox/maps';
+
+const PulsingCircle = () => {
+  const [radius, setRadius] = useState(10);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRadius((prev) => {
+        const next = prev + 2;
+        return next > 30 ? 10 : next;
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <ShapeSource
+      id="pulse-point"
+      shape={{
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [-122.4, 37.8] },
+      }}
+    >
+      <CircleLayer
+        id="pulse-circle"
+        style={{
+          circleColor: 'rgba(51, 181, 229, 0.4)',
+          circleRadius: radius,
+        }}
+      />
+    </ShapeSource>
+  );
+};
+```
+
+## Expression-Based Animations
+
+Use Mapbox expressions for zoom-based animations:
+
+```tsx
+import { CircleLayer } from '@rnmapbox/maps';
+
+<CircleLayer
+  id="animated-circle"
+  style={{
+    circleColor: 'blue',
+    // Animate radius based on zoom level
+    circleRadius: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      10, 5,   // At zoom 10, radius = 5
+      15, 20,  // At zoom 15, radius = 20
+    ],
+    // Animate opacity based on zoom
+    circleOpacity: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      8, 0,    // At zoom 8, invisible
+      10, 1,   // At zoom 10, fully visible
+    ],
+  }}
+/>
+```
+
+## User Location Animation
+
+Smooth user location tracking:
+
+```tsx
+import { MapView, Camera, UserLocation } from '@rnmapbox/maps';
+
+<MapView style={{ flex: 1 }}>
+  <Camera
+    followUserLocation={true}
+    followZoomLevel={16}
+    animationDuration={1000}
+    animationMode="easeTo"
+  />
+  
+  <UserLocation
+    visible={true}
+    animated={true} // Smooth transitions between location updates
+  />
+</MapView>
+```
+
+## Combining Animations
+
+```tsx
+import React, { useRef, useState, useEffect } from 'react';
+import { MapView, Camera, ShapeSource, CircleLayer } from '@rnmapbox/maps';
+
+const CombinedAnimations = () => {
+  const cameraRef = useRef<Camera>(null);
+  const [markerPosition, setMarkerPosition] = useState([-122.4, 37.8]);
+  const [markerRadius, setMarkerRadius] = useState(10);
+
+  useEffect(() => {
+    // Animate marker position
+    const positionInterval = setInterval(() => {
+      setMarkerPosition((prev) => [
+        prev[0] + (Math.random() - 0.5) * 0.01,
+        prev[1] + (Math.random() - 0.5) * 0.01,
+      ]);
+    }, 2000);
+
+    // Pulse marker
+    const radiusInterval = setInterval(() => {
+      setMarkerRadius((prev) => (prev === 10 ? 20 : 10));
+    }, 500);
+
+    return () => {
+      clearInterval(positionInterval);
+      clearInterval(radiusInterval);
+    };
+  }, []);
+
+  const followMarker = () => {
+    cameraRef.current?.setCamera({
+      centerCoordinate: markerPosition,
+      zoomLevel: 15,
+      animationDuration: 1000,
+      animationMode: 'easeTo',
+    });
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera ref={cameraRef} centerCoordinate={[-122.4, 37.8]} zoomLevel={13} />
+      
+      <ShapeSource
+        id="animated-marker"
+        shape={{
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: markerPosition },
+        }}
+      >
+        <CircleLayer
+          id="marker"
+          style={{
+            circleColor: '#007cbf',
+            circleRadius: markerRadius,
+            circleStrokeWidth: 2,
+            circleStrokeColor: 'white',
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+};
+```
+
+## Animation Performance Tips
+
+<Note>
+  - Use `animationMode: 'moveTo'` or `'none'` to disable animations when not needed
+  - Limit the number of simultaneously animated features
+  - Use expression-based animations for better performance
+  - Avoid animating too many properties at once
+  - Test animations on target devices
+  - Use `React.memo()` to prevent unnecessary re-renders
+</Note>
+
+## Animation Timing
+
+```tsx
+// Fast animation (UI feedback)
+animationDuration: 300
+
+// Medium animation (comfortable viewing)
+animationDuration: 1000-2000
+
+// Slow animation (dramatic effect)
+animationDuration: 3000-5000
+
+// Cross-continent fly animation
+animationDuration: 5000-8000
+```
+
+## Canceling Animations
+
+Stop ongoing animations:
+
+```tsx
+// Stop all animations by jumping to position
+cameraRef.current?.setCamera({
+  centerCoordinate: [-122.4, 37.8],
+  animationMode: 'moveTo', // Instant, cancels ongoing animations
+});
+```
+
+## Best Practices
+
+- Choose appropriate animation modes for the distance traveled
+- Use `flyTo` for long distances, `easeTo` for nearby locations
+- Provide visual feedback during long animations
+- Allow users to interrupt animations
+- Test performance on lower-end devices
+- Use expressions for zoom-based animations
+- Keep animation durations reasonable (1-3 seconds for most cases)
+
+<Warning>
+  Avoid rapid consecutive camera animations as they can be disorienting and may cause performance issues.
+</Warning>
+
+## Reference
+
+- Camera: `src/components/Camera.tsx:1`
+- ShapeSource: `src/components/ShapeSource.tsx:1`
+- UserLocation: `src/components/UserLocation.tsx:1`

@@ -1,0 +1,376 @@
+---
+title: Custom HTTP Headers
+description: Guide to adding custom HTTP headers to Mapbox tile requests
+---
+
+# Custom HTTP Headers
+
+Custom HTTP headers allow you to send additional headers with tile requests to your tile server. This is useful for custom authentication, metadata, or any information that can't be included in the URL.
+
+## Overview
+
+Custom headers are implemented using:
+- **iOS (v10+):** [HttpServiceFactory](https://docs.mapbox.com/ios/maps/api/10.10.1/common/Classes/MBXHttpServiceFactory.html)
+- **Android:** Native HTTP service customization
+- **iOS (deprecated Mapbox GL):** Method swizzling on `NSMutableURLRequest`
+
+## Import
+
+```tsx
+import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+
+// Add a header to all requests
+addCustomHeader('Authorization', 'Bearer token123');
+
+// Remove a header
+removeCustomHeader('Authorization');
+```
+
+## Methods
+
+### addCustomHeader()
+
+```tsx
+addCustomHeader(
+  headerName: string,
+  headerValue: string,
+  options?: { urlRegexp?: string }
+): void
+```
+
+Adds a custom HTTP header to Mapbox tile requests.
+
+<ParamField path="headerName" type="string" required>
+  The name of the HTTP header to add.
+</ParamField>
+
+<ParamField path="headerValue" type="string" required>
+  The value of the HTTP header.
+</ParamField>
+
+<ParamField path="options" type="object">
+  Optional configuration.
+  
+  <ParamField path="options.urlRegexp" type="string">
+    Regular expression pattern. If provided, the header will only be added to URLs matching this pattern.
+  </ParamField>
+</ParamField>
+
+**Examples:**
+
+```tsx
+import { addCustomHeader } from '@rnmapbox/maps';
+
+// Add header to all requests
+addCustomHeader('Authorization', 'Bearer mytoken123');
+
+// Add header only to specific URLs
+addCustomHeader('X-API-Key', 'secret-key', {
+  urlRegexp: '^https:\\/\\/api\\.example\\.com\\/(.*)$',
+});
+
+// Add multiple headers
+addCustomHeader('Authorization', 'Bearer token');
+addCustomHeader('X-Custom-Header', 'custom-value');
+addCustomHeader('X-User-ID', '12345');
+```
+
+### removeCustomHeader()
+
+```tsx
+removeCustomHeader(headerName: string): void
+```
+
+Removes a previously added custom HTTP header.
+
+<ParamField path="headerName" type="string" required>
+  The name of the header to remove.
+</ParamField>
+
+**Example:**
+
+```tsx
+import { removeCustomHeader } from '@rnmapbox/maps';
+
+removeCustomHeader('Authorization');
+removeCustomHeader('X-Custom-Header');
+```
+
+## Use Cases
+
+### Authentication
+
+Add authentication headers for private tile servers:
+
+```tsx
+import { useEffect } from 'react';
+import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+
+function AuthenticatedMap({ authToken }) {
+  useEffect(() => {
+    if (authToken) {
+      addCustomHeader('Authorization', `Bearer ${authToken}`);
+    }
+
+    return () => {
+      removeCustomHeader('Authorization');
+    };
+  }, [authToken]);
+
+  return <MapView styleURL="https://tiles.example.com/style.json" />;
+}
+```
+
+### API Keys
+
+Add API keys for custom tile servers:
+
+```tsx
+import { addCustomHeader } from '@rnmapbox/maps';
+
+// Add API key header only for your tile server
+addCustomHeader('X-API-Key', 'your-api-key', {
+  urlRegexp: '^https:\\/\\/tiles\\.example\\.com\\/(.*)$',
+});
+```
+
+### User Metadata
+
+Include user information in tile requests:
+
+```tsx
+import { addCustomHeader } from '@rnmapbox/maps';
+
+addCustomHeader('X-User-ID', userId);
+addCustomHeader('X-Session-ID', sessionId);
+addCustomHeader('X-App-Version', appVersion);
+```
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Authentication">
+    ```tsx
+    import { useEffect } from 'react';
+    import { MapView } from '@rnmapbox/maps';
+    import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+
+    function AuthMap({ token }) {
+      useEffect(() => {
+        addCustomHeader('Authorization', `Bearer ${token}`);
+
+        return () => {
+          removeCustomHeader('Authorization');
+        };
+      }, [token]);
+
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          styleURL="https://tiles.example.com/style.json"
+        />
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="URL-Specific Headers">
+    ```tsx
+    import { useEffect } from 'react';
+    import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+
+    function MultiSourceMap() {
+      useEffect(() => {
+        // Header for tile server A
+        addCustomHeader('X-API-Key', 'key-for-server-a', {
+          urlRegexp: '^https:\\/\\/tiles-a\\.example\\.com\\/(.*)$',
+        });
+
+        // Header for tile server B
+        addCustomHeader('X-API-Key', 'key-for-server-b', {
+          urlRegexp: '^https:\\/\\/tiles-b\\.example\\.com\\/(.*)$',
+        });
+
+        return () => {
+          removeCustomHeader('X-API-Key');
+        };
+      }, []);
+
+      return <MapView style={{ flex: 1 }} />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Dynamic Headers">
+    ```tsx
+    import { useEffect } from 'react';
+    import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+    import { useAuth } from './auth';
+
+    function DynamicHeadersMap() {
+      const { user, token } = useAuth();
+
+      useEffect(() => {
+        if (!token) return;
+
+        // Update headers when auth changes
+        addCustomHeader('Authorization', `Bearer ${token}`);
+        addCustomHeader('X-User-ID', user.id);
+        addCustomHeader('X-User-Role', user.role);
+
+        return () => {
+          removeCustomHeader('Authorization');
+          removeCustomHeader('X-User-ID');
+          removeCustomHeader('X-User-Role');
+        };
+      }, [token, user]);
+
+      return <MapView style={{ flex: 1 }} />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Multiple Headers">
+    ```tsx
+    import { useEffect } from 'react';
+    import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+    import { Platform } from 'react-native';
+    import DeviceInfo from 'react-native-device-info';
+
+    function MetadataMap() {
+      useEffect(() => {
+        const headers = {
+          'X-App-Version': DeviceInfo.getVersion(),
+          'X-Platform': Platform.OS,
+          'X-Device-ID': DeviceInfo.getUniqueId(),
+          'X-Build-Number': DeviceInfo.getBuildNumber(),
+        };
+
+        // Add all headers
+        Object.entries(headers).forEach(([name, value]) => {
+          addCustomHeader(name, value);
+        });
+
+        // Cleanup
+        return () => {
+          Object.keys(headers).forEach((name) => {
+            removeCustomHeader(name);
+          });
+        };
+      }, []);
+
+      return <MapView style={{ flex: 1 }} />;
+    }
+    ```
+  </Tab>
+  
+  <Tab title="App Lifecycle">
+    ```tsx
+    import { useEffect } from 'react';
+    import { addCustomHeader, removeCustomHeader } from '@rnmapbox/maps';
+
+    function App() {
+      useEffect(() => {
+        // Set headers on app mount
+        addCustomHeader('Authorization', '{auth header}');
+        addCustomHeader('X-Some-Header', 'my-value');
+
+        // Clean up on unmount
+        return () => {
+          removeCustomHeader('Authorization');
+          removeCustomHeader('X-Some-Header');
+        };
+      }, []);
+
+      return (
+        <View style={{ flex: 1 }}>
+          <MapView
+            style={{ flex: 1 }}
+            styleURL="https://tiles.example.com/style.json"
+          />
+        </View>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Platform-Specific Setup
+
+### Android
+
+No additional setup required. Headers work out of the box.
+
+### iOS (Mapbox v10+)
+
+No additional setup required. Headers work out of the box using HttpServiceFactory.
+
+### iOS (Mapbox GL / MapLibre - Deprecated)
+
+<Warning>
+  This setup is only needed for the deprecated Mapbox GL iOS SDK. Mapbox v10+ does not require this.
+</Warning>
+
+For older Mapbox GL iOS SDK, you need to initialize the header system in `AppDelegate.m`:
+
+```objc
+// (1) Import the header file
+#import "MGLCustomHeaders.h"
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
+                                                   moduleName:@"YourApp"
+                                            initialProperties:nil];
+  
+  // (2) Initialize headers (enables method swizzling)
+  [[MGLCustomHeaders sharedInstance] initHeaders];
+  
+  // (3) Optionally add global headers
+  [[MGLCustomHeaders sharedInstance] addHeader:@"192.168.1.1" forHeaderName:@"X-IP-Address"];
+
+  // ... rest of your code
+  return YES;
+}
+
+@end
+```
+
+## Best Practices
+
+1. **Clean Up Headers:** Always remove headers when they're no longer needed (e.g., on component unmount or logout)
+2. **Use URL Patterns:** When working with multiple tile servers, use `urlRegexp` to target specific servers
+3. **Security:** Never hardcode sensitive tokens in your code; load them from secure storage
+4. **Update Headers:** Update headers when authentication state changes (e.g., token refresh)
+5. **Test Thoroughly:** Verify headers are being sent correctly using network inspection tools
+
+## Security Considerations
+
+- Headers are sent with every matching request, including to third-party servers if not filtered
+- Use `urlRegexp` to restrict headers to your own tile servers
+- Don't include sensitive data in headers sent to untrusted servers
+- Rotate tokens and API keys regularly
+- Use HTTPS for all tile server communications
+
+## Debugging
+
+To verify headers are being sent:
+
+1. **iOS:** Use Xcode's Network Debugger or Charles Proxy
+2. **Android:** Use Android Studio's Network Inspector or Charles Proxy
+3. **Server-side:** Log incoming headers on your tile server
+
+## Related
+
+- [MapView](/api/mapview) - The map component that uses custom tile sources
+- [RasterSource](/api/raster-source) - Custom raster tile source
+- [VectorSource](/api/vector-source) - Custom vector tile source

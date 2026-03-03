@@ -1,0 +1,477 @@
+---
+title: Offline Map Management
+description: Download and manage offline map regions for use without network connectivity
+---
+
+The Offline Maps feature allows you to download map regions for offline use, enabling your app to function without network connectivity. The SDK provides a comprehensive API for creating, managing, and monitoring offline map packs.
+
+## Overview
+
+Offline maps are managed through the `offlineManager` singleton, which provides methods for:
+
+- Creating and downloading offline packs
+- Monitoring download progress
+- Managing existing packs
+- Invalidating and updating cached tiles
+- Controlling cache size
+
+## Basic Setup
+
+<Steps>
+  <Step title="Import offlineManager">
+    ```tsx
+    import { offlineManager } from '@rnmapbox/maps';
+    ```
+  </Step>
+
+  <Step title="Create an offline pack">
+    ```tsx
+    await offlineManager.createPack(
+      {
+        name: 'my-offline-region',
+        styleURL: 'mapbox://styles/mapbox/streets-v11',
+        bounds: [[-74.2, 40.7], [-73.8, 41.0]],
+        minZoom: 10,
+        maxZoom: 16,
+      },
+      progressListener,
+      errorListener
+    );
+    ```
+  </Step>
+
+  <Step title="Monitor progress">
+    ```tsx
+    const progressListener = (pack, status) => {
+      console.log(`Downloaded: ${status.percentage}%`);
+    };
+
+    const errorListener = (pack, error) => {
+      console.error('Download error:', error);
+    };
+    ```
+  </Step>
+</Steps>
+
+## Creating Offline Packs
+
+### Pack Options
+
+Define what region and zoom levels to download:
+
+```tsx
+import { offlineManager, StyleURL } from '@rnmapbox/maps';
+
+const createOfflinePack = async () => {
+  const packOptions = {
+    name: 'manhattan-streets',
+    styleURL: StyleURL.Street,
+    bounds: [
+      [-74.0479, 40.6829], // Southwest corner [lng, lat]
+      [-73.9067, 40.8820], // Northeast corner [lng, lat]
+    ],
+    minZoom: 10,
+    maxZoom: 16,
+  };
+
+  await offlineManager.createPack(
+    packOptions,
+    onProgress,
+    onError
+  );
+};
+```
+
+### Pack Options Reference
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `name` | `string` | Yes | Unique identifier for the pack |
+| `styleURL` | `string` | Yes | Map style URL |
+| `bounds` | `[[lng, lat], [lng, lat]]` | Yes | Southwest and northeast corners |
+| `minZoom` | `number` | Yes | Minimum zoom level to download |
+| `maxZoom` | `number` | Yes | Maximum zoom level to download |
+
+<Note>
+  The tile count increases exponentially with zoom level. Be cautious when setting high `maxZoom` values for large areas.
+</Note>
+
+## Monitoring Downloads
+
+### Progress Listener
+
+Track download progress with detailed status information:
+
+```tsx
+import { useState } from 'react';
+import { View, Text, ProgressBar } from 'react-native';
+import { offlineManager, OfflinePackDownloadState } from '@rnmapbox/maps';
+
+const OfflineDownloader = () => {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState('idle');
+
+  const onDownloadProgress = (pack, downloadStatus) => {
+    setProgress(downloadStatus.percentage);
+    
+    const state = downloadStatus.state;
+    if (state === OfflinePackDownloadState.Active) {
+      setStatus('downloading');
+    } else if (state === OfflinePackDownloadState.Complete) {
+      setStatus('complete');
+    } else {
+      setStatus('inactive');
+    }
+
+    console.log('Progress:', {
+      percentage: downloadStatus.percentage,
+      completedTileCount: downloadStatus.completedTileCount,
+      completedResourceCount: downloadStatus.completedResourceCount,
+      completedResourceSize: downloadStatus.completedResourceSize,
+      requiredResourceCount: downloadStatus.requiredResourceCount,
+    });
+  };
+
+  const onError = (pack, error) => {
+    console.error('Download failed:', error.message);
+    setStatus('error');
+  };
+
+  const startDownload = async () => {
+    await offlineManager.createPack(
+      {
+        name: `offline-pack-${Date.now()}`,
+        styleURL: StyleURL.Street,
+        bounds: [[-74.2, 40.7], [-73.8, 41.0]],
+        minZoom: 10,
+        maxZoom: 14,
+      },
+      onDownloadProgress,
+      onError
+    );
+  };
+
+  return (
+    <View>
+      <Text>Status: {status}</Text>
+      <ProgressBar progress={progress / 100} />
+      <Text>Downloaded: {progress.toFixed(1)}%</Text>
+    </View>
+  );
+};
+```
+
+### Progress Status Properties
+
+```tsx
+type OfflineProgressStatus = {
+  name: string;                    // Pack name
+  state: number;                   // Download state
+  percentage: number;              // Completion percentage (0-100)
+  completedResourceSize: number;   // Bytes downloaded
+  completedTileCount: number;      // Tiles downloaded
+  completedResourceCount: number;  // Resources downloaded
+  requiredResourceCount: number;   // Total resources needed
+  completedTileSize: number;       // Total tile size in bytes
+};
+```
+
+## Managing Offline Packs
+
+### Retrieving Packs
+
+```tsx
+// Get all packs
+const allPacks = await offlineManager.getPacks();
+console.log(`Found ${allPacks.length} offline packs`);
+
+// Get specific pack by name
+const pack = await offlineManager.getPack('manhattan-streets');
+if (pack) {
+  const status = await pack.status();
+  console.log('Pack status:', status);
+}
+```
+
+### Pack Methods
+
+```tsx
+const pack = await offlineManager.getPack('my-pack');
+
+// Get pack status
+const status = await pack.status();
+
+// Pause download
+await pack.pause();
+
+// Resume download
+await pack.resume();
+```
+
+### Deleting Packs
+
+```tsx
+// Delete a specific pack
+await offlineManager.deletePack('manhattan-streets');
+
+// Delete all packs
+const packs = await offlineManager.getPacks();
+for (const pack of packs) {
+  await offlineManager.deletePack(pack.name);
+}
+```
+
+### Invalidating Packs
+
+Update offline tiles without re-downloading everything:
+
+```tsx
+// Invalidate checks if local tiles match server tiles
+// Only downloads tiles that have changed
+await offlineManager.invalidatePack('manhattan-streets');
+```
+
+<Note>
+  `invalidatePack` is more efficient than deleting and re-downloading. It only fetches tiles that have been updated on the server.
+</Note>
+
+## Complete Example
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, StyleSheet } from 'react-native';
+import {
+  MapView,
+  Camera,
+  offlineManager,
+  StyleURL,
+  OfflinePackDownloadState,
+} from '@rnmapbox/maps';
+
+const OfflineMapExample = () => {
+  const [packs, setPacks] = useState([]);
+  const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    loadExistingPacks();
+    return () => {
+      // Cleanup listeners
+      offlineManager.unsubscribe('my-offline-pack');
+    };
+  }, []);
+
+  const loadExistingPacks = async () => {
+    const existingPacks = await offlineManager.getPacks();
+    setPacks(existingPacks);
+  };
+
+  const downloadRegion = async () => {
+    setDownloading(true);
+    setProgress(0);
+
+    const packName = `offline-pack-${Date.now()}`;
+
+    try {
+      await offlineManager.createPack(
+        {
+          name: packName,
+          styleURL: StyleURL.Street,
+          bounds: [[-74.0479, 40.6829], [-73.9067, 40.8820]],
+          minZoom: 10,
+          maxZoom: 14,
+        },
+        (pack, status) => {
+          setProgress(status.percentage);
+          if (status.state === OfflinePackDownloadState.Complete) {
+            setDownloading(false);
+            loadExistingPacks();
+          }
+        },
+        (pack, error) => {
+          console.error('Download error:', error);
+          setDownloading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Failed to create pack:', error);
+      setDownloading(false);
+    }
+  };
+
+  const deletePack = async (packName) => {
+    await offlineManager.deletePack(packName);
+    loadExistingPacks();
+  };
+
+  return (
+    <View style={styles.container}>
+      <MapView style={styles.map}>
+        <Camera
+          centerCoordinate={[-73.9772, 40.7527]}
+          zoomLevel={12}
+        />
+      </MapView>
+
+      <View style={styles.controls}>
+        <Button
+          title={downloading ? `Downloading ${progress.toFixed(0)}%` : 'Download Region'}
+          onPress={downloadRegion}
+          disabled={downloading}
+        />
+
+        <Text style={styles.title}>Offline Packs: {packs.length}</Text>
+        {packs.map((pack) => (
+          <View key={pack.name} style={styles.packItem}>
+            <Text>{pack.name}</Text>
+            <Button title="Delete" onPress={() => deletePack(pack.name)} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { flex: 1 },
+  controls: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 10,
+  },
+  title: { fontSize: 16, fontWeight: 'bold', marginVertical: 10 },
+  packItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5,
+  },
+});
+
+export default OfflineMapExample;
+```
+
+## Advanced Features
+
+### Setting Tile Count Limit
+
+Limit the maximum number of tiles that can be downloaded:
+
+```tsx
+// Set maximum tiles (Mapbox ToS requirement)
+offlineManager.setTileCountLimit(6000);
+```
+
+<Warning>
+  The Mapbox Terms of Service prohibit changing or bypassing the tile count limit without permission from Mapbox.
+</Warning>
+
+### Progress Event Throttling
+
+Control how often progress events are emitted:
+
+```tsx
+// Set progress event interval to 500ms (default is 300ms)
+offlineManager.setProgressEventThrottle(500);
+```
+
+### Subscribing to Existing Packs
+
+Attach listeners to already-created packs:
+
+```tsx
+const pack = await offlineManager.getPack('existing-pack');
+
+// Subscribe to updates
+await offlineManager.subscribe(
+  'existing-pack',
+  (pack, status) => console.log('Progress:', status.percentage),
+  (pack, error) => console.error('Error:', error)
+);
+
+// Resume download
+await pack.resume();
+```
+
+### Merging Offline Regions
+
+Sideload offline database from another source:
+
+```tsx
+// Path to offline database file
+const dbPath = '/path/to/offline.db';
+await offlineManager.mergeOfflineRegions(dbPath);
+```
+
+### Reset Database
+
+Delete all offline data and reinitialize:
+
+```tsx
+await offlineManager.resetDatabase();
+```
+
+<Warning>
+  `resetDatabase()` permanently deletes all offline packs and cached data. Use with caution.
+</Warning>
+
+## Cache Management
+
+### Set Maximum Cache Size
+
+```tsx
+// Set maximum ambient cache to 50MB
+await offlineManager.setMaximumAmbientCacheSize(50 * 1024 * 1024);
+
+// Disable ambient cache
+await offlineManager.setMaximumAmbientCacheSize(0);
+```
+
+## Calculating Bounds
+
+Use helper libraries to calculate bounds from center coordinates:
+
+```tsx
+import geoViewport from '@mapbox/geo-viewport';
+import { Dimensions } from 'react-native';
+
+const calculateBounds = (centerCoordinate, zoom) => {
+  const { width, height } = Dimensions.get('window');
+  const bounds = geoViewport.bounds(
+    centerCoordinate,
+    zoom,
+    [width, height],
+    512 // Tile size
+  );
+
+  return [
+    [bounds[0], bounds[1]], // Southwest
+    [bounds[2], bounds[3]], // Northeast
+  ];
+};
+
+const bounds = calculateBounds([-73.9772, 40.7527], 12);
+```
+
+## Best Practices
+
+<Note>
+  - Start with lower zoom levels (10-14) for testing
+  - Calculate tile counts before downloading large regions
+  - Provide UI feedback during downloads
+  - Handle errors gracefully with retry logic
+  - Clean up listeners in component unmount
+  - Use `invalidatePack` instead of delete + re-download
+  - Test offline functionality thoroughly
+</Note>
+
+## Reference
+
+- Offline Manager: `src/modules/offline/offlineManager.ts:1`
+- Pack Options: `src/modules/offline/OfflineCreatePackOptions.ts:1`
+- Offline Pack: `src/modules/offline/OfflinePack.ts:1`

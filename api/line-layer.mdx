@@ -1,0 +1,137 @@
+---
+title: LineLayer
+description: Renders stroked polylines on the map
+---
+
+LineLayer is a style layer that renders one or more stroked polylines on the map.
+
+[Mapbox Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#line)
+
+## Props
+
+<ParamField path="id" type="string" required>
+  A unique identifier for the layer.
+</ParamField>
+
+<ParamField path="existing" type="boolean">
+  If true, references an existing layer in the style.
+</ParamField>
+
+<ParamField path="sourceID" type="string" default="Mapbox.StyleSource.DefaultSourceID">
+  The source from which to obtain data.
+</ParamField>
+
+<ParamField path="sourceLayerID" type="string">
+  Identifier of the layer within the source.
+</ParamField>
+
+<ParamField path="aboveLayerID" type="string">
+  Inserts the layer above the specified layer ID.
+</ParamField>
+
+<ParamField path="belowLayerID" type="string">
+  Inserts the layer below the specified layer ID.
+</ParamField>
+
+<ParamField path="slot" type="'bottom' | 'middle' | 'top'">
+  The slot this layer is assigned to. v11 only
+</ParamField>
+
+<ParamField path="minZoomLevel" type="number">
+  Minimum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="maxZoomLevel" type="number">
+  Maximum zoom level for layer visibility.
+</ParamField>
+
+<ParamField path="filter" type="FilterExpression">
+  Filters features based on a condition.
+</ParamField>
+
+<ParamField path="style" type="LineLayerStyleProps">
+  Customizable style attributes.
+</ParamField>
+
+## Style Properties
+
+<ParamField path="style.visibility" type="'visible' | 'none'" default="visible">
+  Controls layer visibility.
+</ParamField>
+
+<ParamField path="style.lineCap" type="'butt' | 'round' | 'square'" default="butt">
+  The display of line endings.
+</ParamField>
+
+<ParamField path="style.lineJoin" type="'bevel' | 'round' | 'miter' | 'none'" default="miter">
+  The display of lines when joining.
+</ParamField>
+
+<ParamField path="style.lineOpacity" type="number" default="1">
+  The opacity at which the line will be drawn. Range: 0-1.
+</ParamField>
+
+<ParamField path="style.lineColor" type="string" default="#000000">
+  The color with which the line will be drawn. Disabled by: linePattern
+</ParamField>
+
+<ParamField path="style.lineWidth" type="number" default="1">
+  Stroke thickness in pixels. Minimum: 0
+</ParamField>
+
+<ParamField path="style.lineGapWidth" type="number" default="0">
+  Draws a line casing outside of a line's actual path. Value indicates the width of the inner gap in pixels.
+</ParamField>
+
+<ParamField path="style.lineOffset" type="number" default="0">
+  The line's offset. For linear features, a positive value offsets the line to the right, relative to the direction of the line, and a negative value to the left.
+</ParamField>
+
+<ParamField path="style.lineBlur" type="number" default="0">
+  Blur applied to the line, in pixels. Minimum: 0
+</ParamField>
+
+<ParamField path="style.lineDasharray" type="number[]">
+  Specifies the lengths of the alternating dashes and gaps that form the dash pattern. Disabled by: linePattern
+</ParamField>
+
+<ParamField path="style.linePattern" type="string">
+  Name of image in sprite to use for drawing image lines.
+</ParamField>
+
+## Example
+
+```tsx
+import { MapView, ShapeSource, LineLayer } from '@rnmapbox/maps';
+
+const route = {
+  type: 'Feature',
+  geometry: {
+    type: 'LineString',
+    coordinates: [
+      [-122.4, 37.8],
+      [-122.5, 37.7],
+      [-122.6, 37.8],
+    ],
+  },
+};
+
+function Map() {
+  return (
+    <MapView>
+      <ShapeSource id="route" shape={route}>
+        <LineLayer
+          id="route-line"
+          style={{
+            lineColor: '#ed6498',
+            lineWidth: 5,
+            lineCap: 'round',
+            lineJoin: 'round',
+            lineOpacity: 0.9,
+          }}
+        />
+      </ShapeSource>
+    </MapView>
+  );
+}
+```

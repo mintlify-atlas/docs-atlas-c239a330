@@ -1,0 +1,439 @@
+---
+title: Markers and Annotations
+description: Add interactive markers and annotations to your map with PointAnnotation and MarkerView
+---
+
+Annotations allow you to mark specific locations on the map with custom views, images, or React Native components. The SDK provides two components for annotations:
+
+- **PointAnnotation** - Renders children to a bitmap, best for static content
+- **MarkerView** - Interactive React Native views, best for dynamic/interactive markers
+
+## When to Use What
+
+| Feature | PointAnnotation | MarkerView | ShapeSource + SymbolLayer |
+|---------|----------------|------------|---------------------------|
+| **Performance** | Good | Moderate | Excellent |
+| **Interactivity** | Limited | Full | Limited |
+| **Animation** | Via bitmap refresh | Native React Native | Expression-based |
+| **Best for** | Static markers | Interactive UI | Thousands of markers |
+| **Max recommended** | ~100 | ~100 | 10,000+ |
+
+<Note>
+  For best performance with many markers, use `ShapeSource` with `SymbolLayer` and static images.
+</Note>
+
+## PointAnnotation
+
+`PointAnnotation` renders React Native views to a bitmap image that is displayed on the map. It's optimized for static content.
+
+### Basic Usage
+
+<Steps>
+  <Step title="Import the component">
+    ```tsx
+    import { MapView, PointAnnotation } from '@rnmapbox/maps';
+    ```
+  </Step>
+
+  <Step title="Add annotations to your map">
+    ```tsx
+    <MapView style={{ flex: 1 }}>
+      <PointAnnotation
+        id="marker1"
+        coordinate={[-73.99155, 40.73581]}
+        title="My Marker"
+      >
+        <View style={{
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: 'red',
+        }} />
+      </PointAnnotation>
+    </MapView>
+    ```
+  </Step>
+</Steps>
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the annotation |
+| `coordinate` | `[longitude, latitude]` | Yes | Position on the map |
+| `title` | `string` | No | Annotation title (required for iOS callout) |
+| `snippet` | `string` | No | Subtitle text |
+| `selected` | `boolean` | No | Manually select/deselect annotation |
+| `draggable` | `boolean` | No | Enable dragging. Default: `false` |
+| `anchor` | `{ x: number, y: number }` | No | Anchor point in [0, 1] space. Default: `{ x: 0.5, y: 0.5 }` |
+| `children` | `ReactElement` | Yes | Custom view to render |
+
+### Events
+
+```tsx
+import { useRef } from 'react';
+import { PointAnnotation, Callout } from '@rnmapbox/maps';
+
+const InteractiveAnnotation = () => {
+  const annotationRef = useRef<PointAnnotation>(null);
+
+  return (
+    <PointAnnotation
+      ref={annotationRef}
+      id="interactive-marker"
+      coordinate={[-73.99155, 40.73581]}
+      title="Draggable Marker"
+      draggable={true}
+      onSelected={(feature) => {
+        console.log('Selected:', feature.geometry.coordinates);
+      }}
+      onDeselected={(feature) => {
+        console.log('Deselected:', feature.id);
+      }}
+      onDragStart={(feature) => {
+        console.log('Drag started at:', feature.geometry.coordinates);
+      }}
+      onDrag={(feature) => {
+        console.log('Dragging:', feature.geometry.coordinates);
+      }}
+      onDragEnd={(feature) => {
+        console.log('Dropped at:', feature.geometry.coordinates);
+      }}
+    >
+      <View style={{
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'blue',
+        borderWidth: 2,
+        borderColor: 'white',
+      }} />
+      <Callout title="This marker is draggable!" />
+    </PointAnnotation>
+  );
+};
+```
+
+### Custom Callouts
+
+Add custom callout views that appear when annotation is selected:
+
+```tsx
+import { PointAnnotation, Callout } from '@rnmapbox/maps';
+import { Text, View } from 'react-native';
+
+<PointAnnotation
+  id="callout-marker"
+  coordinate={[-73.99155, 40.73581]}
+  title="Marker with Callout"
+>
+  <View style={{
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'green',
+  }} />
+  
+  <Callout title="Custom Callout">
+    <View style={{ padding: 10 }}>
+      <Text style={{ fontWeight: 'bold' }}>Custom Content</Text>
+      <Text>You can add any React Native views here</Text>
+    </View>
+  </Callout>
+</PointAnnotation>
+```
+
+### Anchoring
+
+Control which part of your custom view aligns with the coordinate:
+
+<CodeGroup>
+```tsx Top Center
+<PointAnnotation
+  id="pin"
+  coordinate={[-73.99155, 40.73581]}
+  anchor={{ x: 0.5, y: 0 }} // Top center
+>
+  <PinIcon />
+</PointAnnotation>
+```
+
+```tsx Bottom Center
+<PointAnnotation
+  id="pin"
+  coordinate={[-73.99155, 40.73581]}
+  anchor={{ x: 0.5, y: 1 }} // Bottom center (default for pins)
+>
+  <PinIcon />
+</PointAnnotation>
+```
+
+```tsx Center
+<PointAnnotation
+  id="circle"
+  coordinate={[-73.99155, 40.73581]}
+  anchor={{ x: 0.5, y: 0.5 }} // Center (default)
+>
+  <CircleMarker />
+</PointAnnotation>
+```
+</CodeGroup>
+
+### Remote Images
+
+When using remote images, call `refresh()` after the image loads:
+
+```tsx
+import { useRef } from 'react';
+import { Image } from 'react-native';
+import { PointAnnotation } from '@rnmapbox/maps';
+
+const RemoteImageAnnotation = () => {
+  const annotationRef = useRef<PointAnnotation>(null);
+
+  return (
+    <PointAnnotation
+      ref={annotationRef}
+      id="remote-image"
+      coordinate={[-73.99155, 40.73581]}
+    >
+      <Image
+        source={{ uri: 'https://example.com/marker.png' }}
+        style={{ width: 40, height: 40 }}
+        onLoad={() => annotationRef.current?.refresh()}
+        fadeDuration={0} // Prevent animation artifacts
+      />
+    </PointAnnotation>
+  );
+};
+```
+
+<Warning>
+  Always set `fadeDuration={0}` on Image components in PointAnnotation to prevent rendering the bitmap at an unknown animation state.
+</Warning>
+
+## MarkerView
+
+`MarkerView` renders actual React Native views as map annotations, providing full interactivity but with performance trade-offs.
+
+### Basic Usage
+
+```tsx
+import { MapView, MarkerView } from '@rnmapbox/maps';
+import { View, Text, TouchableOpacity } from 'react-native';
+
+const InteractiveMarkers = () => {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <MarkerView coordinate={[-73.99155, 40.73581]}>
+        <TouchableOpacity
+          onPress={() => console.log('Marker pressed!')}
+          style={{
+            backgroundColor: 'white',
+            padding: 10,
+            borderRadius: 8,
+            borderWidth: 2,
+            borderColor: 'blue',
+          }}
+        >
+          <Text style={{ fontWeight: 'bold' }}>Interactive!</Text>
+          <Text>Tap me</Text>
+        </TouchableOpacity>
+      </MarkerView>
+    </MapView>
+  );
+};
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `coordinate` | `[longitude, latitude]` | Required | Position on the map |
+| `anchor` | `{ x: number, y: number }` | `{ x: 0.5, y: 0.5 }` | Anchor point in [0, 1] space |
+| `allowOverlap` | `boolean` | `false` | Allow markers to overlap |
+| `allowOverlapWithPuck` | `boolean` | `false` | Allow overlap with user location puck |
+| `isSelected` | `boolean` | `false` | Selection state |
+| `children` | `ReactElement` | Required | React Native view to display |
+
+### Handling Overlapping Markers
+
+```tsx
+const [allowOverlapWithPuck, setAllowOverlapWithPuck] = useState(false);
+
+<MarkerView
+  coordinate={[-73.99155, 40.73581]}
+  allowOverlap={true} // Don't collapse with other markers
+  allowOverlapWithPuck={allowOverlapWithPuck} // Control puck overlap
+>
+  <CustomMarkerView />
+</MarkerView>
+```
+
+<Note>
+  When `allowOverlap` is `false`, markers that are close together will collapse and only one will be shown.
+</Note>
+
+### Full Interactivity Example
+
+```tsx
+import { useState } from 'react';
+import { MarkerView } from '@rnmapbox/maps';
+import { View, Text, TouchableOpacity, Button } from 'react-native';
+
+const FullyInteractiveMarker = () => {
+  const [count, setCount] = useState(0);
+
+  return (
+    <MarkerView coordinate={[-73.99155, 40.73581]}>
+      <View style={{
+        backgroundColor: 'white',
+        padding: 15,
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+      }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+          Count: {count}
+        </Text>
+        <TouchableOpacity
+          onPress={() => setCount(count + 1)}
+          style={{
+            backgroundColor: 'blue',
+            padding: 8,
+            borderRadius: 5,
+            marginTop: 8,
+          }}
+        >
+          <Text style={{ color: 'white', textAlign: 'center' }}>+1</Text>
+        </TouchableOpacity>
+      </View>
+    </MarkerView>
+  );
+};
+```
+
+## Dynamic Annotations
+
+Add annotations dynamically based on user interaction:
+
+```tsx
+import { useState } from 'react';
+import { MapView, PointAnnotation } from '@rnmapbox/maps';
+
+const DynamicAnnotations = () => {
+  const [annotations, setAnnotations] = useState<GeoJSON.Position[]>([]);
+
+  return (
+    <MapView
+      style={{ flex: 1 }}
+      onPress={(feature) => {
+        const coords = (feature.geometry as GeoJSON.Point).coordinates;
+        setAnnotations([...annotations, coords]);
+      }}
+    >
+      {annotations.map((coordinate, index) => (
+        <PointAnnotation
+          key={`annotation-${index}`}
+          id={`annotation-${index}`}
+          coordinate={coordinate}
+        >
+          <View style={{
+            width: 20,
+            height: 20,
+            borderRadius: 10,
+            backgroundColor: 'red',
+          }} />
+        </PointAnnotation>
+      ))}
+    </MapView>
+  );
+};
+```
+
+## Clustering Annotations
+
+For large numbers of markers, use `ShapeSource` with clustering:
+
+```tsx
+import { ShapeSource, SymbolLayer, CircleLayer } from '@rnmapbox/maps';
+
+const ClusteredMarkers = () => {
+  const geoJSON = {
+    type: 'FeatureCollection',
+    features: locations.map((loc, i) => ({
+      type: 'Feature',
+      id: `marker-${i}`,
+      geometry: {
+        type: 'Point',
+        coordinates: loc,
+      },
+      properties: { name: `Location ${i}` },
+    })),
+  };
+
+  return (
+    <ShapeSource
+      id="markers"
+      shape={geoJSON}
+      cluster={true}
+      clusterRadius={50}
+      clusterMaxZoomLevel={14}
+    >
+      {/* Cluster circles */}
+      <CircleLayer
+        id="clusters"
+        filter={['has', 'point_count']}
+        style={{
+          circleColor: '#51bbd6',
+          circleRadius: 20,
+        }}
+      />
+
+      {/* Individual markers */}
+      <SymbolLayer
+        id="markers"
+        filter={['!', ['has', 'point_count']]}
+        style={{
+          iconImage: 'marker-icon',
+          iconSize: 1,
+        }}
+      />
+    </ShapeSource>
+  );
+};
+```
+
+## Layer Ordering
+
+Control annotation z-order relative to other layers:
+
+```tsx
+import { getAnnotationsLayerID, FillLayer } from '@rnmapbox/maps';
+
+<FillLayer
+  id="polygon"
+  belowLayerID={getAnnotationsLayerID('PointAnnotations')}
+  style={{
+    fillColor: 'rgba(255, 0, 0, 0.5)',
+  }}
+/>
+```
+
+## Performance Tips
+
+<Note>
+  - Use `ShapeSource` + `SymbolLayer` for 100+ static markers
+  - Limit `MarkerView` usage to ~100 markers maximum
+  - Disable animations in `PointAnnotation` images with `fadeDuration={0}`
+  - Call `refresh()` on PointAnnotation when updating remote images
+  - Use clustering for large datasets
+</Note>
+
+## Reference
+
+- PointAnnotation: `src/components/PointAnnotation.tsx:1`
+- MarkerView: `src/components/MarkerView.tsx:1`
+- Callout: `src/components/Callout.tsx:1`

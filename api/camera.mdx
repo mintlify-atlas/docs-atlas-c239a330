@@ -1,0 +1,608 @@
+---
+title: Camera
+description: Camera component API reference for Mapbox Maps SDK for React Native
+---
+
+# Camera
+
+Controls the perspective from which the user sees the map. The Camera component manages the map's center coordinate, zoom level, bearing, and pitch.
+
+## Import
+
+```tsx
+import { Camera } from '@rnmapbox/maps';
+```
+
+## Basic Usage
+
+```tsx
+import { MapView, Camera } from '@rnmapbox/maps';
+
+function MyMap() {
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera
+        centerCoordinate={[-74.006, 40.7128]}
+        zoomLevel={14}
+        pitch={45}
+        heading={0}
+      />
+    </MapView>
+  );
+}
+```
+
+## Imperative Methods
+
+To use imperative methods, pass in a ref object:
+
+```tsx
+import { useRef, useEffect } from 'react';
+import { MapView, Camera } from '@rnmapbox/maps';
+
+function MyMap() {
+  const cameraRef = useRef<Camera>(null);
+
+  useEffect(() => {
+    cameraRef.current?.setCamera({
+      centerCoordinate: [-74.006, 40.7128],
+      zoomLevel: 14,
+      animationDuration: 2000,
+    });
+  }, []);
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <Camera ref={cameraRef} />
+    </MapView>
+  );
+}
+```
+
+## Props
+
+### centerCoordinate
+
+<ParamField path="centerCoordinate" type="[longitude: number, latitude: number]">
+  The location on which the map should center.
+  
+  ```tsx
+  <Camera centerCoordinate={[-122.4194, 37.7749]} />
+  ```
+</ParamField>
+
+### bounds
+
+<ParamField path="bounds" type="{ ne: Position, sw: Position, paddingTop?: number, paddingRight?: number, paddingBottom?: number, paddingLeft?: number }">
+  The corners of a box around which the map should bound. Contains padding props for backwards compatibility; the root `padding` prop should be used instead.
+  
+  ```tsx
+  <Camera
+    bounds={{
+      ne: [-122.4, 37.8],
+      sw: [-122.5, 37.7],
+    }}
+  />
+  ```
+</ParamField>
+
+### heading
+
+<ParamField path="heading" type="number">
+  The heading (orientation) of the map in degrees, where 0° is north.
+  
+  ```tsx
+  <Camera heading={90} /> {/* East */}
+  ```
+</ParamField>
+
+### pitch
+
+<ParamField path="pitch" type="number">
+  The pitch (tilt) of the map in degrees, where 0° is looking straight down.
+  
+  ```tsx
+  <Camera pitch={45} />
+  ```
+</ParamField>
+
+### zoomLevel
+
+<ParamField path="zoomLevel" type="number">
+  The zoom level of the map. Higher values zoom in closer.
+  
+  ```tsx
+  <Camera zoomLevel={14} />
+  ```
+</ParamField>
+
+### padding
+
+<ParamField path="padding" type="{ paddingLeft: number, paddingRight: number, paddingTop: number, paddingBottom: number }">
+  The viewport padding in points.
+  
+  ```tsx
+  <Camera
+    padding={{
+      paddingTop: 50,
+      paddingBottom: 50,
+      paddingLeft: 20,
+      paddingRight: 20,
+    }}
+  />
+  ```
+</ParamField>
+
+### animationDuration
+
+<ParamField path="animationDuration" type="number">
+  The duration the map takes to animate to a new configuration, in milliseconds.
+  
+  ```tsx
+  <Camera
+    centerCoordinate={[-122.4194, 37.7749]}
+    animationDuration={2000}
+  />
+  ```
+</ParamField>
+
+### animationMode
+
+<ParamField path="animationMode" type="'flyTo' | 'easeTo' | 'linearTo' | 'moveTo' | 'none'">
+  The easing or path the camera uses to animate to a new configuration.
+  
+  - `flyTo` - Smooth, realistic "flying" animation
+  - `easeTo` - Smooth easing animation
+  - `linearTo` - Linear animation
+  - `moveTo` - Instant movement
+  - `none` - No animation
+  
+  ```tsx
+  <Camera
+    centerCoordinate={[-122.4194, 37.7749]}
+    animationMode="flyTo"
+    animationDuration={3000}
+  />
+  ```
+</ParamField>
+
+### followUserLocation
+
+<ParamField path="followUserLocation" type="boolean">
+  Whether the map orientation follows the user location.
+  
+  ```tsx
+  <Camera followUserLocation={true} followZoomLevel={16} />
+  ```
+</ParamField>
+
+### followUserMode
+
+<ParamField path="followUserMode" type="UserTrackingMode">
+  The mode used to track the user location on the map.
+  
+  - `UserTrackingMode.Follow` - Follow user location
+  - `UserTrackingMode.FollowWithHeading` - Follow with compass heading
+  - `UserTrackingMode.FollowWithCourse` - Follow with course direction
+  
+  ```tsx
+  import { Camera, UserTrackingMode } from '@rnmapbox/maps';
+  
+  <Camera
+    followUserLocation={true}
+    followUserMode={UserTrackingMode.FollowWithHeading}
+  />
+  ```
+</ParamField>
+
+### followZoomLevel
+
+<ParamField path="followZoomLevel" type="number">
+  The zoom level used when following the user location.
+  
+  ```tsx
+  <Camera followUserLocation={true} followZoomLevel={16} />
+  ```
+</ParamField>
+
+### followPitch
+
+<ParamField path="followPitch" type="number">
+  The pitch used when following the user location.
+  
+  ```tsx
+  <Camera followUserLocation={true} followPitch={45} />
+  ```
+</ParamField>
+
+### followHeading
+
+<ParamField path="followHeading" type="number">
+  The heading used when following the user location.
+</ParamField>
+
+### followPadding
+
+<ParamField path="followPadding" type="Partial<{ paddingLeft: number, paddingRight: number, paddingTop: number, paddingBottom: number }>">
+  The padding used to position the user location when following.
+  
+  ```tsx
+  <Camera
+    followUserLocation={true}
+    followPadding={{ paddingBottom: 200 }}
+  />
+  ```
+</ParamField>
+
+### minZoomLevel
+
+<ParamField path="minZoomLevel" type="number">
+  The lowest allowed zoom level.
+  
+  ```tsx
+  <Camera minZoomLevel={5} maxZoomLevel={18} />
+  ```
+</ParamField>
+
+### maxZoomLevel
+
+<ParamField path="maxZoomLevel" type="number">
+  The highest allowed zoom level.
+  
+  ```tsx
+  <Camera minZoomLevel={5} maxZoomLevel={18} />
+  ```
+</ParamField>
+
+### maxBounds
+
+<ParamField path="maxBounds" type="{ ne: Position, sw: Position }">
+  The corners of a box defining the limits of where the camera can pan or zoom.
+  
+  ```tsx
+  <Camera
+    maxBounds={{
+      ne: [-122.0, 38.0],
+      sw: [-123.0, 37.0],
+    }}
+  />
+  ```
+</ParamField>
+
+### defaultSettings
+
+<ParamField path="defaultSettings" type="CameraStop">
+  The configuration that the camera falls back on if no other values are specified.
+  
+  ```tsx
+  <Camera
+    defaultSettings={{
+      centerCoordinate: [-122.4194, 37.7749],
+      zoomLevel: 12,
+    }}
+  />
+  ```
+</ParamField>
+
+### allowUpdates
+
+<ParamField path="allowUpdates" type="boolean" default="true">
+  Whether the camera should send any configuration to the native module. Prevents unnecessary tile fetching and improves performance when the map is not visible.
+  
+  ```tsx
+  <Camera allowUpdates={isMapVisible} />
+  ```
+</ParamField>
+
+### triggerKey
+
+<ParamField path="triggerKey" type="string | number">
+  Any arbitrary primitive value that, when changed, causes the camera to retry moving to its target configuration. (Not yet implemented.)
+</ParamField>
+
+### onUserTrackingModeChange
+
+<ParamField path="onUserTrackingModeChange" type="(event: MapboxGLEvent) => void">
+  <Warning>Deprecated: Use Viewport#onStatusChanged instead.</Warning>
+  
+  Executes when user tracking mode changes.
+</ParamField>
+
+## Methods
+
+### setCamera()
+
+```tsx
+setCamera(config: CameraStop | CameraStops): void
+```
+
+Sets any camera properties, with default fallbacks if unspecified.
+
+```tsx
+cameraRef.current?.setCamera({
+  centerCoordinate: [-122.4194, 37.7749],
+  zoomLevel: 14,
+  pitch: 45,
+  animationDuration: 2000,
+  animationMode: 'flyTo',
+});
+```
+
+**CameraStop Properties:**
+- `centerCoordinate?: [number, number]`
+- `bounds?: { ne: Position, sw: Position }`
+- `heading?: number`
+- `pitch?: number`
+- `zoomLevel?: number`
+- `padding?: CameraPadding`
+- `animationDuration?: number`
+- `animationMode?: CameraAnimationMode`
+
+### fitBounds()
+
+```tsx
+fitBounds(
+  ne: Position,
+  sw: Position,
+  paddingConfig?: number | number[],
+  animationDuration?: number
+): void
+```
+
+Set the camera position to enclose the provided bounds, with optional padding and duration.
+
+```tsx
+// Simple bounds
+cameraRef.current?.fitBounds(
+  [-122.4, 37.8],  // northeast
+  [-122.5, 37.7],  // southwest
+);
+
+// With padding and animation
+cameraRef.current?.fitBounds(
+  [-122.4, 37.8],
+  [-122.5, 37.7],
+  [20, 40],  // [vertical, horizontal] padding
+  1000       // 1 second animation
+);
+
+// With all-side padding
+cameraRef.current?.fitBounds(
+  [-122.4, 37.8],
+  [-122.5, 37.7],
+  [20, 40, 20, 40],  // [top, right, bottom, left]
+  1000
+);
+```
+
+### flyTo()
+
+```tsx
+flyTo(
+  centerCoordinate: Position,
+  animationDuration?: number
+): void
+```
+
+Sets the camera to center around the provided coordinate using a realistic "travel" animation.
+
+```tsx
+cameraRef.current?.flyTo([-122.4194, 37.7749]);
+cameraRef.current?.flyTo([-122.4194, 37.7749], 3000);
+```
+
+### moveTo()
+
+```tsx
+moveTo(
+  centerCoordinate: Position,
+  animationDuration?: number
+): void
+```
+
+Sets the camera to center around the provided coordinate, with optional duration.
+
+```tsx
+cameraRef.current?.moveTo([-122.4194, 37.7749]);
+cameraRef.current?.moveTo([-122.4194, 37.7749], 500);
+```
+
+### zoomTo()
+
+```tsx
+zoomTo(
+  zoomLevel: number,
+  animationDuration?: number
+): void
+```
+
+Zooms the camera to the provided level, with optional duration.
+
+```tsx
+cameraRef.current?.zoomTo(16);
+cameraRef.current?.zoomTo(16, 1000);
+```
+
+### moveBy()
+
+```tsx
+moveBy(props: {
+  x: number;
+  y: number;
+  animationMode?: 'easeTo' | 'linearTo';
+  animationDuration?: number;
+}): void
+```
+
+Move the map by a given screen coordinate offset with optional animation. Useful for Android Auto or CarPlay pan gestures.
+
+```tsx
+cameraRef.current?.moveBy({ x: 100, y: 50 });
+
+cameraRef.current?.moveBy({
+  x: 100,
+  y: 50,
+  animationMode: 'easeTo',
+  animationDuration: 500,
+});
+```
+
+### scaleBy()
+
+```tsx
+scaleBy(props: {
+  x: number;
+  y: number;
+  scaleFactor: number;
+  animationMode?: 'easeTo' | 'linearTo';
+  animationDuration?: number;
+}): void
+```
+
+Scale the map with optional animation. Useful for Android Auto pinch gestures or double tap.
+
+```tsx
+cameraRef.current?.scaleBy({
+  x: 200,
+  y: 200,
+  scaleFactor: 2.0,  // zoom in
+});
+
+cameraRef.current?.scaleBy({
+  x: 200,
+  y: 200,
+  scaleFactor: 0.5,  // zoom out
+  animationMode: 'easeTo',
+  animationDuration: 300,
+});
+```
+
+## Examples
+
+<Tabs>
+  <Tab title="Basic Camera">
+    ```tsx
+    import { MapView, Camera } from '@rnmapbox/maps';
+
+    function BasicCamera() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={14}
+            pitch={45}
+            heading={90}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Animated Camera">
+    ```tsx
+    import { MapView, Camera } from '@rnmapbox/maps';
+
+    function AnimatedCamera() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Camera
+            centerCoordinate={[-74.006, 40.7128]}
+            zoomLevel={14}
+            animationMode="flyTo"
+            animationDuration={3000}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Fit Bounds">
+    ```tsx
+    import { MapView, Camera } from '@rnmapbox/maps';
+
+    function FitBoundsCamera() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Camera
+            bounds={{
+              ne: [-122.4, 37.8],
+              sw: [-122.5, 37.7],
+            }}
+            padding={{
+              paddingTop: 50,
+              paddingBottom: 50,
+              paddingLeft: 20,
+              paddingRight: 20,
+            }}
+            animationDuration={1000}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Follow User Location">
+    ```tsx
+    import { MapView, Camera, UserTrackingMode } from '@rnmapbox/maps';
+
+    function FollowUserCamera() {
+      return (
+        <MapView style={{ flex: 1 }}>
+          <Camera
+            followUserLocation={true}
+            followUserMode={UserTrackingMode.FollowWithHeading}
+            followZoomLevel={16}
+            followPitch={45}
+          />
+        </MapView>
+      );
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Imperative Control">
+    ```tsx
+    import { useRef } from 'react';
+    import { MapView, Camera } from '@rnmapbox/maps';
+    import { Button, View } from 'react-native';
+
+    function ImperativeCamera() {
+      const cameraRef = useRef<Camera>(null);
+
+      const flyToNewYork = () => {
+        cameraRef.current?.flyTo([-74.006, 40.7128], 2000);
+      };
+
+      const flyToSanFrancisco = () => {
+        cameraRef.current?.flyTo([-122.4194, 37.7749], 2000);
+      };
+
+      const zoomIn = () => {
+        cameraRef.current?.zoomTo(16, 500);
+      };
+
+      return (
+        <>
+          <MapView style={{ flex: 1 }}>
+            <Camera ref={cameraRef} />
+          </MapView>
+          <View style={{ position: 'absolute', bottom: 20, left: 20 }}>
+            <Button title="Fly to NYC" onPress={flyToNewYork} />
+            <Button title="Fly to SF" onPress={flyToSanFrancisco} />
+            <Button title="Zoom In" onPress={zoomIn} />
+          </View>
+        </>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Related Components
+
+- [MapView](/api/mapview) - The map container
+- [UserLocation](/api/user-location) - Show user location
+- [Viewport](/api/viewport) - Advanced camera control
