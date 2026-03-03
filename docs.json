@@ -83,6 +83,7 @@
             "pages": [
               "api/mapview",
               "api/camera",
+              "api/camera-gesture-observer",
               "api/style-import",
               "api/light",
               "api/atmosphere"

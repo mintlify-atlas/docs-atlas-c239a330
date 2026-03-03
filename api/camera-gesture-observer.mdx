@@ -1,0 +1,144 @@
+---
+title: CameraGestureObserver
+description: Native observer component for detecting when map camera movements have settled
+---
+
+## Overview
+
+The `CameraGestureObserver` is a unified native observer optimized for detecting when the map reaches a steady state after camera movements, gestures, or animations. This is useful for triggering actions after the user has finished interacting with the map.
+
+## Import
+
+```tsx
+import { CameraGestureObserver } from '@rnmapbox/maps';
+```
+
+## Props
+
+<ParamField path="quietPeriodMs" type="number" default="200">
+  Time in milliseconds to wait after the last camera change before emitting the 'steady' event. The timer resets with each camera movement.
+</ParamField>
+
+<ParamField path="maxIntervalMs" type="number">
+  Maximum time in milliseconds before emitting a 'timeout' event during continuous camera activity. Useful for detecting prolonged gestures or animations.
+</ParamField>
+
+<ParamField path="onMapSteady" type="function">
+  Callback fired when the map reaches a steady state (no active gestures or animations for the duration specified by `quietPeriodMs`).
+
+  **Signature:** `(event: { nativeEvent: OnMapSteadyEvent }) => void`
+
+  The event object contains:
+  - `timestamp`: When the steady state was detected
+  - `cameraBounds`: Current camera bounds
+  - `cameraCenter`: Current camera center coordinate
+</ParamField>
+
+## Usage
+
+### Basic Usage
+
+```tsx
+import React from 'react';
+import { View, StyleSheet, Text } from 'react-native';
+import Mapbox, { MapView, Camera, CameraGestureObserver } from '@rnmapbox/maps';
+
+const MapWithObserver = () => {
+  const [steadyCount, setSteadyCount] = React.useState(0);
+
+  const handleMapSteady = (event) => {
+    console.log('Map is steady', event.nativeEvent);
+    setSteadyCount(prev => prev + 1);
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.counter}>Map steady count: {steadyCount}</Text>
+      <MapView style={styles.map}>
+        <Camera
+          centerCoordinate={[-73.984, 40.759]}
+          zoomLevel={12}
+        />
+        <CameraGestureObserver
+          onMapSteady={handleMapSteady}
+          quietPeriodMs={300}
+        />
+      </MapView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { flex: 1 },
+  counter: { padding: 10, backgroundColor: 'white' }
+});
+```
+
+### With Custom Timeout
+
+```tsx
+import React from 'react';
+import Mapbox, { MapView, CameraGestureObserver } from '@rnmapbox/maps';
+
+const MapWithTimeout = () => {
+  const handleMapSteady = (event) => {
+    console.log('Map settled after gesture');
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <CameraGestureObserver
+        onMapSteady={handleMapSteady}
+        quietPeriodMs={500}
+        maxIntervalMs={5000}
+      />
+    </MapView>
+  );
+};
+```
+
+### Trigger Actions on Steady
+
+```tsx
+import React from 'react';
+import Mapbox, { MapView, CameraGestureObserver } from '@rnmapbox/maps';
+
+const MapWithDataFetch = () => {
+  const fetchDataForVisibleRegion = async (event) => {
+    const { cameraBounds } = event.nativeEvent;
+    // Fetch data for the visible region
+    const data = await fetchRegionData(cameraBounds);
+    updateMarkers(data);
+  };
+
+  return (
+    <MapView style={{ flex: 1 }}>
+      <CameraGestureObserver
+        onMapSteady={fetchDataForVisibleRegion}
+        quietPeriodMs={400}
+      />
+    </MapView>
+  );
+};
+```
+
+## Use Cases
+
+- **Performance optimization**: Load data only after the user stops panning/zooming
+- **Analytics**: Track when users finish exploring a region
+- **Auto-save**: Save map state after user finishes adjusting view
+- **Lazy loading**: Defer expensive operations until the map is stable
+- **Search**: Trigger "search this area" after map movement stops
+
+## Notes
+
+- The observer is highly optimized at the native level for minimal performance impact
+- The `quietPeriodMs` timer resets on every camera change
+- This component must be a child of `MapView`
+- Multiple observers can be used in the same MapView if needed
+
+## Related Components
+
+- [MapView](/api/mapview) - The main map component
+- [Camera](/api/camera) - Camera controls and animations
