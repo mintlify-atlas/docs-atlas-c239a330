@@ -1,0 +1,212 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "Mapbox Maps SDK for React Native",
+  "projectDescription": "Community-supported React Native library for building maps with Mapbox Maps SDK for iOS and Android",
+  "theme": "palm",
+  "primaryColor": "#4264FB",
+  "lightColor": "#5B7DFF",
+  "darkColor": "#2E4BC9",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/setup-access-token",
+              "guides/ios-setup",
+              "guides/android-setup",
+              "guides/expo-setup",
+              "guides/migration"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/map-view",
+              "concepts/camera",
+              "concepts/sources",
+              "concepts/layers",
+              "concepts/styling",
+              "concepts/expressions"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/user-location",
+              "features/annotations",
+              "features/offline-maps",
+              "features/snapshots",
+              "features/terrain-3d",
+              "features/animations"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "examples/overview",
+              "examples/basic-map",
+              "examples/custom-styles",
+              "examples/markers-annotations",
+              "examples/data-visualization"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core Components",
+            "pages": [
+              "api/mapview",
+              "api/camera",
+              "api/style-import",
+              "api/light",
+              "api/atmosphere"
+            ]
+          },
+          {
+            "group": "Sources",
+            "pages": [
+              "api/vector-source",
+              "api/shape-source",
+              "api/raster-source",
+              "api/raster-dem-source",
+              "api/raster-array-source",
+              "api/image-source"
+            ]
+          },
+          {
+            "group": "Layers",
+            "pages": [
+              "api/background-layer",
+              "api/circle-layer",
+              "api/fill-layer",
+              "api/fill-extrusion-layer",
+              "api/line-layer",
+              "api/symbol-layer",
+              "api/raster-layer",
+              "api/raster-particle-layer",
+              "api/heatmap-layer",
+              "api/hillshade-layer",
+              "api/sky-layer",
+              "api/model-layer"
+            ]
+          },
+          {
+            "group": "Annotations",
+            "pages": [
+              "api/point-annotation",
+              "api/marker-view",
+              "api/callout",
+              "api/annotation"
+            ]
+          },
+          {
+            "group": "Location",
+            "pages": [
+              "api/user-location",
+              "api/location-puck",
+              "api/custom-location-provider",
+              "api/location-manager"
+            ]
+          },
+          {
+            "group": "Assets",
+            "pages": [
+              "api/images",
+              "api/image",
+              "api/models"
+            ]
+          },
+          {
+            "group": "Terrain",
+            "pages": [
+              "api/terrain",
+              "api/viewport"
+            ]
+          },
+          {
+            "group": "Offline & Utilities",
+            "pages": [
+              "api/offline-manager",
+              "api/tile-store",
+              "api/snapshot-manager",
+              "api/logger",
+              "api/custom-http-headers"
+            ]
+          },
+          {
+            "group": "Modules",
+            "pages": [
+              "api/mapbox-module",
+              "api/style-sheet",
+              "api/animated"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Interactive map views with Mapbox GL",
+    "Camera controls and animations",
+    "Multiple layer types (circle, fill, line, symbol, etc.)",
+    "Multiple source types (vector, raster, GeoJSON)",
+    "User location tracking with customizable puck",
+    "Annotations and markers",
+    "Offline map management",
+    "3D terrain and atmosphere effects",
+    "Custom styling and expressions",
+    "Map snapshots",
+    "Expo support with config plugin",
+    "TypeScript support"
+  ],
+  "publicApiSurface": [
+    "MapView",
+    "Camera",
+    "UserLocation",
+    "LocationPuck",
+    "PointAnnotation",
+    "MarkerView",
+    "Callout",
+    "VectorSource",
+    "ShapeSource",
+    "RasterSource",
+    "RasterDemSource",
+    "CircleLayer",
+    "FillLayer",
+    "LineLayer",
+    "SymbolLayer",
+    "BackgroundLayer",
+    "FillExtrusionLayer",
+    "HeatmapLayer",
+    "RasterLayer",
+    "SkyLayer",
+    "ModelLayer",
+    "Terrain",
+    "Atmosphere",
+    "Light",
+    "StyleImport",
+    "Images",
+    "Models",
+    "offlineManager",
+    "snapshotManager",
+    "locationManager",
+    "TileStore",
+    "Logger",
+    "setAccessToken()",
+    "StyleURL"
+  ]
+}
